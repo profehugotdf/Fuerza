@@ -1,0 +1,993 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>Fuerza</title>
+<style>
+  :root{
+    --bg:#0c1015;
+    --bg2:#141a22;
+    --card:#1a212b;
+    --card2:#212a36;
+    --borde:#2a3441;
+    --texto:#e7edf3;
+    --texto-sec:#8fa0b3;
+    --acento:#ff6a3d;
+    --acento2:#ffb020;
+    --ok:#3ddc84;
+    --mal:#ff5470;
+    --radio:14px;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  html,body{margin:0; padding:0; background:var(--bg); color:var(--texto);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;}
+  body{padding-bottom:90px;}
+  header{position:sticky; top:0; z-index:10; background:linear-gradient(180deg,var(--bg) 80%,transparent);
+    padding:16px 16px 8px;}
+  h1{margin:0 0 2px; font-size:22px; font-weight:800; letter-spacing:.3px;
+    display:flex; align-items:center; gap:8px;}
+  h1 .icono{font-size:22px;}
+  .sub{color:var(--texto-sec); font-size:12.5px; margin-bottom:12px;}
+  nav.tabs{display:flex; gap:6px; margin-bottom:4px;}
+  nav.tabs button{flex:1; padding:10px 4px; border:1px solid var(--borde); background:var(--bg2);
+    color:var(--texto-sec); border-radius:12px; font-size:12.5px; font-weight:700; cursor:pointer;}
+  nav.tabs button.activa{background:linear-gradient(135deg,var(--acento),var(--acento2)); color:#1a0e05; border-color:transparent;}
+  main{padding:4px 16px 16px;}
+  section{display:none;}
+  section.activa{display:block;}
+  .card{background:var(--card); border:1px solid var(--borde); border-radius:var(--radio);
+    padding:14px; margin-bottom:12px;}
+  .card h2{margin:0 0 10px; font-size:14px; text-transform:uppercase; letter-spacing:.6px;
+    color:var(--texto-sec); font-weight:700;}
+  label{display:block; font-size:12.5px; color:var(--texto-sec); margin:0 0 4px;}
+  input[type=text], input[type=number], input[type=date], select{
+    width:100%; background:var(--card2); border:1px solid var(--borde); color:var(--texto);
+    border-radius:10px; padding:10px 11px; font-size:15px; margin-bottom:10px;}
+  input:focus, select:focus{outline:none; border-color:var(--acento);}
+  .fila{display:flex; gap:8px;}
+  .fila > *{flex:1;}
+  button.btn{border:none; border-radius:12px; padding:12px 14px; font-size:14.5px; font-weight:700;
+    cursor:pointer;}
+  .btn-primario{width:100%; background:linear-gradient(135deg,var(--acento),var(--acento2)); color:#1a0e05;}
+  .btn-secundario{background:var(--card2); color:var(--texto); border:1px solid var(--borde);}
+  .btn-mini{background:var(--card2); color:var(--texto-sec); border:1px solid var(--borde);
+    padding:9px 10px; font-size:12.5px; border-radius:9px;}
+  .btn-mal{background:rgba(255,84,112,.12); color:var(--mal); border:1px solid rgba(255,84,112,.3);}
+  .ejercicio{background:var(--card2); border:1px solid var(--borde); border-radius:12px;
+    padding:12px; margin-bottom:10px;}
+  .ejercicio-cab{display:flex; align-items:center; gap:8px; margin-bottom:8px;}
+  .ejercicio-cab input[type=text]{margin-bottom:0; flex:1; font-weight:700;}
+  .quitar-ejercicio{background:transparent; border:none; color:var(--texto-sec); font-size:20px;
+    line-height:1; padding:2px 4px; cursor:pointer; flex-shrink:0;}
+  .modos-fila{display:flex; gap:8px; margin-bottom:8px;}
+  .toggle-modo{display:flex; border:1px solid var(--borde); border-radius:9px; overflow:hidden;
+    font-size:11.5px; flex:1;}
+  .toggle-modo button{border:none; background:transparent; color:var(--texto-sec); padding:8px 4px;
+    font-weight:700; cursor:pointer; flex:1;}
+  .toggle-modo button.on{background:var(--acento); color:#1a0e05;}
+  .serie{display:flex; gap:6px; align-items:center; margin-bottom:6px;}
+  .serie .n{width:20px; text-align:center; color:var(--texto-sec); font-size:12px; flex-shrink:0;}
+  .serie input{margin-bottom:0;}
+  .serie button{flex-shrink:0; background:transparent; border:none; color:var(--mal); font-size:18px;
+    padding:4px 6px; cursor:pointer; line-height:1;}
+  .agregar-serie{width:100%; margin-top:2px;}
+  .vacio{color:var(--texto-sec); font-size:13px; text-align:center; padding:20px 10px; line-height:1.5;}
+  .tss-box{display:flex; align-items:center; justify-content:space-between; background:var(--card2);
+    border-radius:12px; padding:14px; margin-top:2px;}
+  .tss-box .num{font-size:30px; font-weight:800; color:var(--acento2); line-height:1;}
+  .tss-box .lbl{font-size:11px; color:var(--texto-sec); text-transform:uppercase; letter-spacing:.5px;}
+  .tss-nota{font-size:11px; color:var(--texto-sec); margin-top:8px; line-height:1.5;}
+  .sesion-card{cursor:pointer;}
+  .sesion-cab{display:flex; justify-content:space-between; align-items:baseline; gap:8px;}
+  .sesion-fecha{font-weight:700; font-size:14.5px;}
+  .sesion-tss{color:var(--acento2); font-weight:800; font-size:15px; white-space:nowrap;}
+  .sesion-meta{color:var(--texto-sec); font-size:12px; margin-top:3px;}
+  .sesion-ejercicios{color:var(--texto-sec); font-size:12.5px; margin-top:7px; line-height:1.5;}
+  .acciones-hist{display:flex; gap:8px; margin-top:10px;}
+  .acciones-hist button{flex:1;}
+  .toast{position:fixed; bottom:18px; left:50%; transform:translateX(-50%); background:var(--ok);
+    color:#04240f; padding:10px 18px; border-radius:99px; font-size:13.5px; font-weight:700;
+    opacity:0; pointer-events:none; transition:opacity .25s, transform .25s; z-index:99;}
+  .toast.show{opacity:1; transform:translateX(-50%) translateY(-4px);}
+  .rango{width:100%;}
+  .rango-val{display:flex; justify-content:space-between; align-items:center; margin-bottom:2px;}
+  .rango-val .num{font-size:20px; font-weight:800; color:var(--acento);}
+  .rutina-info{font-size:12px; color:var(--texto-sec); margin-bottom:8px; padding:8px 10px;
+    background:var(--card2); border-radius:9px; border:1px solid var(--borde);}
+  .tags-rutina{display:flex; flex-wrap:wrap; gap:6px; margin-top:9px;}
+  .tag-ejercicio{background:var(--card2); border:1px solid var(--borde); border-radius:99px;
+    padding:4px 10px; font-size:11.5px; color:var(--texto-sec);}
+  .hint-rutinas{color:var(--texto-sec); font-size:12px; line-height:1.7; padding:2px 4px 14px;}
+  .cronometro-card{text-align:center;}
+  .cronometro-num{font-size:46px; font-weight:800; color:var(--acento2); line-height:1;
+    font-variant-numeric:tabular-nums;}
+  .ronda-titulo{font-size:11.5px; text-transform:uppercase; letter-spacing:.5px; color:var(--texto-sec);
+    font-weight:700; margin:12px 0 4px; padding-top:10px; border-top:1px dashed var(--borde);}
+  .ronda-grupo:first-child .ronda-titulo{border-top:none; padding-top:0; margin-top:0;}
+  .item-vivo{display:flex; align-items:center; gap:10px; padding:11px 4px; border-bottom:1px solid var(--borde);
+    font-size:14.5px; cursor:pointer;}
+  .item-vivo:last-child{border-bottom:none;}
+  .item-vivo.hecho{color:var(--texto-sec); text-decoration:line-through;}
+  .item-vivo input[type=checkbox]{width:21px; height:21px; accent-color:var(--acento); margin:0; flex-shrink:0;}
+</style>
+</head>
+<body>
+
+<header>
+  <h1><span class="icono">🏋️</span> Fuerza</h1>
+  <div class="sub">Registro de sesiones · carga estimada (sRPE)</div>
+  <nav class="tabs" id="navTabs">
+    <button id="tabBtnRegistrar" class="activa" onclick="mostrarTab('registrar')">➕ Registrar</button>
+    <button id="tabBtnHistorial" onclick="mostrarTab('historial')">📋 Historial</button>
+    <button id="tabBtnRutinas" onclick="mostrarTab('rutinas')">🔁 Rutinas</button>
+  </nav>
+</header>
+
+<main>
+
+  <section id="tab-registrar" class="activa">
+
+    <div class="card">
+      <h2>Datos de la sesión</h2>
+      <div class="fila">
+        <div>
+          <label for="inFecha">Fecha</label>
+          <input type="date" id="inFecha">
+        </div>
+        <div>
+          <label for="inDuracion">Duración (min)</label>
+          <input type="number" id="inDuracion" min="1" step="1" placeholder="60" oninput="actualizarTSS()">
+        </div>
+      </div>
+      <label for="inRpeSesion">RPE de la sesión (esfuerzo percibido global)</label>
+      <div class="rango-val">
+        <span style="color:var(--texto-sec); font-size:12px;">Muy suave</span>
+        <span class="num" id="rpeSesionNum">5</span>
+        <span style="color:var(--texto-sec); font-size:12px;">Máximo</span>
+      </div>
+      <input type="range" class="rango" id="inRpeSesion" min="1" max="10" step="1" value="5"
+        oninput="rpeSesionNum.textContent=this.value; actualizarTSS()" style="margin-bottom:0;">
+    </div>
+
+    <div class="card">
+      <h2>Ejercicios</h2>
+      <div id="rutinaInfo" class="rutina-info" style="display:none;"></div>
+      <div id="listaEjercicios"></div>
+      <button class="btn btn-secundario" style="width:100%;" onclick="agregarEjercicio()">+ Agregar ejercicio</button>
+      <div class="fila" style="margin-top:10px;">
+        <button class="btn btn-mini" onclick="guardarComoRutinaNueva()">💾 Guardar como rutina</button>
+        <button class="btn btn-mini" id="btnActualizarRutina" style="display:none;" onclick="actualizarRutinaActual()">🔄 Actualizar rutina</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Carga estimada</h2>
+      <div class="tss-box">
+        <div>
+          <div class="lbl">TSS fuerza (estimado)</div>
+          <div class="num" id="tssPreview">0</div>
+        </div>
+        <div style="text-align:right; color:var(--texto-sec); font-size:12px; max-width:120px;">
+          RPE × min ÷ 6
+        </div>
+      </div>
+      <div class="tss-nota">
+        ⚠️ Estimación por sRPE (método de Foster), normalizada para quedar en escala comparable al TSS de potencia/ritmo de las otras apps. No es una conversión fisiológica validada — es una aproximación de carga percibida.
+      </div>
+    </div>
+
+    <button class="btn btn-primario" onclick="guardarSesion()" id="btnGuardar">💾 Guardar sesión</button>
+    <button class="btn btn-secundario" style="width:100%; margin-top:8px; display:none;" id="btnCancelarEdicion" onclick="cancelarEdicion()">Cancelar edición</button>
+
+  </section>
+
+  <section id="tab-historial">
+    <div id="listaHistorial"></div>
+  </section>
+
+  <section id="tab-rutinas">
+    <div id="listaRutinas"></div>
+  </section>
+
+  <section id="tab-vivo">
+    <div class="card cronometro-card">
+      <div class="lbl" style="text-transform:uppercase; letter-spacing:.5px; color:var(--texto-sec); font-size:11px;">Rutina en curso</div>
+      <div id="vivoNombreRutina" style="font-weight:800; font-size:16px; margin:2px 0 12px;"></div>
+      <div class="cronometro-num" id="vivoCronometro">00:00</div>
+      <div id="vivoProgreso" style="color:var(--texto-sec); font-size:12.5px; margin-top:8px;"></div>
+    </div>
+    <div class="card">
+      <h2>Ejercicios</h2>
+      <div id="vivoLista"></div>
+    </div>
+    <button class="btn btn-primario" onclick="finalizarSesionEnVivo()">🏁 Finalizar y cargar duración</button>
+    <button class="btn btn-secundario" style="width:100%; margin-top:8px;" onclick="descartarSesionEnVivo()">Descartar sesión en vivo</button>
+  </section>
+
+</main>
+
+<div class="toast" id="toast"></div>
+
+<script>
+"use strict";
+
+/* ============ Constantes / claves de storage ============ */
+const K_SESIONES = 'fuerza_sesiones';
+const K_RUTINAS = 'fuerza_rutinas';
+const K_VIVO = 'fuerza_sesion_en_vivo';
+const K_FORMA_COMPARTIDA = 'entrenamiento_forma_registro';
+
+/* ============ Estado en memoria ============ */
+// ejercicios: [{id, nombre, tipo:'reps'|'tiempo', carga:'peso'|'rpe', series:[{cantidad, valor}]}]
+//   tipo   -> qué se cuenta por serie: repeticiones o segundos (isométricos)
+//   carga  -> qué acompaña a esa cantidad: peso en kg, o RPE (para ejercicios sin carga externa)
+let ejercicios = [];
+let editandoId = null;      // id de la sesión en edición, o null si es nueva
+let rutinaActualId = null;  // id de la rutina en la que se basó el formulario actual, o null
+
+// Estado de la sesión "en vivo" (rutina iniciada con cronómetro):
+let vivoRutinaId = null;
+let vivoRutinaNombre = '';
+let vivoInicio = null;      // timestamp (ms) de inicio
+let vivoItems = [];         // [{ronda, nombre, tipo, carga, hecho}]
+let vivoTimerHandle = null;
+let vivoWakeLock = null;
+
+/* ============ Utilidades ============ */
+function idNuevo(prefijo){
+  return prefijo + '_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2,8);
+}
+
+function hoyISO(){
+  const d = new Date();
+  const off = d.getTimezoneOffset();
+  const local = new Date(d.getTime() - off*60000);
+  return local.toISOString().slice(0,10);
+}
+
+function formatearFecha(iso){
+  const [y,m,d] = iso.split('-');
+  return `${d}/${m}/${y.slice(2)}`;
+}
+
+function formatearDuracion(ms){
+  const totalSeg = Math.max(0, Math.floor(ms/1000));
+  const h = Math.floor(totalSeg/3600);
+  const m = Math.floor((totalSeg%3600)/60);
+  const s = totalSeg%60;
+  const mm = String(m).padStart(2,'0');
+  const ss = String(s).padStart(2,'0');
+  return h>0 ? `${h}:${mm}:${ss}` : `${mm}:${ss}`;
+}
+
+function mostrarToast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), 1600);
+}
+
+function escapeAttr(v){
+  if(v === undefined || v === null) return '';
+  return String(v).replace(/&/g,'&amp;').replace(/"/g,'&quot;');
+}
+
+function escapeHtml(v){
+  if(v === undefined || v === null) return '';
+  return String(v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+/* ============ localStorage: sesiones propias ============ */
+function leerSesiones(){
+  try{
+    const raw = localStorage.getItem(K_SESIONES);
+    return raw ? JSON.parse(raw) : [];
+  }catch(e){
+    console.error('Error leyendo sesiones de fuerza', e);
+    return [];
+  }
+}
+
+function guardarSesiones(lista){
+  try{
+    localStorage.setItem(K_SESIONES, JSON.stringify(lista));
+    return true;
+  }catch(e){
+    console.error('Error guardando sesiones de fuerza', e);
+    return false;
+  }
+}
+
+/* ============ localStorage: rutinas (circuitos guardados) ============ */
+function leerRutinas(){
+  try{
+    const raw = localStorage.getItem(K_RUTINAS);
+    return raw ? JSON.parse(raw) : [];
+  }catch(e){
+    console.error('Error leyendo rutinas de fuerza', e);
+    return [];
+  }
+}
+
+function guardarRutinas(lista){
+  try{
+    localStorage.setItem(K_RUTINAS, JSON.stringify(lista));
+    return true;
+  }catch(e){
+    console.error('Error guardando rutinas de fuerza', e);
+    return false;
+  }
+}
+
+/* ============ localStorage: sesión "en vivo" (para sobrevivir un cierre accidental) ============ */
+function guardarEstadoVivo(){
+  try{
+    localStorage.setItem(K_VIVO, JSON.stringify({
+      rutinaId: vivoRutinaId,
+      rutinaNombre: vivoRutinaNombre,
+      inicio: vivoInicio,
+      items: vivoItems
+    }));
+  }catch(e){
+    console.error('Error guardando la sesión en vivo', e);
+  }
+}
+
+function leerEstadoVivo(){
+  try{
+    const raw = localStorage.getItem(K_VIVO);
+    return raw ? JSON.parse(raw) : null;
+  }catch(e){
+    console.error('Error leyendo la sesión en vivo', e);
+    return null;
+  }
+}
+
+function borrarEstadoVivo(){
+  try{ localStorage.removeItem(K_VIVO); }catch(e){ console.error(e); }
+}
+
+/* ============ localStorage: registro compartido de Forma ============ */
+/* Leer el registro COMPLETO (de todas las apps), modificar solo lo propio, guardar todo de vuelta. */
+function leerRegistroForma(){
+  try{
+    const raw = localStorage.getItem(K_FORMA_COMPARTIDA);
+    return raw ? JSON.parse(raw) : [];
+  }catch(e){
+    console.error('Error leyendo registro de Forma compartido', e);
+    return [];
+  }
+}
+
+function upsertEnRegistroForma(entrada){
+  const registro = leerRegistroForma();
+  const filtrado = registro.filter(r => r.id !== entrada.id);
+  filtrado.push(entrada);
+  try{
+    localStorage.setItem(K_FORMA_COMPARTIDA, JSON.stringify(filtrado));
+    return true;
+  }catch(e){
+    console.error('Error guardando en registro de Forma compartido', e);
+    return false;
+  }
+}
+
+function borrarDeRegistroForma(id){
+  const registro = leerRegistroForma();
+  const filtrado = registro.filter(r => r.id !== id);
+  try{
+    localStorage.setItem(K_FORMA_COMPARTIDA, JSON.stringify(filtrado));
+  }catch(e){
+    console.error('Error borrando del registro de Forma compartido', e);
+  }
+}
+
+/* ============ Cálculo de carga (sRPE / Foster) ============ */
+function calcularTSS(rpe, minutos){
+  rpe = Number(rpe) || 0;
+  minutos = Number(minutos) || 0;
+  return (rpe * minutos) / 6;
+}
+
+function actualizarTSS(){
+  const rpe = document.getElementById('inRpeSesion').value;
+  const min = document.getElementById('inDuracion').value;
+  const tss = calcularTSS(rpe, min);
+  document.getElementById('tssPreview').textContent = tss ? tss.toFixed(0) : '0';
+}
+
+/* ============ Tabs ============ */
+function mostrarTab(nombre){
+  document.getElementById('tab-registrar').classList.toggle('activa', nombre==='registrar');
+  document.getElementById('tab-historial').classList.toggle('activa', nombre==='historial');
+  document.getElementById('tab-rutinas').classList.toggle('activa', nombre==='rutinas');
+  document.getElementById('tab-vivo').classList.remove('activa');
+  document.getElementById('tabBtnRegistrar').classList.toggle('activa', nombre==='registrar');
+  document.getElementById('tabBtnHistorial').classList.toggle('activa', nombre==='historial');
+  document.getElementById('tabBtnRutinas').classList.toggle('activa', nombre==='rutinas');
+  if(nombre === 'historial') renderHistorial();
+  if(nombre === 'rutinas') renderRutinas();
+}
+
+/* ============ Ejercicios (formulario) ============ */
+function agregarEjercicio(nombre, tipo, carga, series){
+  ejercicios.push({
+    id: idNuevo('ej'),
+    nombre: nombre || '',
+    tipo: tipo || 'reps',    // 'reps' | 'tiempo'
+    carga: carga || 'peso',  // 'peso' | 'rpe'
+    series: series || [ {cantidad:'', valor:''} ]
+  });
+  renderEjercicios();
+}
+
+function quitarEjercicio(id){
+  ejercicios = ejercicios.filter(e => e.id !== id);
+  renderEjercicios();
+}
+
+function cambiarTipoEjercicio(id, tipo){
+  const ej = ejercicios.find(e => e.id === id);
+  if(ej) ej.tipo = tipo;
+  renderEjercicios();
+}
+
+function cambiarCargaEjercicio(id, carga){
+  const ej = ejercicios.find(e => e.id === id);
+  if(ej) ej.carga = carga;
+  renderEjercicios();
+}
+
+function agregarSerie(ejId){
+  const ej = ejercicios.find(e => e.id === ejId);
+  if(ej) ej.series.push({cantidad:'', valor:''});
+  renderEjercicios();
+}
+
+function quitarSerie(ejId, idx){
+  const ej = ejercicios.find(e => e.id === ejId);
+  if(ej){
+    ej.series.splice(idx,1);
+    if(ej.series.length === 0) ej.series.push({cantidad:'', valor:''});
+  }
+  renderEjercicios();
+}
+
+function leerCamposFormulario(){
+  // vuelca los inputs actuales del DOM al array `ejercicios` antes de re-renderizar o guardar
+  document.querySelectorAll('.ejercicio').forEach(div => {
+    const ejId = div.dataset.id;
+    const ej = ejercicios.find(e => e.id === ejId);
+    if(!ej) return;
+    const nombreInput = div.querySelector('.nombre-ejercicio');
+    if(nombreInput) ej.nombre = nombreInput.value;
+    div.querySelectorAll('.serie').forEach((filaSerie, idx) => {
+      const cantidad = filaSerie.querySelector('.serie-cantidad');
+      const valor = filaSerie.querySelector('.serie-valor');
+      if(ej.series[idx]){
+        ej.series[idx].cantidad = cantidad ? cantidad.value : '';
+        ej.series[idx].valor = valor ? valor.value : '';
+      }
+    });
+  });
+}
+
+function renderEjercicios(){
+  const cont = document.getElementById('listaEjercicios');
+  if(ejercicios.length === 0){
+    cont.innerHTML = '<div class="vacio">Todavía no agregaste ejercicios.</div>';
+    return;
+  }
+  cont.innerHTML = ejercicios.map(ej => {
+    const cantidadPlaceholder = ej.tipo === 'tiempo' ? 'seg' : 'reps';
+    const valorPlaceholder = ej.carga === 'peso' ? 'kg' : 'RPE';
+    const valorStep = ej.carga === 'peso' ? '0.5' : '1';
+    const valorMax = ej.carga === 'rpe' ? 'max="10"' : '';
+    const seriesHtml = ej.series.map((s, idx) => `
+      <div class="serie">
+        <span class="n">${idx+1}</span>
+        <input type="number" class="serie-cantidad" min="0" step="1" placeholder="${cantidadPlaceholder}" value="${escapeAttr(s.cantidad)}">
+        <input type="number" class="serie-valor" min="0" step="${valorStep}" ${valorMax} placeholder="${valorPlaceholder}" value="${escapeAttr(s.valor)}">
+        <button onclick="quitarSerie('${ej.id}', ${idx})" title="Quitar serie">✕</button>
+      </div>
+    `).join('');
+    return `
+      <div class="ejercicio" data-id="${ej.id}">
+        <div class="ejercicio-cab">
+          <input type="text" class="nombre-ejercicio" placeholder="Nombre del ejercicio" value="${escapeAttr(ej.nombre)}">
+          <button class="quitar-ejercicio" onclick="leerCamposFormulario(); quitarEjercicio('${ej.id}')" title="Quitar ejercicio">🗑</button>
+        </div>
+        <div class="modos-fila">
+          <div class="toggle-modo">
+            <button class="${ej.tipo==='reps'?'on':''}" onclick="leerCamposFormulario(); cambiarTipoEjercicio('${ej.id}','reps')">🔢 REPS</button>
+            <button class="${ej.tipo==='tiempo'?'on':''}" onclick="leerCamposFormulario(); cambiarTipoEjercicio('${ej.id}','tiempo')">⏱️ TIEMPO</button>
+          </div>
+          <div class="toggle-modo">
+            <button class="${ej.carga==='peso'?'on':''}" onclick="leerCamposFormulario(); cambiarCargaEjercicio('${ej.id}','peso')">KG</button>
+            <button class="${ej.carga==='rpe'?'on':''}" onclick="leerCamposFormulario(); cambiarCargaEjercicio('${ej.id}','rpe')">RPE</button>
+          </div>
+        </div>
+        ${seriesHtml}
+        <button class="btn btn-mini agregar-serie" onclick="leerCamposFormulario(); agregarSerie('${ej.id}')">+ Serie</button>
+      </div>
+    `;
+  }).join('');
+}
+
+/* ============ Rutinas (circuitos reutilizables) ============ */
+function construirDefinicionRutina(){
+  const validos = ejercicios.filter(e => (e.nombre||'').trim() !== '');
+  if(validos.length === 0){
+    mostrarToast('⚠️ Agregá nombres a los ejercicios primero');
+    return null;
+  }
+  return validos.map(e => ({
+    nombre: e.nombre.trim(),
+    tipo: e.tipo,
+    carga: e.carga,
+    seriesSugeridas: e.series.length || 1
+  }));
+}
+
+function guardarComoRutinaNueva(){
+  leerCamposFormulario();
+  const definicion = construirDefinicionRutina();
+  if(!definicion) return;
+  const nombre = prompt('Nombre de la rutina:', '');
+  if(!nombre || !nombre.trim()) return;
+  const rutinas = leerRutinas();
+  const rutina = { id: idNuevo('rutina'), nombre: nombre.trim(), ejercicios: definicion };
+  rutinas.push(rutina);
+  guardarRutinas(rutinas);
+  rutinaActualId = rutina.id;
+  renderBotonRutina();
+  mostrarToast('✅ Rutina guardada');
+}
+
+function actualizarRutinaActual(){
+  leerCamposFormulario();
+  const definicion = construirDefinicionRutina();
+  if(!definicion) return;
+  const rutinas = leerRutinas();
+  const idx = rutinas.findIndex(r => r.id === rutinaActualId);
+  if(idx < 0){
+    mostrarToast('⚠️ No se encontró la rutina original');
+    return;
+  }
+  rutinas[idx].ejercicios = definicion;
+  guardarRutinas(rutinas);
+  mostrarToast('✅ Rutina actualizada');
+}
+
+function renderBotonRutina(){
+  const info = document.getElementById('rutinaInfo');
+  const btnActualizar = document.getElementById('btnActualizarRutina');
+  if(rutinaActualId){
+    const r = leerRutinas().find(x => x.id === rutinaActualId);
+    if(r){
+      info.style.display = 'block';
+      info.textContent = '📂 Basado en la rutina: ' + r.nombre;
+      btnActualizar.style.display = 'block';
+      return;
+    }
+  }
+  info.style.display = 'none';
+  btnActualizar.style.display = 'none';
+}
+
+function hayDatosEnFormulario(){
+  leerCamposFormulario();
+  return ejercicios.some(e => (e.nombre||'').trim() !== '' ||
+    e.series.some(s => s.cantidad !== '' || s.valor !== ''));
+}
+
+function usarRutina(id){
+  const rutina = leerRutinas().find(r => r.id === id);
+  if(!rutina) return;
+  if(hayDatosEnFormulario() && !confirm('Esto va a reemplazar los ejercicios que ya cargaste en el formulario. ¿Continuar?')) return;
+
+  ejercicios = rutina.ejercicios.map(def => ({
+    id: idNuevo('ej'),
+    nombre: def.nombre,
+    tipo: def.tipo || 'reps',
+    carga: def.carga || 'peso',
+    series: Array.from({length: def.seriesSugeridas || 1}, () => ({cantidad:'', valor:''}))
+  }));
+  rutinaActualId = id;
+  renderEjercicios();
+  renderBotonRutina();
+  mostrarTab('registrar');
+  mostrarToast('📂 Rutina cargada: ' + rutina.nombre);
+}
+
+function renombrarRutina(id){
+  const rutinas = leerRutinas();
+  const r = rutinas.find(x => x.id === id);
+  if(!r) return;
+  const nuevoNombre = prompt('Nuevo nombre:', r.nombre);
+  if(!nuevoNombre || !nuevoNombre.trim()) return;
+  r.nombre = nuevoNombre.trim();
+  guardarRutinas(rutinas);
+  renderRutinas();
+  if(rutinaActualId === id) renderBotonRutina();
+}
+
+function borrarRutina(id){
+  if(!confirm('¿Borrar esta rutina guardada? No afecta a las sesiones ya registradas.')) return;
+  const rutinas = leerRutinas().filter(r => r.id !== id);
+  guardarRutinas(rutinas);
+  if(rutinaActualId === id){
+    rutinaActualId = null;
+    renderBotonRutina();
+  }
+  renderRutinas();
+  mostrarToast('🗑 Rutina borrada');
+}
+
+function renderRutinas(){
+  const cont = document.getElementById('listaRutinas');
+  const rutinas = leerRutinas();
+
+  if(rutinas.length === 0){
+    cont.innerHTML = '<div class="vacio">Todavía no guardaste ninguna rutina.<br>Armá los ejercicios en "Registrar" y tocá "💾 Guardar como rutina".</div>';
+    return;
+  }
+
+  const hint = `<div class="hint-rutinas">🏁 <b>Iniciar</b>: arranca el cronómetro y elegís cuántas rondas del circuito — vas tildando cada ejercicio a medida que lo hacés.<br>📝 <b>Cargar</b>: completa el formulario de Registrar para anotar todo a mano, sin cronómetro.</div>`;
+
+  cont.innerHTML = hint + rutinas.map(r => {
+    const tags = r.ejercicios.map(e => {
+      const icono = e.tipo === 'tiempo' ? '⏱️' : '🔢';
+      const unidad = e.carga === 'peso' ? 'KG' : 'RPE';
+      return `<span class="tag-ejercicio">${icono} ${escapeHtml(e.nombre)} · ${unidad}</span>`;
+    }).join('');
+    return `
+      <div class="card">
+        <div class="sesion-cab">
+          <div class="sesion-fecha">${escapeHtml(r.nombre)}</div>
+        </div>
+        <div class="sesion-meta">${r.ejercicios.length} ejercicio${r.ejercicios.length===1?'':'s'}</div>
+        <div class="tags-rutina">${tags}</div>
+        <div class="acciones-hist">
+          <button class="btn btn-primario" style="width:auto;" onclick="iniciarSesionEnVivo('${r.id}')">🏁 Iniciar</button>
+          <button class="btn btn-secundario" onclick="usarRutina('${r.id}')">📝 Cargar</button>
+        </div>
+        <div class="acciones-hist" style="margin-top:8px;">
+          <button class="btn btn-mini" style="flex:1;" onclick="renombrarRutina('${r.id}')">✏️ Renombrar</button>
+          <button class="btn btn-mal" style="flex:1;" onclick="borrarRutina('${r.id}')">🗑 Borrar</button>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+/* ============ Sesión "en vivo" (rutina iniciada con cronómetro) ============ */
+async function solicitarWakeLock(){
+  try{
+    if('wakeLock' in navigator){
+      vivoWakeLock = await navigator.wakeLock.request('screen');
+    }
+  }catch(e){
+    console.error('Bloqueo de pantalla no disponible', e);
+  }
+}
+
+function liberarWakeLock(){
+  if(vivoWakeLock){
+    try{ vivoWakeLock.release(); }catch(e){ console.error(e); }
+    vivoWakeLock = null;
+  }
+}
+
+document.addEventListener('visibilitychange', () => {
+  if(vivoInicio && document.visibilityState === 'visible'){
+    solicitarWakeLock();
+  }
+});
+
+function iniciarSesionEnVivo(rutinaId){
+  const rutina = leerRutinas().find(r => r.id === rutinaId);
+  if(!rutina) return;
+
+  const rondasTexto = prompt('¿Cuántas rondas del circuito?', '1');
+  if(rondasTexto === null) return; // canceló
+  const rondas = Math.max(1, parseInt(rondasTexto, 10) || 1);
+
+  const items = [];
+  for(let ronda = 1; ronda <= rondas; ronda++){
+    rutina.ejercicios.forEach(e => {
+      items.push({ ronda, nombre: e.nombre, tipo: e.tipo, carga: e.carga, hecho: false });
+    });
+  }
+
+  vivoRutinaId = rutina.id;
+  vivoRutinaNombre = rutina.nombre;
+  vivoInicio = Date.now();
+  vivoItems = items;
+
+  guardarEstadoVivo();
+  mostrarSeccionVivo();
+}
+
+function mostrarSeccionVivo(){
+  document.getElementById('navTabs').style.display = 'none';
+  document.getElementById('tab-registrar').classList.remove('activa');
+  document.getElementById('tab-historial').classList.remove('activa');
+  document.getElementById('tab-rutinas').classList.remove('activa');
+  document.getElementById('tab-vivo').classList.add('activa');
+
+  document.getElementById('vivoNombreRutina').textContent = vivoRutinaNombre;
+  renderVivoLista();
+
+  if(vivoTimerHandle) clearInterval(vivoTimerHandle);
+  actualizarCronometroVivo();
+  vivoTimerHandle = setInterval(actualizarCronometroVivo, 1000);
+
+  solicitarWakeLock();
+}
+
+function actualizarCronometroVivo(){
+  const ms = Date.now() - vivoInicio;
+  document.getElementById('vivoCronometro').textContent = formatearDuracion(ms);
+}
+
+function renderVivoLista(){
+  const cont = document.getElementById('vivoLista');
+  const porRonda = {};
+  vivoItems.forEach((it, idx) => {
+    if(!porRonda[it.ronda]) porRonda[it.ronda] = [];
+    porRonda[it.ronda].push(Object.assign({idx}, it));
+  });
+  const rondas = Object.keys(porRonda).sort((a,b) => Number(a) - Number(b));
+  const hayVariasRondas = rondas.length > 1;
+
+  cont.innerHTML = rondas.map(rn => `
+    <div class="ronda-grupo">
+      ${hayVariasRondas ? `<div class="ronda-titulo">Ronda ${rn}</div>` : ''}
+      ${porRonda[rn].map(it => `
+        <label class="item-vivo ${it.hecho ? 'hecho' : ''}">
+          <input type="checkbox" ${it.hecho ? 'checked' : ''} onchange="toggleItemVivo(${it.idx})">
+          <span>${it.tipo === 'tiempo' ? '⏱️' : '🔢'} ${escapeHtml(it.nombre)}</span>
+        </label>
+      `).join('')}
+    </div>
+  `).join('');
+
+  const hechos = vivoItems.filter(i => i.hecho).length;
+  document.getElementById('vivoProgreso').textContent = `${hechos} / ${vivoItems.length} completados`;
+}
+
+function toggleItemVivo(idx){
+  vivoItems[idx].hecho = !vivoItems[idx].hecho;
+  guardarEstadoVivo();
+  renderVivoLista();
+}
+
+function finalizarSesionEnVivo(){
+  const ms = Date.now() - vivoInicio;
+  const minutos = Math.max(1, Math.round(ms / 60000));
+
+  if(vivoTimerHandle){ clearInterval(vivoTimerHandle); vivoTimerHandle = null; }
+  liberarWakeLock();
+
+  // Un ejercicio por nombre+tipo+carga, con una serie vacía (a completar a mano) por cada ronda tildada.
+  const porClave = {};
+  vivoItems.forEach(it => {
+    if(!it.hecho) return;
+    const clave = it.nombre + '||' + it.tipo + '||' + it.carga;
+    if(!porClave[clave]) porClave[clave] = { nombre: it.nombre, tipo: it.tipo, carga: it.carga, series: [] };
+    porClave[clave].series.push({ cantidad: '', valor: '' });
+  });
+  const ejerciciosCargados = Object.values(porClave);
+
+  const rutinaIdUsada = vivoRutinaId;
+
+  borrarEstadoVivo();
+  vivoRutinaId = null;
+  vivoRutinaNombre = '';
+  vivoInicio = null;
+  vivoItems = [];
+
+  document.getElementById('navTabs').style.display = '';
+
+  editandoId = null;
+  rutinaActualId = rutinaIdUsada;
+  document.getElementById('inFecha').value = hoyISO();
+  document.getElementById('inDuracion').value = minutos;
+  document.getElementById('inRpeSesion').value = 5;
+  document.getElementById('rpeSesionNum').textContent = '5';
+
+  ejercicios = ejerciciosCargados.map(e => Object.assign({ id: idNuevo('ej') }, e));
+  if(ejercicios.length === 0) agregarEjercicio();
+
+  renderEjercicios();
+  renderBotonRutina();
+  actualizarTSS();
+  document.getElementById('btnGuardar').textContent = '💾 Guardar sesión';
+  document.getElementById('btnCancelarEdicion').style.display = 'none';
+
+  mostrarTab('registrar');
+  mostrarToast(`⏱️ Duración cargada: ${minutos} min — completá series y RPE`);
+}
+
+function descartarSesionEnVivo(){
+  if(!confirm('¿Descartar esta sesión en vivo? Se pierde el tiempo y lo tildado.')) return;
+
+  if(vivoTimerHandle){ clearInterval(vivoTimerHandle); vivoTimerHandle = null; }
+  liberarWakeLock();
+  borrarEstadoVivo();
+  vivoRutinaId = null;
+  vivoRutinaNombre = '';
+  vivoInicio = null;
+  vivoItems = [];
+
+  document.getElementById('navTabs').style.display = '';
+  mostrarTab('rutinas');
+}
+
+/* ============ Guardar / limpiar formulario ============ */
+function limpiarFormulario(){
+  editandoId = null;
+  rutinaActualId = null;
+  document.getElementById('inFecha').value = hoyISO();
+  document.getElementById('inDuracion').value = '';
+  document.getElementById('inRpeSesion').value = 5;
+  document.getElementById('rpeSesionNum').textContent = '5';
+  ejercicios = [];
+  agregarEjercicio();
+  actualizarTSS();
+  renderBotonRutina();
+  document.getElementById('btnGuardar').textContent = '💾 Guardar sesión';
+  document.getElementById('btnCancelarEdicion').style.display = 'none';
+}
+
+function cancelarEdicion(){
+  limpiarFormulario();
+  mostrarTab('historial');
+}
+
+function guardarSesion(){
+  leerCamposFormulario();
+
+  const fecha = document.getElementById('inFecha').value || hoyISO();
+  const duracion = Number(document.getElementById('inDuracion').value) || 0;
+  const rpeSesion = Number(document.getElementById('inRpeSesion').value) || 0;
+
+  if(duracion <= 0){
+    mostrarToast('⚠️ Cargá la duración de la sesión');
+    return;
+  }
+
+  // limpiar ejercicios vacíos (sin nombre y sin ninguna serie con datos)
+  const ejerciciosLimpios = ejercicios
+    .map(ej => ({
+      nombre: (ej.nombre || '').trim(),
+      tipo: ej.tipo,
+      carga: ej.carga,
+      series: ej.series
+        .filter(s => s.cantidad !== '' && s.cantidad !== null && s.cantidad !== undefined)
+        .map(s => ({ cantidad: Number(s.cantidad) || 0, valor: s.valor === '' ? null : Number(s.valor) }))
+    }))
+    .filter(ej => ej.nombre !== '' || ej.series.length > 0);
+
+  if(ejerciciosLimpios.length === 0){
+    mostrarToast('⚠️ Agregá al menos un ejercicio con series');
+    return;
+  }
+
+  const tss = calcularTSS(rpeSesion, duracion);
+  const id = editandoId || idNuevo('fuerza');
+
+  const sesion = {
+    id,
+    fecha,
+    duracionMin: duracion,
+    rpeSesion,
+    tss,
+    ejercicios: ejerciciosLimpios
+  };
+
+  const lista = leerSesiones();
+  const idx = lista.findIndex(s => s.id === id);
+  if(idx >= 0) lista[idx] = sesion; else lista.push(sesion);
+  guardarSesiones(lista);
+
+  upsertEnRegistroForma({ fecha, deporte: 'fuerza', tss, id });
+
+  mostrarToast(editandoId ? '✅ Sesión actualizada' : '✅ Sesión guardada');
+  limpiarFormulario();
+  mostrarTab('historial');
+}
+
+/* ============ Historial ============ */
+function renderHistorial(){
+  const cont = document.getElementById('listaHistorial');
+  const lista = leerSesiones().slice().sort((a,b) => b.fecha.localeCompare(a.fecha) || b.id.localeCompare(a.id));
+
+  if(lista.length === 0){
+    cont.innerHTML = '<div class="vacio">Todavía no hay sesiones guardadas.</div>';
+    return;
+  }
+
+  cont.innerHTML = lista.map(s => {
+    const nombresEjercicios = s.ejercicios.map(e => escapeHtml(e.nombre || '(sin nombre)')).join(' · ');
+    return `
+      <div class="card sesion-card" onclick="cargarSesionEnFormulario('${s.id}')">
+        <div class="sesion-cab">
+          <div class="sesion-fecha">${formatearFecha(s.fecha)}</div>
+          <div class="sesion-tss">TSS ${s.tss.toFixed(0)}</div>
+        </div>
+        <div class="sesion-meta">${s.duracionMin} min · RPE ${s.rpeSesion} · ${s.ejercicios.length} ejercicio${s.ejercicios.length===1?'':'s'}</div>
+        <div class="sesion-ejercicios">${nombresEjercicios}</div>
+        <div class="acciones-hist">
+          <button class="btn btn-secundario" onclick="event.stopPropagation(); cargarSesionEnFormulario('${s.id}')">✏️ Editar</button>
+          <button class="btn btn-mal" onclick="event.stopPropagation(); borrarSesion('${s.id}')">🗑 Borrar</button>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function cargarSesionEnFormulario(id){
+  const lista = leerSesiones();
+  const s = lista.find(x => x.id === id);
+  if(!s) return;
+
+  editandoId = id;
+  rutinaActualId = null;
+  document.getElementById('inFecha').value = s.fecha;
+  document.getElementById('inDuracion').value = s.duracionMin;
+  document.getElementById('inRpeSesion').value = s.rpeSesion;
+  document.getElementById('rpeSesionNum').textContent = s.rpeSesion;
+
+  // Defensivo: sesiones guardadas con una versión anterior de la app usaban
+  // 'modo' en vez de 'carga' y 'reps' en vez de 'cantidad' — se traducen acá.
+  ejercicios = s.ejercicios.map(e => ({
+    id: idNuevo('ej'),
+    nombre: e.nombre,
+    tipo: e.tipo || 'reps',
+    carga: e.carga || e.modo || 'peso',
+    series: (e.series || []).map(ser => ({
+      cantidad: (ser.cantidad !== undefined ? ser.cantidad : ser.reps) ?? '',
+      valor: (ser.valor === null || ser.valor === undefined) ? '' : ser.valor
+    }))
+  }));
+  if(ejercicios.length === 0) agregarEjercicio();
+
+  renderEjercicios();
+  renderBotonRutina();
+  actualizarTSS();
+  document.getElementById('btnGuardar').textContent = '💾 Guardar cambios';
+  document.getElementById('btnCancelarEdicion').style.display = 'block';
+  mostrarTab('registrar');
+}
+
+function borrarSesion(id){
+  if(!confirm('¿Borrar esta sesión? No se puede deshacer.')) return;
+  const lista = leerSesiones().filter(s => s.id !== id);
+  guardarSesiones(lista);
+  borrarDeRegistroForma(id);
+  if(editandoId === id) limpiarFormulario();
+  renderHistorial();
+  mostrarToast('🗑 Sesión borrada');
+}
+
+/* ============ Inicio ============ */
+const estadoVivoGuardado = leerEstadoVivo();
+if(estadoVivoGuardado){
+  vivoRutinaId = estadoVivoGuardado.rutinaId;
+  vivoRutinaNombre = estadoVivoGuardado.rutinaNombre;
+  vivoInicio = estadoVivoGuardado.inicio;
+  vivoItems = estadoVivoGuardado.items || [];
+  mostrarSeccionVivo();
+} else {
+  document.getElementById('inFecha').value = hoyISO();
+  agregarEjercicio();
+  actualizarTSS();
+  renderBotonRutina();
+}
+</script>
+
+</body>
+</html>
