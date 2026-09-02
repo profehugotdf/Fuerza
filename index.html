@@ -30,8 +30,8 @@
   h1 .icono{font-size:22px;}
   .sub{color:var(--texto-sec); font-size:12.5px; margin-bottom:12px;}
   nav.tabs{display:flex; gap:6px; margin-bottom:4px;}
-  nav.tabs button{flex:1; padding:10px 4px; border:1px solid var(--borde); background:var(--bg2);
-    color:var(--texto-sec); border-radius:12px; font-size:12.5px; font-weight:700; cursor:pointer;}
+  nav.tabs button{flex:1; padding:9px 2px; border:1px solid var(--borde); background:var(--bg2);
+    color:var(--texto-sec); border-radius:12px; font-size:11px; font-weight:700; cursor:pointer;}
   nav.tabs button.activa{background:linear-gradient(135deg,var(--acento),var(--acento2)); color:#1a0e05; border-color:transparent;}
   main{padding:4px 16px 16px;}
   section{display:none;}
@@ -110,6 +110,15 @@
   .item-vivo:last-child{border-bottom:none;}
   .item-vivo.hecho{color:var(--texto-sec); text-decoration:line-through;}
   .item-vivo input[type=checkbox]{width:21px; height:21px; accent-color:var(--acento); margin:0; flex-shrink:0;}
+  .musculo-fila{display:flex; align-items:center; gap:8px; margin-bottom:9px; font-size:12.5px;}
+  .musculo-nombre{width:96px; flex-shrink:0; color:var(--texto-sec);}
+  .musculo-pct{width:34px; flex-shrink:0; text-align:right; color:var(--texto-sec); font-size:11px;}
+  .musculo-barra-fondo{flex:1; background:var(--card2); border-radius:6px; height:10px; overflow:hidden;}
+  .musculo-barra{height:100%; border-radius:6px;}
+  .diagramas-fila{display:flex; justify-content:center; gap:12px;}
+  .diagramas-fila svg{width:47%; max-width:160px;}
+  .diagramas-etiquetas{display:flex; justify-content:center; gap:0; font-size:10.5px; color:var(--texto-sec); margin-top:6px;}
+  .diagramas-etiquetas span{width:47%; max-width:160px; text-align:center;}
 </style>
 </head>
 <body>
@@ -121,6 +130,7 @@
     <button id="tabBtnRegistrar" class="activa" onclick="mostrarTab('registrar')">➕ Registrar</button>
     <button id="tabBtnHistorial" onclick="mostrarTab('historial')">📋 Historial</button>
     <button id="tabBtnRutinas" onclick="mostrarTab('rutinas')">🔁 Rutinas</button>
+    <button id="tabBtnMusculos" onclick="mostrarTab('musculos')">💪 Músculos</button>
   </nav>
 </header>
 
@@ -159,6 +169,10 @@
         <button class="btn btn-mini" onclick="guardarComoRutinaNueva()">💾 Guardar como rutina</button>
         <button class="btn btn-mini" id="btnActualizarRutina" style="display:none;" onclick="actualizarRutinaActual()">🔄 Actualizar rutina</button>
       </div>
+      <div class="fila" style="margin-top:8px;">
+        <button class="btn btn-mini" onclick="document.getElementById('inputFit').click()">⌚ Importar de Garmin (.fit)</button>
+      </div>
+      <input type="file" id="inputFit" accept=".fit" style="display:none" onchange="importarArchivoFit(event)">
     </div>
 
     <div class="card">
@@ -188,6 +202,73 @@
 
   <section id="tab-rutinas">
     <div id="listaRutinas"></div>
+  </section>
+
+  <section id="tab-musculos">
+    <div class="card">
+      <div class="modos-fila" style="margin-bottom:2px;">
+        <div class="toggle-modo">
+          <button id="btnModoMusculosSesion" class="on" onclick="mostrarSubModoMusculos('sesion')">Por sesión</button>
+          <button id="btnModoMusculosPeriodo" onclick="mostrarSubModoMusculos('periodo')">Por período</button>
+        </div>
+      </div>
+      <div id="musculosSelector"></div>
+    </div>
+
+    <div class="card">
+      <div class="diagramas-fila">
+        <svg id="svgFrente" viewBox="0 0 140 300" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="70" cy="18" r="13" fill="var(--card2)" stroke="var(--borde)" stroke-width="1.5"/>
+          <rect x="64" y="28" width="12" height="10" fill="var(--card2)"/>
+          <rect x="40" y="36" width="60" height="100" rx="18" fill="var(--card2)" stroke="var(--borde)" stroke-width="1.5"/>
+          <rect x="14" y="40" width="18" height="92" rx="9" fill="var(--card2)" stroke="var(--borde)" stroke-width="1.5"/>
+          <rect x="108" y="40" width="18" height="92" rx="9" fill="var(--card2)" stroke="var(--borde)" stroke-width="1.5"/>
+          <rect x="44" y="140" width="23" height="140" rx="11" fill="var(--card2)" stroke="var(--borde)" stroke-width="1.5"/>
+          <rect x="73" y="140" width="23" height="140" rx="11" fill="var(--card2)" stroke="var(--borde)" stroke-width="1.5"/>
+
+          <ellipse id="mHombroI" cx="27" cy="46" rx="11" ry="10" fill="var(--card2)"/>
+          <ellipse id="mHombroD" cx="113" cy="46" rx="11" ry="10" fill="var(--card2)"/>
+          <ellipse id="mPecho" cx="70" cy="64" rx="26" ry="15" fill="var(--card2)"/>
+          <ellipse id="mBicepsI" cx="22" cy="82" rx="8" ry="19" fill="var(--card2)"/>
+          <ellipse id="mBicepsD" cx="118" cy="82" rx="8" ry="19" fill="var(--card2)"/>
+          <ellipse id="mAntebrazoI" cx="20" cy="120" rx="7" ry="15" fill="var(--card2)"/>
+          <ellipse id="mAntebrazoD" cx="120" cy="120" rx="7" ry="15" fill="var(--card2)"/>
+          <rect id="mAbdomen" x="52" y="86" width="36" height="46" rx="10" fill="var(--card2)"/>
+          <ellipse id="mCuadricepsI" cx="55" cy="195" rx="14" ry="42" fill="var(--card2)"/>
+          <ellipse id="mCuadricepsD" cx="85" cy="195" rx="14" ry="42" fill="var(--card2)"/>
+        </svg>
+        <svg id="svgEspalda" viewBox="0 0 140 300" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="70" cy="18" r="13" fill="var(--card2)" stroke="var(--borde)" stroke-width="1.5"/>
+          <rect x="64" y="28" width="12" height="10" fill="var(--card2)"/>
+          <rect x="40" y="36" width="60" height="100" rx="18" fill="var(--card2)" stroke="var(--borde)" stroke-width="1.5"/>
+          <rect x="14" y="40" width="18" height="92" rx="9" fill="var(--card2)" stroke="var(--borde)" stroke-width="1.5"/>
+          <rect x="108" y="40" width="18" height="92" rx="9" fill="var(--card2)" stroke="var(--borde)" stroke-width="1.5"/>
+          <rect x="44" y="140" width="23" height="140" rx="11" fill="var(--card2)" stroke="var(--borde)" stroke-width="1.5"/>
+          <rect x="73" y="140" width="23" height="140" rx="11" fill="var(--card2)" stroke="var(--borde)" stroke-width="1.5"/>
+
+          <ellipse id="mTrapecio" cx="70" cy="42" rx="22" ry="10" fill="var(--card2)"/>
+          <ellipse id="mEspalda" cx="70" cy="78" rx="27" ry="23" fill="var(--card2)"/>
+          <ellipse id="mTricepsI" cx="22" cy="82" rx="8" ry="19" fill="var(--card2)"/>
+          <ellipse id="mTricepsD" cx="118" cy="82" rx="8" ry="19" fill="var(--card2)"/>
+          <rect id="mLumbares" x="52" y="112" width="36" height="26" rx="9" fill="var(--card2)"/>
+          <ellipse id="mGluteoI" cx="56" cy="150" rx="16" ry="16" fill="var(--card2)"/>
+          <ellipse id="mGluteoD" cx="84" cy="150" rx="16" ry="16" fill="var(--card2)"/>
+          <ellipse id="mIsquioI" cx="56" cy="198" rx="13" ry="32" fill="var(--card2)"/>
+          <ellipse id="mIsquioD" cx="84" cy="198" rx="13" ry="32" fill="var(--card2)"/>
+          <ellipse id="mGemeloI" cx="56" cy="252" rx="10" ry="26" fill="var(--card2)"/>
+          <ellipse id="mGemeloD" cx="84" cy="252" rx="10" ry="26" fill="var(--card2)"/>
+        </svg>
+      </div>
+      <div class="diagramas-etiquetas"><span>Frente</span><span>Espalda</span></div>
+    </div>
+
+    <div class="card">
+      <h2>Detalle</h2>
+      <div id="musculosLeyenda"></div>
+      <div class="tss-nota">
+        ⚠️ Estimado a partir del nombre del ejercicio (busca palabras clave como "sentadilla", "press de banca", "dominadas", etc.) y la cantidad de series — no de un análisis biomecánico real. Ejercicios con nombres poco claros o no reconocidos no suman a ningún grupo.
+      </div>
+    </div>
   </section>
 
   <section id="tab-vivo">
@@ -402,12 +483,15 @@ function mostrarTab(nombre){
   document.getElementById('tab-registrar').classList.toggle('activa', nombre==='registrar');
   document.getElementById('tab-historial').classList.toggle('activa', nombre==='historial');
   document.getElementById('tab-rutinas').classList.toggle('activa', nombre==='rutinas');
+  document.getElementById('tab-musculos').classList.toggle('activa', nombre==='musculos');
   document.getElementById('tab-vivo').classList.remove('activa');
   document.getElementById('tabBtnRegistrar').classList.toggle('activa', nombre==='registrar');
   document.getElementById('tabBtnHistorial').classList.toggle('activa', nombre==='historial');
   document.getElementById('tabBtnRutinas').classList.toggle('activa', nombre==='rutinas');
+  document.getElementById('tabBtnMusculos').classList.toggle('activa', nombre==='musculos');
   if(nombre === 'historial') renderHistorial();
   if(nombre === 'rutinas') renderRutinas();
+  if(nombre === 'musculos') renderMusculos();
 }
 
 /* ============ Ejercicios (formulario) ============ */
@@ -574,6 +658,222 @@ function renderBotonRutina(){
   }
   info.style.display = 'none';
   btnActualizar.style.display = 'none';
+}
+
+/* ============ Importar sesión de fuerza desde un .fit de Garmin ============ */
+// Parser binario mínimo del formato FIT (sin librerías externas), escrito y
+// validado contra un archivo .fit real exportado desde Garmin Connect.
+// Lee dinámicamente los mensajes de "definición" del propio archivo (no hay
+// offsets de byte fijos hardcodeados), así que tolera variaciones razonables
+// entre dispositivos/versiones de firmware.
+//
+// Campos usados (confirmados contra el archivo real de Hugo, num=225 "set"):
+//   0=duration(ms) 3=repetitions 4=weight(kg×16) 5=set_type(1=activo,0=descanso)
+//   7=category[] 8=category_subtype[] 10=message_index
+// Y del mensaje "session" (num=18): 7=total_elapsed_time(ms), 253=timestamp
+const OFFSET_GARMIN_UNIX = 631065600; // segundos entre 1970-01-01 y la época FIT (1989-12-31)
+
+// Nombres de categoría de ejercicio de Garmin. El archivo .fit de Hugo NO trae
+// el nombre específico del ejercicio (solo códigos numéricos de categoría), y
+// esta lista es una ESTIMACIÓN por posición según el catálogo público de la
+// FIT SDK — no una traducción oficial confirmada campo a campo. Por eso todo
+// ejercicio importado queda marcado "(Garmin)" para revisar/renombrar a mano.
+const CATEGORIAS_GARMIN_ESTIMADAS = [
+  'Press de banca', 'Elevación de talones', 'Cardio', 'Carga (carry)', 'Rotacional (chop)',
+  'Core', 'Abdominales (crunch)', 'Curl de bíceps', 'Peso muerto', 'Aperturas (flye)',
+  'Elevación de cadera', 'Estabilidad de cadera', 'Swing de cadera', 'Hiperextensión',
+  'Elevación lateral', 'Curl de pierna', 'Elevación de piernas', 'Zancada (lunge)',
+  'Levantamiento olímpico', 'Plancha', 'Pliometría', 'Dominadas', 'Flexiones', 'Remo',
+  'Press de hombro', 'Estabilidad de hombro', 'Encogimientos (shrug)', 'Abdominales (sit-up)',
+  'Sentadilla', 'Cuerpo completo', 'Extensión de tríceps', 'Entrada en calor', 'Correr'
+];
+
+function fitTipoBase(baseType){
+  const tabla = {
+    0x00:{size:1,kind:'uint'}, 0x01:{size:1,kind:'int'}, 0x02:{size:1,kind:'uint'},
+    0x83:{size:2,kind:'int'}, 0x84:{size:2,kind:'uint'},
+    0x85:{size:4,kind:'int'}, 0x86:{size:4,kind:'uint'},
+    0x07:{size:1,kind:'string'},
+    0x88:{size:4,kind:'float'}, 0x89:{size:8,kind:'float'},
+    0x0A:{size:1,kind:'uint'}, 0x8B:{size:2,kind:'uint'}, 0x8C:{size:4,kind:'uint'},
+    0x0D:{size:1,kind:'uint'},
+    0x8E:{size:8,kind:'int'}, 0x8F:{size:8,kind:'uint'}, 0x90:{size:8,kind:'uint'},
+  };
+  return tabla[baseType] || {size:1, kind:'uint'};
+}
+
+function fechaISODesdeGarminEpoch(segundosGarmin){
+  const ms = (segundosGarmin + OFFSET_GARMIN_UNIX) * 1000;
+  const d = new Date(ms);
+  const off = d.getTimezoneOffset();
+  const local = new Date(d.getTime() - off*60000);
+  return local.toISOString().slice(0,10);
+}
+
+function parseFitFuerza(arrayBuffer){
+  const view = new DataView(arrayBuffer);
+  let pos = 0;
+  const headerSize = view.getUint8(0);
+  const dataSize = view.getUint32(4, true);
+  pos = headerSize;
+  const end = headerSize + dataSize;
+
+  const localDefs = {};
+  const setRecords = [];
+  let sessionTotalElapsedSec = null;
+  let sessionTimestamp = null;
+
+  while(pos < end){
+    const header = view.getUint8(pos); pos += 1;
+    let localType, esDefinicion;
+    if(header & 0x80){
+      localType = (header >> 5) & 0x3;
+      esDefinicion = false;
+    } else {
+      esDefinicion = !!(header & 0x40);
+      localType = header & 0x0F;
+    }
+
+    if(esDefinicion){
+      pos += 1; // reservado
+      const arch = view.getUint8(pos); pos += 1;
+      const little = (arch === 0);
+      const globalNum = view.getUint16(pos, little);
+      pos += 2;
+      const numFields = view.getUint8(pos); pos += 1;
+      const fields = [];
+      for(let i=0; i<numFields; i++){
+        const num = view.getUint8(pos), size = view.getUint8(pos+1), baseType = view.getUint8(pos+2);
+        pos += 3;
+        fields.push({num, size, baseType});
+      }
+      if(header & 0x20){ // developer data flag: saltear campos de developer
+        const numDev = view.getUint8(pos); pos += 1;
+        pos += numDev * 3;
+      }
+      localDefs[localType] = {globalNum, little, fields};
+    } else {
+      const def = localDefs[localType];
+      if(!def) break; // registro sin definición previa: fin de lo que podemos leer con seguridad
+      const values = {};
+      for(const f of def.fields){
+        const info = fitTipoBase(f.baseType);
+        const count = Math.max(1, Math.floor(f.size / info.size));
+        const arr = [];
+        for(let i=0; i<count; i++){
+          const off = pos + i*info.size;
+          let v = null;
+          if(info.kind === 'string'){ v = null; }
+          else if(info.size === 1) v = info.kind==='int' ? view.getInt8(off) : view.getUint8(off);
+          else if(info.size === 2) v = info.kind==='int' ? view.getInt16(off, def.little) : view.getUint16(off, def.little);
+          else if(info.size === 4) v = info.kind==='int' ? view.getInt32(off, def.little) : (info.kind==='float' ? view.getFloat32(off, def.little) : view.getUint32(off, def.little));
+          arr.push(v);
+        }
+        pos += f.size;
+        values[f.num] = (arr.length === 1) ? arr[0] : arr;
+      }
+      if(def.globalNum === 18){ // session
+        if(values[7] !== undefined) sessionTotalElapsedSec = values[7] / 1000;
+        if(values[253] !== undefined) sessionTimestamp = values[253];
+      }
+      if(def.globalNum === 225){ // set
+        setRecords.push(values);
+      }
+    }
+  }
+
+  const activos = setRecords
+    .filter(v => v[5] === 1) // set_type: 1 = serie activa (0 = descanso, se descarta)
+    .sort((a,b) => (a[10] ?? 0) - (b[10] ?? 0)); // message_index: orden real de ejecución
+
+  const esValido = (x) => x !== undefined && x !== 0xFFFF && x !== 0xFFFE;
+  const grupos = {};
+  const orden = [];
+
+  activos.forEach(v => {
+    const duracionSeg = (v[0] !== undefined) ? v[0] / 1000 : null;
+    const repsRaw = v[3];
+    const repsValid = esValido(repsRaw);
+    const pesoRaw = v[4];
+    const pesoValid = esValido(pesoRaw);
+
+    const catArr = Array.isArray(v[7]) ? v[7] : (v[7]!==undefined ? [v[7]] : []);
+    const subArr = Array.isArray(v[8]) ? v[8] : (v[8]!==undefined ? [v[8]] : []);
+    const cat0 = catArr.find(esValido);
+    const sub0 = subArr.find(esValido);
+    const clave = (cat0 !== undefined ? cat0 : 'x') + '_' + (sub0 !== undefined ? sub0 : 'x');
+
+    if(!grupos[clave]){
+      const nombre = (cat0 !== undefined && CATEGORIAS_GARMIN_ESTIMADAS[cat0])
+        ? CATEGORIAS_GARMIN_ESTIMADAS[cat0] + ' (Garmin)'
+        : 'Ejercicio sin clasificar (Garmin)';
+      grupos[clave] = {
+        nombre,
+        tipo: repsValid ? 'reps' : 'tiempo', // sin reps válidas pero con duración = ejercicio isométrico
+        carga: 'peso',
+        series: []
+      };
+      orden.push(clave);
+    }
+    grupos[clave].series.push({
+      cantidad: repsValid ? repsRaw : (duracionSeg !== null ? Math.round(duracionSeg) : ''),
+      valor: pesoValid ? Math.round((pesoRaw/16) * 100) / 100 : ''
+    });
+  });
+
+  return {
+    ejercicios: orden.map(clave => grupos[clave]),
+    duracionMin: sessionTotalElapsedSec !== null ? Math.max(1, Math.round(sessionTotalElapsedSec/60)) : null,
+    fechaISO: sessionTimestamp !== null ? fechaISODesdeGarminEpoch(sessionTimestamp) : null,
+  };
+}
+
+function importarArchivoFit(event){
+  const archivo = event.target.files && event.target.files[0];
+  event.target.value = ''; // permite reimportar el mismo archivo si hace falta
+  if(!archivo) return;
+
+  const lector = new FileReader();
+  lector.onload = () => {
+    let resultado;
+    try{
+      resultado = parseFitFuerza(lector.result);
+    }catch(e){
+      console.error('Error al parsear el archivo FIT', e);
+      mostrarToast('⚠️ No pude leer ese archivo .fit');
+      return;
+    }
+    aplicarImportacionFit(resultado, archivo.name);
+  };
+  lector.onerror = () => mostrarToast('⚠️ No pude leer ese archivo .fit');
+  lector.readAsArrayBuffer(archivo);
+}
+
+function aplicarImportacionFit(resultado, nombreArchivo){
+  if(!resultado || resultado.ejercicios.length === 0){
+    mostrarToast('⚠️ No encontré series de fuerza en ese archivo');
+    return;
+  }
+  if(hayDatosEnFormulario() && !confirm('Esto va a reemplazar los ejercicios que ya cargaste en el formulario. ¿Continuar?')) return;
+
+  editandoId = null;
+  rutinaActualId = null;
+
+  if(resultado.fechaISO) document.getElementById('inFecha').value = resultado.fechaISO;
+  if(resultado.duracionMin) document.getElementById('inDuracion').value = resultado.duracionMin;
+  document.getElementById('inRpeSesion').value = 5;
+  document.getElementById('rpeSesionNum').textContent = '5';
+
+  ejercicios = resultado.ejercicios.map(e => Object.assign({id: idNuevo('ej')}, e));
+
+  renderEjercicios();
+  renderBotonRutina();
+  actualizarTSS();
+  document.getElementById('btnGuardar').textContent = '💾 Guardar sesión';
+  document.getElementById('btnCancelarEdicion').style.display = 'none';
+
+  mostrarTab('registrar');
+  mostrarToast(`⌚ Importado de ${nombreArchivo} — revisá nombres y cargá el RPE antes de guardar`);
 }
 
 function hayDatosEnFormulario(){
@@ -824,6 +1124,231 @@ function descartarSesionEnVivo(){
 
   document.getElementById('navTabs').style.display = '';
   mostrarTab('rutinas');
+}
+
+/* ============ Grupos musculares (estimado por palabras clave del nombre) ============ */
+// Mapea cada id de región del SVG a su grupo muscular.
+const REGIONES_SVG = {
+  hombros: ['mHombroI','mHombroD'],
+  pecho: ['mPecho'],
+  biceps: ['mBicepsI','mBicepsD'],
+  antebrazos: ['mAntebrazoI','mAntebrazoD'],
+  abdominales: ['mAbdomen'],
+  cuadriceps: ['mCuadricepsI','mCuadricepsD'],
+  trapecios: ['mTrapecio'],
+  espalda: ['mEspalda'],
+  triceps: ['mTricepsI','mTricepsD'],
+  lumbares: ['mLumbares'],
+  gluteos: ['mGluteoI','mGluteoD'],
+  isquiotibiales: ['mIsquioI','mIsquioD'],
+  gemelos: ['mGemeloI','mGemeloD'],
+};
+
+const NOMBRES_GRUPOS = {
+  hombros:'Hombros', pecho:'Pecho', biceps:'Bíceps', antebrazos:'Antebrazos',
+  abdominales:'Abdominales', cuadriceps:'Cuádriceps', trapecios:'Trapecios',
+  espalda:'Espalda', triceps:'Tríceps', lumbares:'Lumbares', gluteos:'Glúteos',
+  isquiotibiales:'Isquiotibiales', gemelos:'Gemelos',
+};
+
+function normalizarTexto(t){
+  return (t||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+}
+
+// Estima qué grupos musculares trabaja un ejercicio a partir de su nombre.
+// Devuelve un objeto {grupo: peso} — peso 1 = movimiento principal, <1 = asistido.
+// No es un análisis biomecánico: es una búsqueda de palabras clave en español
+// (más algunas en inglés) pensada para cubrir tanto nombres tipeados a mano
+// como los que genera el importador de Garmin (ver CATEGORIAS_GARMIN_ESTIMADAS).
+function inferirGruposEjercicio(nombreOriginal){
+  const t = normalizarTexto(nombreOriginal);
+  const grupos = {};
+  const sumar = (grupo, peso) => { grupos[grupo] = (grupos[grupo]||0) + peso; };
+  const contiene = (...palabras) => palabras.some(p => t.includes(p));
+
+  // curl de pierna vs curl de brazo: la frase compuesta se chequea primero
+  const esCurlPierna = contiene('curl de pierna','leg curl','curl femoral','curl de isquio');
+  if(esCurlPierna) sumar('isquiotibiales', 1);
+  else if(contiene('curl')) sumar('biceps', 1);
+
+  if(contiene('press de banca','bench','pecho','apertura','flye','fondos','dip')){
+    sumar('pecho', 1); sumar('triceps', 0.5);
+  }
+  if(contiene('flexion','flexiones','push up','pushup')){
+    sumar('pecho', 1); sumar('triceps', 0.5); sumar('hombros', 0.3);
+  }
+  if(contiene('press de hombro','shoulder press','militar','arnold','elevacion lateral','elevacion frontal')){
+    sumar('hombros', 1);
+  }
+  if(contiene('dominada','pull up','pullup','chin up','jalon','lat pulldown','pulldown')){
+    sumar('espalda', 1); sumar('biceps', 0.5);
+  }
+  if(contiene('remo','row','face pull')){
+    sumar('espalda', 1); sumar('biceps', 0.3);
+  }
+  if(contiene('peso muerto','deadlift')){
+    sumar('isquiotibiales', 1); sumar('gluteos', 1); sumar('espalda', 0.5); sumar('lumbares', 0.5);
+  }
+  if(contiene('sentadilla','squat')){
+    sumar('cuadriceps', 1); sumar('gluteos', 0.5);
+  }
+  if(contiene('zancada','lunge','estocada')){
+    sumar('cuadriceps', 1); sumar('gluteos', 0.7);
+  }
+  if(contiene('gluteo','glúteo','puente','hip thrust','elevacion de cadera','swing de cadera','hip raise')){
+    sumar('gluteos', 1);
+  }
+  if(contiene('triceps','skull crusher','press frances')){
+    sumar('triceps', 1);
+  }
+  if(contiene('abdominal','abdominales','crunch','sit up','situp','plancha','plank','core','elevacion de piernas','russian twist')){
+    sumar('abdominales', 1);
+  }
+  if(contiene('hiperextension','lumbar','back extension','superman')){
+    sumar('lumbares', 1);
+  }
+  if(contiene('trapecio','encogimiento','shrug')){
+    sumar('trapecios', 1);
+  }
+  if(contiene('gemelo','pantorrilla','calf','talon')){
+    sumar('gemelos', 1);
+  }
+  if(contiene('antebrazo','muñeca','muneca','forearm','farmer')){
+    sumar('antebrazos', 1);
+  }
+  if(contiene('femoral','isquio','hamstring') && !esCurlPierna){
+    sumar('isquiotibiales', 1);
+  }
+  if(contiene('cuerpo completo','total body','olimpico','olímpico','clean','snatch','thruster')){
+    sumar('pecho', 0.3); sumar('espalda', 0.3); sumar('cuadriceps', 0.3); sumar('hombros', 0.3);
+  }
+  if(contiene('estabilidad de cadera')){
+    sumar('gluteos', 0.7); sumar('abdominales', 0.3);
+  }
+  if(contiene('estabilidad de hombro')){
+    sumar('hombros', 0.7);
+  }
+  if(contiene('carga','carry')){
+    sumar('antebrazos', 0.5); sumar('abdominales', 0.5);
+  }
+  if(contiene('rotacional','chop')){
+    sumar('abdominales', 1);
+  }
+
+  return grupos;
+}
+
+// Suma el volumen (peso del grupo × cantidad de series) de una lista de
+// ejercicios (de una sesión, o de varias sesiones ya combinadas en un array).
+function calcularVolumenMuscular(listaEjercicios){
+  const totales = {};
+  (listaEjercicios||[]).forEach(ej => {
+    const grupos = inferirGruposEjercicio(ej.nombre);
+    const numSeries = (ej.series||[]).length || 0;
+    if(numSeries === 0) return;
+    Object.keys(grupos).forEach(g => {
+      totales[g] = (totales[g]||0) + grupos[g] * numSeries;
+    });
+  });
+  return totales;
+}
+
+// Interpola un color entre gris (sin trabajo), ámbar y rojo según intensidad 0-1.
+function colorParaIntensidad(t){
+  t = Math.max(0, Math.min(1, t));
+  const stops = [ [42,52,65], [255,176,32], [255,84,112] ]; // --borde, --acento2, --mal
+  const [a, b] = t <= 0.5 ? [stops[0], stops[1]] : [stops[1], stops[2]];
+  const localT = t <= 0.5 ? (t/0.5) : ((t-0.5)/0.5);
+  const mezclar = (i) => Math.round(a[i] + (b[i]-a[i])*localT);
+  return `rgb(${mezclar(0)},${mezclar(1)},${mezclar(2)})`;
+}
+
+function fechaISOHaceNDias(n){
+  const d = new Date();
+  d.setDate(d.getDate() - n);
+  const off = d.getTimezoneOffset();
+  const local = new Date(d.getTime() - off*60000);
+  return local.toISOString().slice(0,10);
+}
+
+let modoMusculos = 'sesion';       // 'sesion' | 'periodo'
+let periodoMusculosDias = 30;      // 7 | 30 | 90 | null (null = todo)
+
+function mostrarSubModoMusculos(modo){
+  modoMusculos = modo;
+  document.getElementById('btnModoMusculosSesion').classList.toggle('on', modo==='sesion');
+  document.getElementById('btnModoMusculosPeriodo').classList.toggle('on', modo==='periodo');
+  renderMusculos();
+}
+
+function cambiarPeriodoMusculos(dias){
+  periodoMusculosDias = dias;
+  renderMusculos();
+}
+
+function renderMusculos(){
+  const cont = document.getElementById('musculosSelector');
+  const lista = leerSesiones().slice().sort((a,b) => b.fecha.localeCompare(a.fecha) || b.id.localeCompare(a.id));
+
+  if(modoMusculos === 'sesion'){
+    if(lista.length === 0){
+      cont.innerHTML = '<div class="vacio">Todavía no hay sesiones guardadas.</div>';
+    } else {
+      cont.innerHTML = `<select id="selectSesionMusculos" onchange="renderDiagramaMusculos()">
+        ${lista.map(s => `<option value="${s.id}">${formatearFecha(s.fecha)} · ${s.ejercicios.length} ejercicio${s.ejercicios.length===1?'':'s'} · TSS ${s.tss.toFixed(0)}</option>`).join('')}
+      </select>`;
+    }
+  } else {
+    const opciones = [[7,'7 días'],[30,'30 días'],[90,'90 días'],[null,'Todo']];
+    cont.innerHTML = `<div class="toggle-modo">
+      ${opciones.map(([dias,etiqueta]) => `<button class="${periodoMusculosDias===dias?'on':''}" onclick="cambiarPeriodoMusculos(${dias})">${etiqueta}</button>`).join('')}
+    </div>`;
+  }
+  renderDiagramaMusculos();
+}
+
+function obtenerEjerciciosParaVista(){
+  const lista = leerSesiones();
+  if(modoMusculos === 'sesion'){
+    const id = document.getElementById('selectSesionMusculos')?.value;
+    const s = lista.find(x => x.id === id);
+    return s ? s.ejercicios : [];
+  }
+  const desdeISO = periodoMusculosDias !== null ? fechaISOHaceNDias(periodoMusculosDias) : null;
+  const filtradas = desdeISO ? lista.filter(s => s.fecha >= desdeISO) : lista;
+  return filtradas.flatMap(s => s.ejercicios);
+}
+
+function renderDiagramaMusculos(){
+  const ejerciciosVista = obtenerEjerciciosParaVista();
+  const totales = calcularVolumenMuscular(ejerciciosVista);
+  const valores = Object.values(totales);
+  const max = valores.length ? Math.max(...valores) : 0;
+
+  Object.keys(REGIONES_SVG).forEach(grupo => {
+    const intensidad = max > 0 ? (totales[grupo]||0)/max : 0;
+    const color = intensidad > 0 ? colorParaIntensidad(intensidad) : 'var(--card2)';
+    REGIONES_SVG[grupo].forEach(id => {
+      const el = document.getElementById(id);
+      if(el) el.setAttribute('fill', color);
+    });
+  });
+
+  const cont = document.getElementById('musculosLeyenda');
+  const entradas = Object.entries(totales).filter(([,v]) => v > 0).sort((a,b) => b[1]-a[1]);
+  if(entradas.length === 0){
+    cont.innerHTML = '<div class="vacio">No hay ejercicios clasificados en esta vista todavía.</div>';
+    return;
+  }
+  const maxV = entradas[0][1];
+  cont.innerHTML = entradas.map(([g,v]) => {
+    const pct = Math.round((v/maxV)*100);
+    return `<div class="musculo-fila">
+      <span class="musculo-nombre">${NOMBRES_GRUPOS[g]||g}</span>
+      <div class="musculo-barra-fondo"><div class="musculo-barra" style="width:${pct}%; background:${colorParaIntensidad(v/maxV)}"></div></div>
+      <span class="musculo-pct">${pct}%</span>
+    </div>`;
+  }).join('');
 }
 
 /* ============ Guardar / limpiar formulario ============ */
