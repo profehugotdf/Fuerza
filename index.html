@@ -1065,23 +1065,49 @@ function toggleItemVivo(idx){
 }
 
 function finalizarSesionEnVivo(){
+  // Si todavía no tildó nada, no tiene sentido pedirle el RPE ni cerrar la
+  // sesión en vivo: se lo advierte con un diálogo que hay que responder sí o
+  // sí (nada de un cartelito que se esfuma solo), y se le da la opción de
+  // seguir con el cronómetro corriendo en vez de perder la sesión.
+  const hechosCount = vivoItems.filter(it => it.hecho).length;
+  if(hechosCount === 0){
+    const seguir = confirm('Todavía no tildaste ningún ejercicio, así que no hay nada para guardar.\n\nAceptar = volver al checklist (el cronómetro sigue corriendo).\nCancelar = descartar esta sesión en vivo.');
+    if(seguir) return; // vuelve a la vista en vivo tal cual estaba, sin tocar nada
+    if(vivoTimerHandle){ clearInterval(vivoTimerHandle); vivoTimerHandle = null; }
+    liberarWakeLock();
+    borrarEstadoVivo();
+    vivoRutinaId = null;
+    vivoRutinaNombre = '';
+    vivoInicio = null;
+    vivoItems = [];
+    document.getElementById('navTabs').style.display = '';
+    mostrarTab('rutinas');
+    return;
+  }
+
   const ms = Date.now() - vivoInicio;
   const minutos = Math.max(1, Math.round(ms / 60000));
+
+  const rpeTexto = prompt('¿Cuál fue tu RPE de la sesión (esfuerzo percibido, 1 a 10)?', '5');
+  if(rpeTexto === null) return; // canceló: no guarda nada, la sesión en vivo sigue como estaba
+  let rpeSesion = Math.round(Number(rpeTexto));
+  if(!Number.isFinite(rpeSesion)) rpeSesion = 5;
+  rpeSesion = Math.min(10, Math.max(1, rpeSesion));
 
   if(vivoTimerHandle){ clearInterval(vivoTimerHandle); vivoTimerHandle = null; }
   liberarWakeLock();
 
-  // Un ejercicio por nombre+tipo+carga, con una serie vacía (a completar a mano) por cada ronda tildada.
+  // Un ejercicio por nombre+tipo+carga, con una serie por cada ronda tildada.
+  // Reps/peso quedan en 0/sin dato — el checklist no los captura — para que
+  // Hugo los complete después desde Historial → ✏️ Editar.
   const porClave = {};
   vivoItems.forEach(it => {
     if(!it.hecho) return;
     const clave = it.nombre + '||' + it.tipo + '||' + it.carga;
     if(!porClave[clave]) porClave[clave] = { nombre: it.nombre, tipo: it.tipo, carga: it.carga, series: [] };
-    porClave[clave].series.push({ cantidad: '', valor: '' });
+    porClave[clave].series.push({ cantidad: 0, valor: null });
   });
-  const ejerciciosCargados = Object.values(porClave);
-
-  const rutinaIdUsada = vivoRutinaId;
+  const ejerciciosGuardados = Object.values(porClave);
 
   borrarEstadoVivo();
   vivoRutinaId = null;
@@ -1091,24 +1117,18 @@ function finalizarSesionEnVivo(){
 
   document.getElementById('navTabs').style.display = '';
 
-  editandoId = null;
-  rutinaActualId = rutinaIdUsada;
-  document.getElementById('inFecha').value = hoyISO();
-  document.getElementById('inDuracion').value = minutos;
-  document.getElementById('inRpeSesion').value = 5;
-  document.getElementById('rpeSesionNum').textContent = '5';
+  const fecha = hoyISO();
+  const tss = calcularTSS(rpeSesion, minutos);
+  const id = idNuevo('fuerza');
+  const sesion = { id, fecha, duracionMin: minutos, rpeSesion, tss, ejercicios: ejerciciosGuardados };
 
-  ejercicios = ejerciciosCargados.map(e => Object.assign({ id: idNuevo('ej') }, e));
-  if(ejercicios.length === 0) agregarEjercicio();
+  const lista = leerSesiones();
+  lista.push(sesion);
+  guardarSesiones(lista);
+  upsertEnRegistroForma({ fecha, deporte: 'fuerza', tss, id });
 
-  renderEjercicios();
-  renderBotonRutina();
-  actualizarTSS();
-  document.getElementById('btnGuardar').textContent = '💾 Guardar sesión';
-  document.getElementById('btnCancelarEdicion').style.display = 'none';
-
-  mostrarTab('registrar');
-  mostrarToast(`⏱️ Duración cargada: ${minutos} min — completá series y RPE`);
+  mostrarTab('historial');
+  mostrarToast(`✅ Sesión guardada (${minutos} min, RPE ${rpeSesion}) — completá reps y peso en ✏️ Editar`);
 }
 
 function descartarSesionEnVivo(){
