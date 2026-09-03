@@ -2,2229 +2,1647 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-<title>Plan de Ciclos</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>Fuerza</title>
 <style>
   :root{
-    --bg: #0f1720;
-    --bg-panel: #16212c;
-    --bg-panel-2: #1c2b38;
-    --line: #2a3a48;
-    --text: #e7edf2;
-    --text-dim: #8ea3b3;
-    --accent: #e0a458;
-    --accent-dim: #8a6a3e;
-    --ok: #5fb88a;
-    --warn: #d9705a;
-    --natacion: #5aa9d6;
-    --bici: #e0a458;
-    --carrera: #5fb88a;
-    --fuerza: #b587c9;
-    --kayak: #d9705a;
-    --mono: 'JetBrains Mono', 'SFMono-Regular', Consolas, monospace;
-    --sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    --bg:#0c1015;
+    --bg2:#141a22;
+    --card:#1a212b;
+    --card2:#212a36;
+    --borde:#2a3441;
+    --texto:#e7edf3;
+    --texto-sec:#8fa0b3;
+    --acento:#ff6a3d;
+    --acento2:#ffb020;
+    --ok:#3ddc84;
+    --mal:#ff5470;
+    --radio:14px;
   }
-  *{box-sizing:border-box;}
-  html,body{margin:0;padding:0;background:var(--bg);color:var(--text);font-family:var(--sans);}
-  body{padding-bottom:70px;}
-  h1,h2,h3{font-weight:600;letter-spacing:-0.01em;margin:0 0 4px;}
-  h1{font-size:1.05rem;}
-  h2{font-size:0.95rem;color:var(--text);}
-  h3{font-size:0.8rem;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.06em;font-weight:600;}
-  p{margin:0;color:var(--text-dim);font-size:0.82rem;}
-  a{color:var(--accent);}
-
-  header{
-    position:relative;
-    padding:22px 16px 14px;
-    background:linear-gradient(180deg, #131f29 0%, var(--bg) 100%);
-    border-bottom:1px solid var(--line);
-    overflow:hidden;
-  }
-  header .curveWrap{position:absolute;inset:0;opacity:0.5;pointer-events:none;}
-  header svg{width:100%;height:100%;display:block;}
-  header .headText{position:relative;z-index:1;}
-  header .eyebrow{font-family:var(--mono);font-size:0.68rem;color:var(--accent);letter-spacing:0.12em;text-transform:uppercase;margin-bottom:2px;}
-  header .cicloName{font-size:1.25rem;font-weight:700;}
-  header .cicloMeta{font-family:var(--mono);font-size:0.72rem;color:var(--text-dim);margin-top:4px;}
-
-  main{max-width:720px;margin:0 auto;padding:14px 12px 24px;}
-
-  .tabs{display:flex;gap:6px;margin-bottom:14px;position:sticky;top:0;background:var(--bg);padding:8px 0;z-index:5;}
-  .tab{flex:1;text-align:center;padding:9px 6px;border-radius:9px;background:var(--bg-panel);border:1px solid var(--line);color:var(--text-dim);font-size:0.8rem;font-weight:600;cursor:pointer;user-select:none;}
-  .tab.active{background:var(--accent);color:#1a1206;border-color:var(--accent);}
-
-  .panel{display:none;}
-  .panel.active{display:block;}
-
-  .card{background:var(--bg-panel);border:1px solid var(--line);border-radius:12px;padding:14px;margin-bottom:12px;}
-  .card + .card{margin-top:12px;}
-
-  input[type=range]{
-    -webkit-appearance:none;appearance:none;width:100%;height:28px;background:transparent;padding:0;margin:6px 0 2px;
-  }
-  input[type=range]::-webkit-slider-runnable-track{
-    height:6px;border-radius:4px;
-    background:linear-gradient(90deg, #3a4a58 0%, var(--accent) 100%);
-  }
-  input[type=range]::-webkit-slider-thumb{
-    -webkit-appearance:none;appearance:none;width:24px;height:24px;border-radius:50%;
-    background:var(--accent);border:3px solid #1a1206;margin-top:-9px;box-shadow:0 1px 4px rgba(0,0,0,.4);
-  }
-  input[type=range]::-moz-range-track{height:6px;border-radius:4px;background:linear-gradient(90deg, #3a4a58 0%, var(--accent) 100%);}
-  input[type=range]::-moz-range-thumb{width:24px;height:24px;border-radius:50%;background:var(--accent);border:3px solid #1a1206;}
-  .sliderLabels{display:flex;justify-content:space-between;font-size:0.68rem;color:var(--text-dim);}
-  .mono{font-family:var(--mono);}
-
-  label{display:block;font-size:0.72rem;color:var(--text-dim);margin-bottom:4px;font-weight:600;}
-  input[type=text],input[type=number],input[type=date],select{
-    width:100%;background:var(--bg-panel-2);border:1px solid var(--line);color:var(--text);
-    padding:9px 10px;border-radius:8px;font-size:0.9rem;font-family:var(--sans);
-  }
-  input:focus,select:focus{outline:2px solid var(--accent);outline-offset:-1px;}
-  .row{display:flex;gap:8px;}
-  .row > *{flex:1;min-width:0;}
-  .field{margin-bottom:10px;}
-  .hint{font-size:0.68rem;color:var(--text-dim);margin-top:3px;}
-
-  table{width:100%;border-collapse:collapse;font-size:0.82rem;}
-  th{text-align:left;font-size:0.65rem;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.04em;padding:4px 6px;border-bottom:1px solid var(--line);}
-  td{padding:6px;border-bottom:1px solid var(--line);vertical-align:middle;}
-  td input{padding:6px 7px;font-size:0.82rem;}
-  tr:last-child td{border-bottom:none;}
-  .dot{width:9px;height:9px;border-radius:50%;display:inline-block;margin-right:6px;flex:none;}
-  .discRow{display:flex;align-items:center;font-size:0.85rem;}
-
-  button{
-    font-family:var(--sans);font-weight:600;font-size:0.85rem;border:none;border-radius:9px;
-    padding:11px 14px;cursor:pointer;background:var(--bg-panel-2);color:var(--text);border:1px solid var(--line);
-  }
-  button.primary{background:var(--accent);color:#1a1206;border-color:var(--accent);}
-  button.ghost{background:transparent;}
-  button.small{padding:6px 10px;font-size:0.75rem;border-radius:7px;}
-  button.danger{color:var(--warn);}
-  .btnRow{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;}
-
-  .chip{display:inline-flex;align-items:center;gap:6px;background:var(--bg-panel-2);border:1px solid var(--line);border-radius:20px;padding:5px 10px 5px 12px;font-family:var(--mono);font-size:0.78rem;}
-  .chip button{padding:0;width:16px;height:16px;line-height:16px;text-align:center;border-radius:50%;background:var(--line);border:none;font-size:0.7rem;color:var(--text-dim);}
-  .chipList{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px;}
-
-  .statGrid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:4px;}
-  .stat{background:var(--bg-panel-2);border-radius:9px;padding:9px 10px;}
-  .stat .v{font-family:var(--mono);font-size:1.1rem;font-weight:700;}
-  .stat .l{font-size:0.65rem;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.04em;margin-top:2px;}
-
-  .discCard{border-radius:10px;background:var(--bg-panel-2);padding:11px 12px;margin-bottom:8px;display:flex;align-items:center;gap:10px;}
-  .discCard .info{flex:1;min-width:0;}
-  .discCard .name{font-weight:700;font-size:0.9rem;display:flex;align-items:center;}
-  .discCard .sub{font-family:var(--mono);font-size:0.72rem;color:var(--text-dim);margin-top:2px;}
-  .discCard .time{font-family:var(--mono);font-size:1.25rem;font-weight:700;text-align:right;}
-  .discCard.inactive{opacity:0.45;}
-  .toggle{width:40px;height:23px;border-radius:20px;background:var(--line);position:relative;flex:none;cursor:pointer;transition:background .15s;}
-  .toggle.on{background:var(--ok);}
-  .toggle .knob{position:absolute;top:2px;left:2px;width:19px;height:19px;border-radius:50%;background:#fff;transition:left .15s;}
-  .toggle.on .knob{left:19px;}
-
-  .zoneBar{display:flex;height:34px;border-radius:8px;overflow:hidden;margin:10px 0 4px;}
-  .zoneBar div{display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:0.62rem;color:#0a0f14;font-weight:700;overflow:hidden;white-space:nowrap;padding:0 3px;}
-  .zoneLegend{display:flex;flex-wrap:wrap;gap:8px 14px;font-size:0.68rem;color:var(--text-dim);margin-bottom:6px;}
-  .zoneLegend span{display:inline-flex;align-items:center;gap:5px;}
-
-  .sesionCard{border-radius:10px;background:var(--bg-panel-2);padding:10px 12px;margin-bottom:7px;}
-  .sesionCard .nombre{font-weight:700;font-size:0.85rem;display:flex;align-items:center;margin-bottom:5px;}
-  .sesionCard .estructura{font-family:var(--mono);font-size:0.92rem;font-weight:700;color:var(--accent);}
-  .sesionCard .totalizado{font-family:var(--mono);font-size:0.72rem;color:var(--text-dim);margin-top:2px;}
-  .sesionCard .targets{font-family:var(--mono);font-size:0.74rem;color:var(--accent);margin-top:3px;}
-
-  .zonaCard{border-radius:10px;background:var(--bg-panel-2);padding:11px 12px;margin-bottom:8px;}
-  .zonaCard .titulo{font-weight:700;font-size:0.82rem;margin-bottom:8px;}
-  .zonaCard .subrow{display:flex;align-items:center;gap:8px;margin-bottom:6px;}
-  .zonaCard .subrow .lbl{width:64px;flex:none;font-size:0.68rem;color:var(--text-dim);}
-  .zonaCard .subrow input{width:auto;flex:1;padding:6px 8px;font-size:0.8rem;}
-  .zonaCard .subrow span.arrow{color:var(--text-dim);font-size:0.75rem;flex:none;}
-
-  .diasRow{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;flex-wrap:wrap;gap:6px;}
-  .diasRow-label{display:flex;align-items:center;font-size:0.8rem;font-weight:600;flex:1;min-width:90px;}
-  .diasRow-btns{display:flex;gap:4px;}
-  .diaChip{width:27px;height:27px;border-radius:50%;background:var(--bg-panel-2);border:1px solid var(--line);color:var(--text-dim);font-size:0.68rem;font-weight:700;cursor:pointer;padding:0;}
-  .diaChip.on{color:#0a0f14;border-color:transparent;}
-
-  .calGrid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;}
-  .diaCab{text-align:center;font-size:0.62rem;color:var(--text-dim);padding:2px 0 6px;}
-  .calDia{aspect-ratio:1;border-radius:8px;background:var(--bg-panel-2);border:1px solid var(--line);padding:3px 2px;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;cursor:pointer;}
-  .calDia.fuera{opacity:0.28;}
-  .calDia.hoy{outline:2px solid var(--accent);outline-offset:-1px;}
-  .calDia .num{font-size:0.64rem;color:var(--text-dim);font-family:var(--mono);}
-  .calDia .dots{display:flex;flex-wrap:wrap;gap:1.5px;justify-content:center;margin-top:3px;min-height:6px;}
-  .calDia .dots span{width:5px;height:5px;border-radius:50%;}
-  .calDia .dots span.plan{background:transparent!important;border:1px solid currentColor;}
-  #calTitulo{text-transform:capitalize;font-size:0.9rem;}
-
-  .graficoWrap{overflow-x:auto;-webkit-overflow-scrolling:touch;border-radius:10px;background:var(--bg-panel-2);border:1px solid var(--line);}
-  .graficoWrap svg{display:block;}
-
-  .empty{text-align:center;padding:30px 14px;color:var(--text-dim);}
-  .empty .big{font-size:1.8rem;margin-bottom:6px;}
-
-  .savedRow{display:flex;align-items:center;gap:8px;padding:9px 10px;border-radius:9px;background:var(--bg-panel-2);margin-bottom:6px;}
-  .savedRow .n{flex:1;font-weight:600;font-size:0.85rem;}
-  .savedRow.active{outline:1.5px solid var(--accent);}
-
-  .toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:var(--ok);color:#08160f;padding:10px 18px;border-radius:20px;font-weight:700;font-size:0.85rem;z-index:50;opacity:0;pointer-events:none;transition:opacity .2s, transform .2s;}
-  .toast.show{opacity:1;transform:translateX(-50%) translateY(-6px);}
-
-  ::-webkit-scrollbar{width:0;height:0;}
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  html,body{margin:0; padding:0; background:var(--bg); color:var(--texto);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;}
+  body{padding-bottom:90px;}
+  header{position:sticky; top:0; z-index:10; background:linear-gradient(180deg,var(--bg) 80%,transparent);
+    padding:16px 16px 8px;}
+  h1{margin:0 0 2px; font-size:22px; font-weight:800; letter-spacing:.3px;
+    display:flex; align-items:center; gap:8px;}
+  h1 .icono{font-size:22px;}
+  .sub{color:var(--texto-sec); font-size:12.5px; margin-bottom:12px;}
+  nav.tabs{display:flex; gap:6px; margin-bottom:4px;}
+  nav.tabs button{flex:1; padding:9px 2px; border:1px solid var(--borde); background:var(--bg2);
+    color:var(--texto-sec); border-radius:12px; font-size:11px; font-weight:700; cursor:pointer;}
+  nav.tabs button.activa{background:linear-gradient(135deg,var(--acento),var(--acento2)); color:#1a0e05; border-color:transparent;}
+  main{padding:4px 16px 16px;}
+  section{display:none;}
+  section.activa{display:block;}
+  .card{background:var(--card); border:1px solid var(--borde); border-radius:var(--radio);
+    padding:14px; margin-bottom:12px;}
+  .card h2{margin:0 0 10px; font-size:14px; text-transform:uppercase; letter-spacing:.6px;
+    color:var(--texto-sec); font-weight:700;}
+  label{display:block; font-size:12.5px; color:var(--texto-sec); margin:0 0 4px;}
+  input[type=text], input[type=number], input[type=date], select{
+    width:100%; background:var(--card2); border:1px solid var(--borde); color:var(--texto);
+    border-radius:10px; padding:10px 11px; font-size:15px; margin-bottom:10px;}
+  input:focus, select:focus{outline:none; border-color:var(--acento);}
+  .fila{display:flex; gap:8px;}
+  .fila > *{flex:1;}
+  button.btn{border:none; border-radius:12px; padding:12px 14px; font-size:14.5px; font-weight:700;
+    cursor:pointer;}
+  .btn-primario{width:100%; background:linear-gradient(135deg,var(--acento),var(--acento2)); color:#1a0e05;}
+  .btn-secundario{background:var(--card2); color:var(--texto); border:1px solid var(--borde);}
+  .btn-mini{background:var(--card2); color:var(--texto-sec); border:1px solid var(--borde);
+    padding:9px 10px; font-size:12.5px; border-radius:9px;}
+  .btn-mal{background:rgba(255,84,112,.12); color:var(--mal); border:1px solid rgba(255,84,112,.3);}
+  .ejercicio{background:var(--card2); border:1px solid var(--borde); border-radius:12px;
+    padding:12px; margin-bottom:10px;}
+  .ejercicio-cab{display:flex; align-items:center; gap:8px; margin-bottom:8px;}
+  .ejercicio-cab input[type=text]{margin-bottom:0; flex:1; font-weight:700;}
+  .quitar-ejercicio{background:transparent; border:none; color:var(--texto-sec); font-size:20px;
+    line-height:1; padding:2px 4px; cursor:pointer; flex-shrink:0;}
+  .modos-fila{display:flex; gap:8px; margin-bottom:8px;}
+  .toggle-modo{display:flex; border:1px solid var(--borde); border-radius:9px; overflow:hidden;
+    font-size:11.5px; flex:1;}
+  .toggle-modo button{border:none; background:transparent; color:var(--texto-sec); padding:8px 4px;
+    font-weight:700; cursor:pointer; flex:1;}
+  .toggle-modo button.on{background:var(--acento); color:#1a0e05;}
+  .serie{display:flex; gap:6px; align-items:center; margin-bottom:6px;}
+  .serie .n{width:20px; text-align:center; color:var(--texto-sec); font-size:12px; flex-shrink:0;}
+  .serie input{margin-bottom:0;}
+  .serie button{flex-shrink:0; background:transparent; border:none; color:var(--mal); font-size:18px;
+    padding:4px 6px; cursor:pointer; line-height:1;}
+  .agregar-serie{width:100%; margin-top:2px;}
+  .vacio{color:var(--texto-sec); font-size:13px; text-align:center; padding:20px 10px; line-height:1.5;}
+  .tss-box{display:flex; align-items:center; justify-content:space-between; background:var(--card2);
+    border-radius:12px; padding:14px; margin-top:2px;}
+  .tss-box .num{font-size:30px; font-weight:800; color:var(--acento2); line-height:1;}
+  .tss-box .lbl{font-size:11px; color:var(--texto-sec); text-transform:uppercase; letter-spacing:.5px;}
+  .tss-nota{font-size:11px; color:var(--texto-sec); margin-top:8px; line-height:1.5;}
+  .sesion-card{cursor:pointer;}
+  .sesion-cab{display:flex; justify-content:space-between; align-items:baseline; gap:8px;}
+  .sesion-fecha{font-weight:700; font-size:14.5px;}
+  .sesion-tss{color:var(--acento2); font-weight:800; font-size:15px; white-space:nowrap;}
+  .sesion-meta{color:var(--texto-sec); font-size:12px; margin-top:3px;}
+  .sesion-ejercicios{color:var(--texto-sec); font-size:12.5px; margin-top:7px; line-height:1.5;}
+  .acciones-hist{display:flex; gap:8px; margin-top:10px;}
+  .acciones-hist button{flex:1;}
+  .toast{position:fixed; bottom:18px; left:50%; transform:translateX(-50%); background:var(--ok);
+    color:#04240f; padding:10px 18px; border-radius:99px; font-size:13.5px; font-weight:700;
+    opacity:0; pointer-events:none; transition:opacity .25s, transform .25s; z-index:99;}
+  .toast.show{opacity:1; transform:translateX(-50%) translateY(-4px);}
+  .rango{width:100%;}
+  .rango-val{display:flex; justify-content:space-between; align-items:center; margin-bottom:2px;}
+  .rango-val .num{font-size:20px; font-weight:800; color:var(--acento);}
+  .rutina-info{font-size:12px; color:var(--texto-sec); margin-bottom:8px; padding:8px 10px;
+    background:var(--card2); border-radius:9px; border:1px solid var(--borde);}
+  .tags-rutina{display:flex; flex-wrap:wrap; gap:6px; margin-top:9px;}
+  .tag-ejercicio{background:var(--card2); border:1px solid var(--borde); border-radius:99px;
+    padding:4px 10px; font-size:11.5px; color:var(--texto-sec);}
+  .hint-rutinas{color:var(--texto-sec); font-size:12px; line-height:1.7; padding:2px 4px 14px;}
+  .cronometro-card{text-align:center;}
+  .cronometro-num{font-size:46px; font-weight:800; color:var(--acento2); line-height:1;
+    font-variant-numeric:tabular-nums;}
+  .ronda-titulo{font-size:11.5px; text-transform:uppercase; letter-spacing:.5px; color:var(--texto-sec);
+    font-weight:700; margin:12px 0 4px; padding-top:10px; border-top:1px dashed var(--borde);}
+  .ronda-grupo:first-child .ronda-titulo{border-top:none; padding-top:0; margin-top:0;}
+  .item-vivo{display:flex; align-items:center; gap:10px; padding:11px 4px; border-bottom:1px solid var(--borde);
+    font-size:14.5px; cursor:pointer;}
+  .item-vivo:last-child{border-bottom:none;}
+  .item-vivo.hecho{color:var(--texto-sec); text-decoration:line-through;}
+  .item-vivo input[type=checkbox]{width:21px; height:21px; accent-color:var(--acento); margin:0; flex-shrink:0;}
+  .musculo-fila{display:flex; align-items:center; gap:8px; margin-bottom:9px; font-size:12.5px;}
+  .musculo-nombre{width:96px; flex-shrink:0; color:var(--texto-sec);}
+  .musculo-pct{width:34px; flex-shrink:0; text-align:right; color:var(--texto-sec); font-size:11px;}
+  .musculo-barra-fondo{flex:1; background:var(--card2); border-radius:6px; height:10px; overflow:hidden;}
+  .musculo-barra{height:100%; border-radius:6px;}
+  .diagramas-fila{display:flex; justify-content:center; gap:12px;}
+  .diagramas-fila svg{width:47%; max-width:160px;}
+  .diagramas-etiquetas{display:flex; justify-content:center; gap:0; font-size:10.5px; color:var(--texto-sec); margin-top:6px;}
+  .diagramas-etiquetas span{width:47%; max-width:160px; text-align:center;}
 </style>
 </head>
 <body>
 
 <header>
-  <div class="curveWrap"><svg id="curveSvg" viewBox="0 0 400 90" preserveAspectRatio="none"></svg></div>
-  <div class="headText">
-    <div class="eyebrow">Plan de ciclos</div>
-    <div class="cicloName" id="hdrNombre">Sin ciclo activo</div>
-    <div class="cicloMeta" id="hdrMeta">—</div>
-  </div>
+  <h1><span class="icono">🏋️</span> Fuerza</h1>
+  <div class="sub">Registro de sesiones · carga estimada (sRPE)</div>
+  <nav class="tabs" id="navTabs">
+    <button id="tabBtnRegistrar" class="activa" onclick="mostrarTab('registrar')">➕ Registrar</button>
+    <button id="tabBtnHistorial" onclick="mostrarTab('historial')">📋 Historial</button>
+    <button id="tabBtnRutinas" onclick="mostrarTab('rutinas')">🔁 Rutinas</button>
+    <button id="tabBtnMusculos" onclick="mostrarTab('musculos')">💪 Músculos</button>
+  </nav>
 </header>
 
 <main>
-  <div class="tabs">
-    <div class="tab active" data-tab="hoy">Plan de hoy</div>
-    <div class="tab" data-tab="calendario">Calendario</div>
-    <div class="tab" data-tab="ciclo">Ciclo</div>
-    <div class="tab" data-tab="grafico">Gráfico</div>
-    <div class="tab" data-tab="datos">Datos</div>
-  </div>
 
-  <!-- PLAN DE HOY -->
-  <section class="panel active" id="panel-hoy">
-    <div id="hoyEmpty" class="empty" style="display:none">
-      <div class="big">📋</div>
-      <p>Todavía no armaste ningún ciclo.<br>Andá a la pestaña <b>Ciclo</b> para crear el primero.</p>
+  <section id="tab-registrar" class="activa">
+
+    <div class="card">
+      <h2>Datos de la sesión</h2>
+      <div class="fila">
+        <div>
+          <label for="inFecha">Fecha</label>
+          <input type="date" id="inFecha">
+        </div>
+        <div>
+          <label for="inDuracion">Duración (min)</label>
+          <input type="number" id="inDuracion" min="1" step="1" placeholder="60" oninput="actualizarTSS()">
+        </div>
+      </div>
+      <label for="inRpeSesion">RPE de la sesión (esfuerzo percibido global)</label>
+      <div class="rango-val">
+        <span style="color:var(--texto-sec); font-size:12px;">Muy suave</span>
+        <span class="num" id="rpeSesionNum">5</span>
+        <span style="color:var(--texto-sec); font-size:12px;">Máximo</span>
+      </div>
+      <input type="range" class="rango" id="inRpeSesion" min="1" max="10" step="1" value="5"
+        oninput="rpeSesionNum.textContent=this.value; actualizarTSS()" style="margin-bottom:0;">
     </div>
 
-    <div id="hoyContent" style="display:none">
-      <div class="card">
-        <div class="row">
-          <div class="field">
-            <label>Fecha</label>
-            <input type="date" id="fechaPlan">
-          </div>
-          <div class="field">
-            <label>% carga (editable para hoy)</label>
-            <input type="number" id="cargaOverride" min="0" max="200" step="1">
-          </div>
-        </div>
-        <div class="statGrid">
-          <div class="stat"><div class="v" id="statDia">—</div><div class="l">día del ciclo</div></div>
-          <div class="stat"><div class="v" id="statSemana">—</div><div class="l">semana</div></div>
-          <div class="stat"><div class="v" id="statHoras">—</div><div class="l">hs / semana</div></div>
-        </div>
-        <div class="hint" id="fueraDeRangoHint" style="display:none;color:var(--warn)">Esta fecha está fuera del rango del ciclo activo.</div>
+    <div class="card">
+      <h2>Ejercicios</h2>
+      <div id="rutinaInfo" class="rutina-info" style="display:none;"></div>
+      <div id="listaEjercicios"></div>
+      <button class="btn btn-secundario" style="width:100%;" onclick="agregarEjercicio()">+ Agregar ejercicio</button>
+      <div class="fila" style="margin-top:10px;">
+        <button class="btn btn-mini" onclick="guardarComoRutinaNueva()">💾 Guardar como rutina</button>
+        <button class="btn btn-mini" id="btnActualizarRutina" style="display:none;" onclick="actualizarRutinaActual()">🔄 Actualizar rutina</button>
       </div>
-
-      <div class="card">
-        <h3>Disciplinas de hoy</h3>
-        <p style="margin-bottom:8px">Tocá para marcar qué vas a entrenar hoy. El tiempo ya está ajustado por el %carga de la semana.</p>
-        <div id="discList"></div>
+      <div class="fila" style="margin-top:8px;">
+        <button class="btn btn-mini" onclick="document.getElementById('inputFit').click()">⌚ Importar de Garmin (.fit)</button>
       </div>
-
-      <div class="card">
-        <h3>Sesiones de series sugeridas</h3>
-        <p style="margin-bottom:8px">Series × trabajo / descanso, con el volumen y la carga de esta semana.</p>
-        <div class="zoneBar" id="zoneBar"></div>
-        <div id="sesionesZonas"></div>
-        <div class="hint" id="pulsoHint" style="margin-top:8px"></div>
-      </div>
-
-      <button class="primary" style="width:100%" id="btnGuardarPlan">Guardar plan de hoy</button>
-      <p class="hint" style="text-align:center;margin-top:8px">Esto lo guarda en localStorage para que Correr, Bici Indoor y Kayak Indoor lo puedan leer.</p>
+      <input type="file" id="inputFit" accept=".fit" style="display:none" onchange="importarArchivoFit(event)">
     </div>
+
+    <div class="card">
+      <h2>Carga estimada</h2>
+      <div class="tss-box">
+        <div>
+          <div class="lbl">TSS fuerza (estimado)</div>
+          <div class="num" id="tssPreview">0</div>
+        </div>
+        <div style="text-align:right; color:var(--texto-sec); font-size:12px; max-width:120px;">
+          RPE × min ÷ 6
+        </div>
+      </div>
+      <div class="tss-nota">
+        ⚠️ Estimación por sRPE (método de Foster), normalizada para quedar en escala comparable al TSS de potencia/ritmo de las otras apps. No es una conversión fisiológica validada — es una aproximación de carga percibida.
+      </div>
+    </div>
+
+    <button class="btn btn-primario" onclick="guardarSesion()" id="btnGuardar">💾 Guardar sesión</button>
+    <button class="btn btn-secundario" style="width:100%; margin-top:8px; display:none;" id="btnCancelarEdicion" onclick="cancelarEdicion()">Cancelar edición</button>
+
   </section>
 
-  <!-- CALENDARIO -->
-  <section class="panel" id="panel-calendario">
-    <div class="card">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
-        <button class="small" id="calPrev">‹</button>
-        <h3 id="calTitulo">Mes</h3>
-        <button class="small" id="calNext">›</button>
-      </div>
-      <div class="calGrid" id="calGridHead"></div>
-      <div class="calGrid" id="calGridBody" style="margin-top:3px"></div>
-      <div class="zoneLegend" style="margin-top:10px">
-        <span><span class="dot" style="background:#8ea3b3"></span>real (entrenado)</span>
-        <span><span class="dot" style="background:transparent;border:1px solid #8ea3b3"></span>planeado</span>
-      </div>
-      <p class="hint" style="margin-top:6px">Tocá un día para ver el detalle. Lo planeado depende de los días de la semana que le asignaste a cada disciplina, en Ciclo.</p>
-    </div>
-    <div class="card" id="calDetalle" style="display:none"></div>
+  <section id="tab-historial">
+    <div id="listaHistorial"></div>
   </section>
 
-  <!-- CICLO -->
-  <section class="panel" id="panel-ciclo">
+  <section id="tab-rutinas">
+    <div id="listaRutinas"></div>
+  </section>
+
+  <section id="tab-musculos">
     <div class="card">
-      <h3>Ciclos guardados</h3>
-      <div id="listaCiclos"></div>
-      <div class="btnRow">
-        <button class="primary" id="btnNuevoCiclo">+ Nuevo ciclo</button>
+      <div class="modos-fila" style="margin-bottom:2px;">
+        <div class="toggle-modo">
+          <button id="btnModoMusculosSesion" class="on" onclick="mostrarSubModoMusculos('sesion')">Por sesión</button>
+          <button id="btnModoMusculosPeriodo" onclick="mostrarSubModoMusculos('periodo')">Por período</button>
+        </div>
       </div>
+      <div id="musculosSelector"></div>
     </div>
 
-    <div class="card" id="formCicloCard" style="display:none">
-      <h3>Configurar ciclo</h3>
+    <div class="card">
+      <div class="diagramas-fila">
+        <svg id="svgFrente" viewBox="0 0 140 300" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="70" cy="18" r="13" fill="var(--card2)" stroke="var(--borde)" stroke-width="1.5"/>
+          <rect x="64" y="28" width="12" height="10" fill="var(--card2)"/>
+          <rect x="40" y="36" width="60" height="100" rx="18" fill="var(--card2)" stroke="var(--borde)" stroke-width="1.5"/>
+          <rect x="14" y="40" width="18" height="92" rx="9" fill="var(--card2)" stroke="var(--borde)" stroke-width="1.5"/>
+          <rect x="108" y="40" width="18" height="92" rx="9" fill="var(--card2)" stroke="var(--borde)" stroke-width="1.5"/>
+          <rect x="44" y="140" width="23" height="140" rx="11" fill="var(--card2)" stroke="var(--borde)" stroke-width="1.5"/>
+          <rect x="73" y="140" width="23" height="140" rx="11" fill="var(--card2)" stroke="var(--borde)" stroke-width="1.5"/>
 
-      <div class="field">
-        <label>Nombre del ciclo</label>
-        <input type="text" id="fNombre" placeholder="Ej: Base verano 2026">
-      </div>
-      <div class="field">
-        <label>Fecha de inicio</label>
-        <input type="date" id="fFechaInicio">
-      </div>
+          <ellipse id="mHombroI" cx="27" cy="46" rx="11" ry="10" fill="var(--card2)"/>
+          <ellipse id="mHombroD" cx="113" cy="46" rx="11" ry="10" fill="var(--card2)"/>
+          <ellipse id="mPecho" cx="70" cy="64" rx="26" ry="15" fill="var(--card2)"/>
+          <ellipse id="mBicepsI" cx="22" cy="82" rx="8" ry="19" fill="var(--card2)"/>
+          <ellipse id="mBicepsD" cx="118" cy="82" rx="8" ry="19" fill="var(--card2)"/>
+          <ellipse id="mAntebrazoI" cx="20" cy="120" rx="7" ry="15" fill="var(--card2)"/>
+          <ellipse id="mAntebrazoD" cx="120" cy="120" rx="7" ry="15" fill="var(--card2)"/>
+          <rect id="mAbdomen" x="52" y="86" width="36" height="46" rx="10" fill="var(--card2)"/>
+          <ellipse id="mCuadricepsI" cx="55" cy="195" rx="14" ry="42" fill="var(--card2)"/>
+          <ellipse id="mCuadricepsD" cx="85" cy="195" rx="14" ry="42" fill="var(--card2)"/>
+        </svg>
+        <svg id="svgEspalda" viewBox="0 0 140 300" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="70" cy="18" r="13" fill="var(--card2)" stroke="var(--borde)" stroke-width="1.5"/>
+          <rect x="64" y="28" width="12" height="10" fill="var(--card2)"/>
+          <rect x="40" y="36" width="60" height="100" rx="18" fill="var(--card2)" stroke="var(--borde)" stroke-width="1.5"/>
+          <rect x="14" y="40" width="18" height="92" rx="9" fill="var(--card2)" stroke="var(--borde)" stroke-width="1.5"/>
+          <rect x="108" y="40" width="18" height="92" rx="9" fill="var(--card2)" stroke="var(--borde)" stroke-width="1.5"/>
+          <rect x="44" y="140" width="23" height="140" rx="11" fill="var(--card2)" stroke="var(--borde)" stroke-width="1.5"/>
+          <rect x="73" y="140" width="23" height="140" rx="11" fill="var(--card2)" stroke="var(--borde)" stroke-width="1.5"/>
 
-      <h3 style="margin-top:10px">Evento objetivo (opcional)</h3>
-      <p>Si cargás una fecha de evento, la duración del ciclo se calcula sola — desde el inicio hasta ese día — y el taper termina justo ahí.</p>
-      <div class="row">
-        <div class="field">
-          <label>Nombre del evento</label>
-          <input type="text" id="fEventoNombre" placeholder="10k La Gaceta">
-        </div>
-        <div class="field">
-          <label>Fecha del evento</label>
-          <input type="date" id="fEventoFecha">
-        </div>
+          <ellipse id="mTrapecio" cx="70" cy="42" rx="22" ry="10" fill="var(--card2)"/>
+          <ellipse id="mEspalda" cx="70" cy="78" rx="27" ry="23" fill="var(--card2)"/>
+          <ellipse id="mTricepsI" cx="22" cy="82" rx="8" ry="19" fill="var(--card2)"/>
+          <ellipse id="mTricepsD" cx="118" cy="82" rx="8" ry="19" fill="var(--card2)"/>
+          <rect id="mLumbares" x="52" y="112" width="36" height="26" rx="9" fill="var(--card2)"/>
+          <ellipse id="mGluteoI" cx="56" cy="150" rx="16" ry="16" fill="var(--card2)"/>
+          <ellipse id="mGluteoD" cx="84" cy="150" rx="16" ry="16" fill="var(--card2)"/>
+          <ellipse id="mIsquioI" cx="56" cy="198" rx="13" ry="32" fill="var(--card2)"/>
+          <ellipse id="mIsquioD" cx="84" cy="198" rx="13" ry="32" fill="var(--card2)"/>
+          <ellipse id="mGemeloI" cx="56" cy="252" rx="10" ry="26" fill="var(--card2)"/>
+          <ellipse id="mGemeloD" cx="84" cy="252" rx="10" ry="26" fill="var(--card2)"/>
+        </svg>
       </div>
-      <div class="field" id="fSemanasWrap">
-        <label>o, sin evento fijo: duración (semanas)</label>
-        <input type="number" id="fSemanas" min="1" step="1">
-      </div>
-      <p class="hint" id="duracionCalculadaHint"></p>
-      <div class="field">
-        <label>Forma de la curva de incremento</label>
-        <input type="range" id="fKSlider" min="0" max="100" step="1" value="50">
-        <div class="sliderLabels">
-          <span>Lineal</span>
-          <span id="fKValueLabel" class="mono">k=0.02</span>
-          <span>Logarítmica</span>
-        </div>
-        <input type="hidden" id="fK" value="0.02">
-      </div>
-      <div class="row">
-        <div class="field">
-          <label>Horas / semana — inicio</label>
-          <input type="number" id="fHorasIni" min="0" step="0.5">
-        </div>
-        <div class="field">
-          <label>Horas / semana — fin</label>
-          <input type="number" id="fHorasFin" min="0" step="0.5">
-        </div>
-      </div>
+      <div class="diagramas-etiquetas"><span>Frente</span><span>Espalda</span></div>
+    </div>
 
-      <div class="field" style="margin-top:2px">
-        <label>Incremento de horas a lo largo del ciclo</label>
-        <svg id="graficoHoras" viewBox="0 0 400 170" style="width:100%;height:170px;background:var(--bg-panel-2);border-radius:10px;border:1px solid var(--line)"></svg>
-        <div class="hint" id="curvaInfo"></div>
-      </div>
-
-      <h3 style="margin-top:14px">Taper (bajada antes del evento)</h3>
-      <p>Últimos días del ciclo con volumen reducido, para llegar descansado al día del evento (el último día del ciclo). Dejá 0 días si este ciclo no termina en una competencia.</p>
-      <div class="row">
-        <div class="field">
-          <label>Días de taper</label>
-          <input type="number" id="fTaperDias" min="0" step="1">
-        </div>
-        <div class="field">
-          <label>Reducción de volumen (%)</label>
-          <input type="number" id="fTaperPct" min="0" max="90" step="5">
-        </div>
-      </div>
-
-      <h3 style="margin-top:14px">Patrón de carga semanal (%)</h3>
-      <p>Se repite semana a semana a lo largo del ciclo. Ej: 85, 90, 95, 100 (descarga cada 4ta semana).</p>
-      <div class="chipList" id="patronCargaChips"></div>
-      <div class="btnRow">
-        <input type="number" id="nuevoPct" placeholder="%" style="max-width:80px" min="0" max="200">
-        <button class="small" id="btnAgregarPct">Agregar</button>
-      </div>
-
-      <h3 style="margin-top:14px">Distribución por disciplina</h3>
-      <table>
-        <thead><tr><th>Disciplina</th><th>% inicio</th><th>% fin</th><th>Ses/sem inicio</th><th>Ses/sem fin</th></tr></thead>
-        <tbody id="discTableBody"></tbody>
-      </table>
-      <p class="hint" id="pctWarning" style="display:none;color:var(--warn)"></p>
-
-      <h3 style="margin-top:14px">Días de la semana por disciplina</h3>
-      <p>Para mostrarlas en el Calendario. No cambia el tiempo por sesión, solo qué día le toca a cada una.</p>
-      <div id="diasSemanaCards"></div>
-
-      <h3 style="margin-top:14px">Zonas de entrenamiento</h3>
-      <p>Trabajo y descanso en mm:ss o h:mm:ss. Series = repeticiones de esa zona en una sesión.</p>
-      <div id="zonaCards"></div>
-
-      <div class="btnRow">
-        <button class="primary" id="btnGuardarCiclo">Guardar ciclo</button>
-        <button class="ghost" id="btnCancelarCiclo">Cancelar</button>
+    <div class="card">
+      <h2>Detalle</h2>
+      <div id="musculosLeyenda"></div>
+      <div class="tss-nota">
+        ⚠️ Estimado a partir del nombre del ejercicio (busca palabras clave como "sentadilla", "press de banca", "dominadas", etc.) y la cantidad de series — no de un análisis biomecánico real. Ejercicios con nombres poco claros o no reconocidos no suman a ningún grupo.
       </div>
     </div>
   </section>
 
-  <!-- GRÁFICO -->
-  <section class="panel" id="panel-grafico">
-    <div class="card">
-      <h3>Panorama de la temporada</h3>
-      <p style="margin-bottom:8px">Todos los ciclos guardados, uno después del otro, con su curva de horas y el taper marcado como una caída al final. Los huecos son descanso entre ciclos.</p>
-      <div id="panoramaEmpty" class="empty" style="display:none">
-        <div class="big">🗺️</div>
-        <p>Armá al menos un ciclo, en la pestaña Ciclo.</p>
-      </div>
-      <div id="panoramaWrap" class="graficoWrap" style="display:none">
-        <svg id="panoramaSvg"></svg>
-      </div>
-      <div id="panoramaLeyenda" style="margin-top:10px"></div>
-      <p class="hint" style="margin-top:6px">Tocá un ciclo en la lista de abajo (pestaña Ciclo) para editar sus fechas y que encastre justo con el anterior o el siguiente.</p>
-    </div>
-
-    <div class="card">
-      <h3>Tiempo por sesión — evolución semanal</h3>
-      <p style="margin-bottom:8px">Minutos por sesión de cada disciplina, semana a semana, ajustados por la curva y el %carga de esa semana. Deslizá para ver todo el ciclo.</p>
-      <div id="graficoCicloEmpty" class="empty" style="display:none">
-        <div class="big">📈</div>
-        <p>Armá un ciclo primero, en la pestaña Ciclo.</p>
-      </div>
-      <div id="graficoCicloWrap" class="graficoWrap" style="display:none">
-        <svg id="graficoCicloSvg"></svg>
-      </div>
-      <div class="zoneLegend" id="graficoCicloLeyenda" style="margin-top:10px"></div>
-    </div>
-
-    <div class="card">
-      <h3>Proyección de Forma (CTL/ATL/TSB)</h3>
-      <p style="margin-bottom:8px">Estima aptitud (CTL), fatiga (ATL) y forma (TSB) a partir del tiempo planeado y el %pulso máx de cada semana como referencia de intensidad. Arranca de tu Forma real combinada y proyecta hacia adelante, atravesando todos los ciclos guardados en orden, uno tras otro.</p>
-      <div id="formaEmpty" class="empty" style="display:none">
-        <div class="big">📉</div>
-        <p>Armá un ciclo primero, en la pestaña Ciclo.</p>
-      </div>
-      <div id="formaWrap" class="graficoWrap" style="display:none">
-        <svg id="formaSvg"></svg>
-      </div>
-      <div class="hint" id="formaCursorInfo" style="margin-top:6px;font-family:var(--mono)"></div>
-      <p class="hint" style="margin-top:2px">Tocá y arrastrá sobre el gráfico para ver el detalle de cualquier día, pasado o futuro.</p>
-      <div class="statGrid" id="formaStats" style="margin-top:10px"></div>
-      <div id="formaEventos" style="margin-top:8px;display:none"></div>
-      <p class="hint" id="formaAviso" style="margin-top:8px;color:var(--warn);display:none"></p>
-      <div class="zoneLegend" id="formaLeyenda" style="margin-top:6px"></div>
-      <div class="zoneLegend" style="margin-top:4px">
-        <span><span class="dot" style="background:#d9705a"></span>banda roja: TSB &lt; -30, riesgo</span>
-        <span><span class="dot" style="background:#5fb88a"></span>banda verde: TSB +5 a +25, óptimo pre-competencia</span>
-      </div>
-      <p class="hint" style="margin-top:8px">Estimación para planificar. El TSS real de Correr/Kayak sale de (pulso promedio ÷ pulso umbral)² × horas × 100; acá, al no tener el pulso real de una sesión futura, se usa el %pulso máx objetivo de esa semana en su lugar — da un TSS algo más alto si tu umbral real es menor al 100% del máximo. El resto de la fórmula (EWMA 42/7 días, TSB = brecha del día anterior) es idéntico al de Correr, Kayak y ahora también Bici Indoor.</p>
-    </div>
-  </section>
-
-  <!-- DATOS -->
-  <section class="panel" id="panel-datos">
-    <div class="card">
-      <h3>Perfil</h3>
-      <p style="margin-bottom:10px">Se guarda en <span class="mono">entrenamiento_perfil</span> (compartido con Correr/Bici/Kayak).</p>
-      <div class="field">
-        <label>Peso (kg)</label>
-        <input type="number" id="uPeso" min="0" step="0.1">
-      </div>
-      <button class="primary" style="width:100%" id="btnGuardarPerfil">Guardar perfil</button>
-      <p class="hint" id="perfilActualizado" style="margin-top:6px"></p>
-    </div>
-
-    <div class="card">
-      <h3>Umbrales personales</h3>
-      <p style="margin-bottom:10px">Se guardan en <span class="mono">entrenamiento_umbrales</span> (compartido con Correr/Bici/Kayak). Con esto, las tarjetas de "Plan de hoy" muestran ritmo/vatios/pulso objetivo, además del tiempo, para cada disciplina activa.</p>
-      <div class="field">
-        <label>Ritmo umbral — Carrera (min:seg / km)</label>
-        <input type="text" id="uRitmoCarrera" placeholder="4:30">
-      </div>
-      <div class="row">
-        <div class="field">
-          <label>Pulso umbral — Carrera (lpm)</label>
-          <input type="number" id="uPulsoCarrera" min="0" step="1">
+  <section id="tab-vivo">
+    <div class="card cronometro-card">
+      <div class="lbl" style="text-transform:uppercase; letter-spacing:.5px; color:var(--texto-sec); font-size:11px;">Rutina en curso</div>
+      <div id="vivoNombreRutina" style="font-weight:800; font-size:16px; margin:2px 0 12px;"></div>
+      <div class="cronometro-num" id="vivoCronometro">00:00</div>
+      <div style="display:flex; justify-content:center; gap:26px; margin-top:12px;">
+        <div style="text-align:center;">
+          <div style="font-size:10.5px; color:var(--texto-sec); text-transform:uppercase; letter-spacing:.4px;">Trabajo</div>
+          <div id="vivoTrabajo" style="font-size:19px; font-weight:800; color:var(--ok);">00:00</div>
         </div>
-        <div class="field">
-          <label>FTP — Bici (W)</label>
-          <input type="number" id="uFtpBici" min="0" step="1">
+        <div style="text-align:center;">
+          <div style="font-size:10.5px; color:var(--texto-sec); text-transform:uppercase; letter-spacing:.4px;">Pausa</div>
+          <div id="vivoPausa" style="font-size:19px; font-weight:800; color:var(--acento2);">00:00</div>
         </div>
       </div>
-      <div class="field">
-        <label>Pulso umbral — Kayak (lpm)</label>
-        <input type="number" id="uPulsoKayak" min="0" step="1">
-      </div>
-      <div class="field">
-        <label>Ritmo umbral — Natación (min:seg / 100m)</label>
-        <input type="text" id="uRitmoNatacion" placeholder="1:35">
-      </div>
-      <button class="primary" style="width:100%" id="btnGuardarUmbrales">Guardar umbrales</button>
-      <button style="width:100%;margin-top:8px" id="btnImportarUmbrales">Traer lo que ya tengo cargado en Correr/Bici/Kayak</button>
-      <p class="hint" id="umbralesActualizado" style="margin-top:6px"></p>
-    </div>
-
-    <div class="card">
-      <h3>Backup</h3>
-      <p style="margin-bottom:10px">Exportá todo (ciclos + ajustes de carga por día) a un archivo, o restaurá desde uno.</p>
-      <div class="btnRow">
-        <button id="btnExportar">Exportar JSON</button>
-        <button id="btnImportar">Importar JSON</button>
-        <input type="file" id="fileImportar" accept="application/json" style="display:none">
-      </div>
+      <button class="btn btn-secundario" id="btnPausaVivo" style="margin-top:14px;" onclick="alternarPausaVivo()">⏸️ Pausa</button>
+      <div id="vivoProgreso" style="color:var(--texto-sec); font-size:12.5px; margin-top:10px;"></div>
     </div>
     <div class="card">
-      <h3>Borrar ciclo activo</h3>
-      <p style="margin-bottom:10px">Elimina el ciclo seleccionado y sus ajustes de carga por día. No se puede deshacer.</p>
-      <button class="danger" id="btnBorrarCiclo">Borrar ciclo activo</button>
+      <h2>Ejercicios</h2>
+      <div id="vivoLista"></div>
     </div>
+    <button class="btn btn-primario" onclick="finalizarSesionEnVivo()">🏁 Finalizar y cargar duración</button>
+    <button class="btn btn-secundario" style="width:100%; margin-top:8px;" onclick="descartarSesionEnVivo()">Descartar sesión en vivo</button>
   </section>
+
 </main>
 
 <div class="toast" id="toast"></div>
 
 <script>
-'use strict';
+"use strict";
 
-/* ========================= MOTOR DE INTERPOLACIÓN ========================= */
+/* ============ Constantes / claves de storage ============ */
+const K_SESIONES = 'fuerza_sesiones';
+const K_RUTINAS = 'fuerza_rutinas';
+const K_VIVO = 'fuerza_sesion_en_vivo';
+const K_FORMA_COMPARTIDA = 'entrenamiento_forma_registro';
 
-function curvaNormalizada(diaIndex, totalDias, k) {
-  if (totalDias <= 1) return 0;
-  const expo = (d) => 1 - Math.exp(-k * d);
-  const b = expo(diaIndex);
-  const bMin = expo(1);
-  const bMax = expo(totalDias);
-  if (bMax === bMin) return 0;
-  return (b - bMin) / (bMax - bMin);
+/* ============ Estado en memoria ============ */
+// ejercicios: [{id, nombre, tipo:'reps'|'tiempo', carga:'peso'|'rpe', series:[{cantidad, valor}]}]
+//   tipo   -> qué se cuenta por serie: repeticiones o segundos (isométricos)
+//   carga  -> qué acompaña a esa cantidad: peso en kg, o RPE (para ejercicios sin carga externa)
+let ejercicios = [];
+let editandoId = null;      // id de la sesión en edición, o null si es nueva
+let rutinaActualId = null;  // id de la rutina en la que se basó el formulario actual, o null
+
+// Estado de la sesión "en vivo" (rutina iniciada con cronómetro):
+let vivoRutinaId = null;
+let vivoRutinaNombre = '';
+let vivoInicio = null;      // timestamp (ms) de inicio
+let vivoItems = [];         // [{ronda, nombre, tipo, carga, hecho}]
+let vivoTimerHandle = null;
+let vivoWakeLock = null;
+let vivoEnPausa = false;              // false = trabajo, true = pausa/descanso
+let vivoSegundosTrabajoAcum = 0;      // segundos ya cerrados (no incluye el segmento en curso)
+let vivoSegundosPausaAcum = 0;
+let vivoSegmentoInicio = null;        // timestamp (ms) de cuando arrancó el segmento actual
+
+/* ============ Utilidades ============ */
+function idNuevo(prefijo){
+  return prefijo + '_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2,8);
 }
 
-function interpolarValor(curva, inicio, fin, modo) {
-  const v = inicio + curva * (fin - inicio);
-  if (modo === 'entero-trunc') return Math.trunc(v);
-  if (modo === 'entero-round') return Math.round(v);
-  return v;
+function hoyISO(){
+  const d = new Date();
+  const off = d.getTimezoneOffset();
+  const local = new Date(d.getTime() - off*60000);
+  return local.toISOString().slice(0,10);
 }
 
-// Reducción lineal de horasSemana en los últimos N días del ciclo (taper), independiente
-// de la curva de incremento principal. factor 1.0 = sin reducir, hasta (1-reduccionPct/100)
-// el último día del ciclo (el día del evento).
-function calcularFactorTaper(config, diaIndex) {
-  const taper = config.taper;
-  if (!taper || !taper.dias || taper.dias <= 0 || !taper.reduccionPct) return 1;
-  const inicioTaper = config.totalDias - taper.dias + 1;
-  if (diaIndex < inicioTaper) return 1;
-  const progreso = (diaIndex - inicioTaper + 1) / taper.dias; // 0 (arranca el taper) .. 1 (día del evento)
-  return 1 - (taper.reduccionPct / 100) * Math.min(1, progreso);
+function formatearFecha(iso){
+  const [y,m,d] = iso.split('-');
+  return `${d}/${m}/${y.slice(2)}`;
 }
 
-const METRICAS_ZONA = [
-  { key: 'potFosf', label: 'Potencia fosfágena', fase: 'fosf' },
-  { key: 'capFosf', label: 'Capacidad fosfágena', fase: 'fosf' },
-  { key: 'potGlucol', label: 'Potencia glucolítica', fase: 'glucol' },
-  { key: 'capGlucol', label: 'Capacidad glucolítica', fase: 'glucol' },
-  { key: 'potAerobMax', label: 'Potencia aeróbica máx', fase: 'aerob' },
-  { key: 'potAerob', label: 'Potencia aeróbica', fase: 'aerob' },
-  { key: 'capAerobMax', label: 'Capacidad aeróbica máx', fase: 'aerob' },
-  { key: 'capEfAerob2', label: 'Capacidad/eficiencia aeróbica 2', fase: 'aerob' },
-  { key: 'capAerob1', label: 'Capacidad aeróbica 1', fase: 'aerob' },
-  { key: 'pctPulsoMax', label: '% pulso máx', fase: 'pulso' },
-];
-
-const DISCIPLINAS = [
-  { key: 'natacion', label: 'Natación', color: 'var(--natacion)' },
-  { key: 'bici', label: 'Ciclismo', color: 'var(--bici)' },
-  { key: 'carrera', label: 'Carrera', color: 'var(--carrera)' },
-  { key: 'fuerza', label: 'Fuerza', color: 'var(--fuerza)' },
-  { key: 'kayak', label: 'Kayak', color: 'var(--kayak)' },
-];
-
-function calcularDia(config, fechaISO) {
-  const fechaInicio = new Date(config.fechaInicio + 'T00:00:00');
-  const fecha = new Date(fechaISO + 'T00:00:00');
-  const diaIndex = Math.round((fecha - fechaInicio) / 86400000) + 1;
-
-  const curvaEnDia = (di) => curvaNormalizada(Math.min(Math.max(di, 1), config.totalDias), config.totalDias, config.k);
-
-  const fueraDeRango = diaIndex < 1 || diaIndex > config.totalDias;
-  const curva = curvaEnDia(diaIndex);
-
-  const semanaIndex = Math.floor((Math.min(Math.max(diaIndex, 1), config.totalDias) - 1) / 7);
-  const patron = (config.patronCargaSemanal && config.patronCargaSemanal.length) ? config.patronCargaSemanal : [100];
-  let pctCarga = patron[semanaIndex % patron.length];
-  if (config.cargaOverrides && config.cargaOverrides[fechaISO] !== undefined) {
-    pctCarga = config.cargaOverrides[fechaISO];
-  }
-
-  const horasSemana = interpolarValor(curva, config.horasSemana.inicio, config.horasSemana.fin, 'continuo');
-  const factorTaper = calcularFactorTaper(config, diaIndex);
-  const horasSemanaConTaper = horasSemana * factorTaper;
-
-  const disciplinas = {};
-  for (const d of DISCIPLINAS) {
-    const cfg = config.disciplinas[d.key];
-    const pct = interpolarValor(curva, cfg.pctInicio, cfg.pctFin, 'entero-trunc');
-    const sesionesSemana = interpolarValor(curva, cfg.sesionesInicio, cfg.sesionesFin, 'entero-round');
-    const tiempoSemanaSeg = horasSemanaConTaper * 3600 * (pct / 100);
-    const tiempoSesionSeg = sesionesSemana > 0 ? (tiempoSemanaSeg / sesionesSemana) * (pctCarga / 100) : 0;
-    disciplinas[d.key] = { label: d.label, color: d.color, pct, sesionesSemana, tiempoSemanaSeg, tiempoSesionSeg };
-  }
-
-  const zonas = {};
-  for (const z of METRICAS_ZONA) {
-    const cfg = config.zonas[z.key];
-    if (z.key === 'pctPulsoMax') {
-      zonas[z.key] = { label: z.label, fase: z.fase, esPorcentaje: true, valor: interpolarValor(curva, cfg.inicio, cfg.fin, 'entero-trunc') };
-      continue;
-    }
-    const trabajoSeg = interpolarValor(curva, cfg.trabajo.inicio, cfg.trabajo.fin, 'continuo');
-    const recuperacionSeg = interpolarValor(curva, cfg.recuperacion.inicio, cfg.recuperacion.fin, 'continuo');
-    const series = Math.max(1, interpolarValor(curva, cfg.series.inicio, cfg.series.fin, 'entero-round'));
-    const duracionTotalSeg = series * trabajoSeg + Math.max(0, series - 1) * recuperacionSeg;
-    zonas[z.key] = {
-      label: z.label, fase: z.fase, esPorcentaje: false,
-      trabajoSeg, recuperacionSeg, series, duracionTotalSeg,
-      valor: trabajoSeg, // compat: "valor" = tiempo de trabajo sugerido
-    };
-  }
-
-  return { fueraDeRango, diaIndex, semanaIndex: semanaIndex + 1, curva, pctCarga, horasSemana: horasSemanaConTaper, enTaper: factorTaper < 1, disciplinas, zonas };
+function formatearDuracion(ms){
+  const totalSeg = Math.max(0, Math.floor(ms/1000));
+  const h = Math.floor(totalSeg/3600);
+  const m = Math.floor((totalSeg%3600)/60);
+  const s = totalSeg%60;
+  const mm = String(m).padStart(2,'0');
+  const ss = String(s).padStart(2,'0');
+  return h>0 ? `${h}:${mm}:${ss}` : `${mm}:${ss}`;
 }
 
-/* ========================= UTILIDADES DE TIEMPO ========================= */
-
-function segARelojes(seg) {
-  seg = Math.round(seg || 0);
-  const h = Math.floor(seg / 3600);
-  const m = Math.floor((seg % 3600) / 60);
-  const s = seg % 60;
-  if (h > 0) return h + ':' + String(m).padStart(2, '0') + ':' + String(s).padStart(2, '0');
-  return m + ':' + String(s).padStart(2, '0');
+function mostrarToast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), 1600);
 }
 
-function relojASegundos(str) {
-  if (str === null || str === undefined || str === '') return 0;
-  const partes = String(str).split(':').map((p) => parseFloat(p) || 0);
-  if (partes.length === 3) return partes[0] * 3600 + partes[1] * 60 + partes[2];
-  if (partes.length === 2) return partes[0] * 60 + partes[1];
-  return partes[0] || 0;
+function escapeAttr(v){
+  if(v === undefined || v === null) return '';
+  return String(v).replace(/&/g,'&amp;').replace(/"/g,'&quot;');
 }
 
-/* ========================= ALMACENAMIENTO ========================= */
+function escapeHtml(v){
+  if(v === undefined || v === null) return '';
+  return String(v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
 
-const LS_CICLOS = 'plan_ciclos_v1';
-const LS_OVERRIDES = 'plan_carga_overrides_v1';
-const LS_COMPARTIDO = 'entrenamiento_plan_hoy';
-const LS_REGISTRO_FORMA = 'entrenamiento_forma_registro';
-
-/* ========================= PROYECCIÓN DE FORMA (CTL/ATL/TSB) ========================= */
-
-const TC_CTL = 42; // días
-const TC_ATL = 7;  // días
-
-function leerRegistroForma() {
-  try {
-    return JSON.parse(localStorage.getItem(LS_REGISTRO_FORMA)) || [];
-  } catch (e) {
+/* ============ localStorage: sesiones propias ============ */
+function leerSesiones(){
+  try{
+    const raw = localStorage.getItem(K_SESIONES);
+    return raw ? JSON.parse(raw) : [];
+  }catch(e){
+    console.error('Error leyendo sesiones de fuerza', e);
     return [];
   }
 }
 
-// Recorre el registro real (compartido con Correr/Bici/Kayak) día a día con la
-// misma recursión EWMA hasta "hastaISO" (inclusive) para tener el CTL/ATL de partida.
-function calcularEstadoActual(registro, hastaISO) {
-  const porDia = {};
-  registro.forEach((e) => {
-    const f = (e && e.fecha) ? String(e.fecha).slice(0, 10) : null;
-    if (!f) return;
-    porDia[f] = (porDia[f] || 0) + (parseFloat(e.tss) || 0);
+function guardarSesiones(lista){
+  try{
+    localStorage.setItem(K_SESIONES, JSON.stringify(lista));
+    return true;
+  }catch(e){
+    console.error('Error guardando sesiones de fuerza', e);
+    return false;
+  }
+}
+
+/* ============ localStorage: rutinas (circuitos guardados) ============ */
+function leerRutinas(){
+  try{
+    const raw = localStorage.getItem(K_RUTINAS);
+    return raw ? JSON.parse(raw) : [];
+  }catch(e){
+    console.error('Error leyendo rutinas de fuerza', e);
+    return [];
+  }
+}
+
+function guardarRutinas(lista){
+  try{
+    localStorage.setItem(K_RUTINAS, JSON.stringify(lista));
+    return true;
+  }catch(e){
+    console.error('Error guardando rutinas de fuerza', e);
+    return false;
+  }
+}
+
+/* ============ localStorage: sesión "en vivo" (para sobrevivir un cierre accidental) ============ */
+function guardarEstadoVivo(){
+  try{
+    localStorage.setItem(K_VIVO, JSON.stringify({
+      rutinaId: vivoRutinaId,
+      rutinaNombre: vivoRutinaNombre,
+      inicio: vivoInicio,
+      items: vivoItems,
+      enPausa: vivoEnPausa,
+      segundosTrabajoAcum: vivoSegundosTrabajoAcum,
+      segundosPausaAcum: vivoSegundosPausaAcum,
+      segmentoInicio: vivoSegmentoInicio
+    }));
+  }catch(e){
+    console.error('Error guardando la sesión en vivo', e);
+  }
+}
+
+function leerEstadoVivo(){
+  try{
+    const raw = localStorage.getItem(K_VIVO);
+    return raw ? JSON.parse(raw) : null;
+  }catch(e){
+    console.error('Error leyendo la sesión en vivo', e);
+    return null;
+  }
+}
+
+function borrarEstadoVivo(){
+  try{ localStorage.removeItem(K_VIVO); }catch(e){ console.error(e); }
+}
+
+/* ============ localStorage: registro compartido de Forma ============ */
+/* Leer el registro COMPLETO (de todas las apps), modificar solo lo propio, guardar todo de vuelta. */
+function leerRegistroForma(){
+  try{
+    const raw = localStorage.getItem(K_FORMA_COMPARTIDA);
+    return raw ? JSON.parse(raw) : [];
+  }catch(e){
+    console.error('Error leyendo registro de Forma compartido', e);
+    return [];
+  }
+}
+
+function upsertEnRegistroForma(entrada){
+  const registro = leerRegistroForma();
+  const filtrado = registro.filter(r => r.id !== entrada.id);
+  filtrado.push(entrada);
+  try{
+    localStorage.setItem(K_FORMA_COMPARTIDA, JSON.stringify(filtrado));
+    return true;
+  }catch(e){
+    console.error('Error guardando en registro de Forma compartido', e);
+    return false;
+  }
+}
+
+function borrarDeRegistroForma(id){
+  const registro = leerRegistroForma();
+  const filtrado = registro.filter(r => r.id !== id);
+  try{
+    localStorage.setItem(K_FORMA_COMPARTIDA, JSON.stringify(filtrado));
+  }catch(e){
+    console.error('Error borrando del registro de Forma compartido', e);
+  }
+}
+
+/* ============ Cálculo de carga (sRPE / Foster) ============ */
+function calcularTSS(rpe, minutos){
+  rpe = Number(rpe) || 0;
+  minutos = Number(minutos) || 0;
+  return (rpe * minutos) / 6;
+}
+
+function actualizarTSS(){
+  const rpe = document.getElementById('inRpeSesion').value;
+  const min = document.getElementById('inDuracion').value;
+  const tss = calcularTSS(rpe, min);
+  document.getElementById('tssPreview').textContent = tss ? tss.toFixed(0) : '0';
+}
+
+/* ============ Tabs ============ */
+function mostrarTab(nombre){
+  document.getElementById('tab-registrar').classList.toggle('activa', nombre==='registrar');
+  document.getElementById('tab-historial').classList.toggle('activa', nombre==='historial');
+  document.getElementById('tab-rutinas').classList.toggle('activa', nombre==='rutinas');
+  document.getElementById('tab-musculos').classList.toggle('activa', nombre==='musculos');
+  document.getElementById('tab-vivo').classList.remove('activa');
+  document.getElementById('tabBtnRegistrar').classList.toggle('activa', nombre==='registrar');
+  document.getElementById('tabBtnHistorial').classList.toggle('activa', nombre==='historial');
+  document.getElementById('tabBtnRutinas').classList.toggle('activa', nombre==='rutinas');
+  document.getElementById('tabBtnMusculos').classList.toggle('activa', nombre==='musculos');
+  if(nombre === 'historial') renderHistorial();
+  if(nombre === 'rutinas') renderRutinas();
+  if(nombre === 'musculos') renderMusculos();
+}
+
+/* ============ Ejercicios (formulario) ============ */
+function agregarEjercicio(nombre, tipo, carga, series){
+  ejercicios.push({
+    id: idNuevo('ej'),
+    nombre: nombre || '',
+    tipo: tipo || 'reps',    // 'reps' | 'tiempo'
+    carga: carga || 'peso',  // 'peso' | 'rpe'
+    series: series || [ {cantidad:'', valor:''} ]
   });
-  const fechas = Object.keys(porDia);
-  const hasta = new Date(hastaISO + 'T00:00:00');
-  const ventanaMin = new Date(hasta);
-  ventanaMin.setDate(ventanaMin.getDate() - 90); // no hace falta ir más atrás: a 90 días el EWMA ya convergió
-  let inicio = fechas.length ? new Date(fechas.reduce((a, b) => (a < b ? a : b)) + 'T00:00:00') : hasta;
-  if (inicio < ventanaMin) inicio = ventanaMin;
+  renderEjercicios();
+}
 
-  let ctl = 0, atl = 0, ctlPrev = 0, atlPrev = 0;
-  const serie = [];
-  const cursor = new Date(inicio);
-  while (cursor <= hasta) {
-    const iso = cursor.toISOString().slice(0, 10);
-    const tss = porDia[iso] || 0;
-    ctlPrev = ctl; atlPrev = atl;
-    ctl = ctl + (tss - ctl) / TC_CTL;
-    atl = atl + (tss - atl) / TC_ATL;
-    // tsb "de ese día" = brecha ANTES de sumar el tss de ese día — misma convención que
-    // pasoEWMA() en Correr/Kayak/Bici (tsb representa la frescura con la que arrancaste el día).
-    serie.push({ fecha: iso, ctl, atl, tsb: ctlPrev - atlPrev });
-    cursor.setDate(cursor.getDate() + 1);
+function quitarEjercicio(id){
+  ejercicios = ejercicios.filter(e => e.id !== id);
+  renderEjercicios();
+}
+
+function cambiarTipoEjercicio(id, tipo){
+  const ej = ejercicios.find(e => e.id === id);
+  if(ej) ej.tipo = tipo;
+  renderEjercicios();
+}
+
+function cambiarCargaEjercicio(id, carga){
+  const ej = ejercicios.find(e => e.id === id);
+  if(ej) ej.carga = carga;
+  renderEjercicios();
+}
+
+function agregarSerie(ejId){
+  const ej = ejercicios.find(e => e.id === ejId);
+  if(ej) ej.series.push({cantidad:'', valor:''});
+  renderEjercicios();
+}
+
+function quitarSerie(ejId, idx){
+  const ej = ejercicios.find(e => e.id === ejId);
+  if(ej){
+    ej.series.splice(idx,1);
+    if(ej.series.length === 0) ej.series.push({cantidad:'', valor:''});
   }
-  const ultimo = serie[serie.length - 1] || { ctl: 0, atl: 0, tsb: 0 };
-  return { ctl: ultimo.ctl, atl: ultimo.atl, tsb: ultimo.tsb, tieneDatos: fechas.length > 0, serie };
+  renderEjercicios();
 }
 
-// TSS diario promedio estimado para una fecha, repartiendo el volumen semanal
-// planeado de las 5 disciplinas parejo en los 7 días (no sabemos todavía qué
-// día de la semana le toca a cada una).
-function tssDiarioEstimado(configConOverrides, fechaISO) {
-  const r = calcularDia(configConOverrides, fechaISO);
-  if (r.fueraDeRango) return 0;
-  const IF = (r.zonas.pctPulsoMax.valor || 70) / 100;
-  let tssSemana = 0;
-  DISCIPLINAS.forEach((d) => {
-    const dd = r.disciplinas[d.key];
-    tssSemana += dd.sesionesSemana * (dd.tiempoSesionSeg / 3600) * IF * IF * 100;
-  });
-  return tssSemana / 7;
-}
-
-function tssDiarioEstimadoTemporada(fechaISO) {
-  const encontrado = cicloParaFecha(fechaISO);
-  if (!encontrado) return 0;
-  const overridesCiclo = overridesAll[encontrado.id] || {};
-  const configConOverrides = Object.assign({}, encontrado.config, { cargaOverrides: overridesCiclo });
-  return tssDiarioEstimado(configConOverrides, fechaISO);
-}
-
-// Proyecta a través de TODOS los ciclos guardados en orden — así, encadenar Base →
-// Media maratón+taper → Travesía → Ironman+taper → Vacaciones se refleja solo, sin
-// que cada ciclo tenga que saber nada del anterior o el siguiente.
-function proyectarFormaTemporada(desdeISO, ctlIni, atlIni) {
-  const ciclos = listaCiclosOrdenados();
-  if (!ciclos.length) return [];
-  const finTemporada = finCicloISO(ciclos[ciclos.length - 1].config);
-  const fin = new Date(finTemporada + 'T00:00:00');
-
-  const puntos = [];
-  let ctl = ctlIni, atl = atlIni;
-  const cursor = new Date(desdeISO + 'T00:00:00');
-  cursor.setDate(cursor.getDate() + 1);
-  while (cursor <= fin) {
-    const iso = cursor.toISOString().slice(0, 10);
-    const tss = tssDiarioEstimadoTemporada(iso);
-    const ctlPrev = ctl, atlPrev = atl;
-    ctl = ctl + (tss - ctl) / TC_CTL;
-    atl = atl + (tss - atl) / TC_ATL;
-    puntos.push({ fecha: iso, ctl, atl, tsb: ctlPrev - atlPrev });
-    cursor.setDate(cursor.getDate() + 1);
-  }
-  return puntos;
-}
-
-function cargarStore() {
-  let store;
-  try {
-    store = JSON.parse(localStorage.getItem(LS_CICLOS)) || { ciclos: {}, activoId: null };
-  } catch (e) {
-    store = { ciclos: {}, activoId: null };
-  }
-  migrarTodosLosCiclos(store);
-  return store;
-}
-function guardarStore(store) {
-  localStorage.setItem(LS_CICLOS, JSON.stringify(store));
-}
-function cargarOverrides() {
-  try {
-    return JSON.parse(localStorage.getItem(LS_OVERRIDES)) || {};
-  } catch (e) {
-    return {};
-  }
-}
-function guardarOverrides(ov) {
-  localStorage.setItem(LS_OVERRIDES, JSON.stringify(ov));
-}
-
-function configDefault() {
-  return {
-    nombre: 'Nuevo ciclo',
-    fechaInicio: new Date().toISOString().slice(0, 10),
-    totalDias: 84,
-    k: 0.02,
-    horasSemana: { inicio: 5, fin: 10 },
-    taper: { dias: 0, reduccionPct: 0 },
-    eventoNombre: '', eventoFecha: '',
-    patronCargaSemanal: [85, 90, 95, 100],
-    disciplinas: {
-      natacion: { pctInicio: 20, pctFin: 20, sesionesInicio: 2, sesionesFin: 3, diasSemana: [] },
-      bici: { pctInicio: 25, pctFin: 25, sesionesInicio: 2, sesionesFin: 3, diasSemana: [] },
-      carrera: { pctInicio: 25, pctFin: 25, sesionesInicio: 2, sesionesFin: 3, diasSemana: [] },
-      fuerza: { pctInicio: 15, pctFin: 10, sesionesInicio: 2, sesionesFin: 2, diasSemana: [] },
-      kayak: { pctInicio: 15, pctFin: 20, sesionesInicio: 1, sesionesFin: 2, diasSemana: [] },
-    },
-    zonas: {
-      potFosf: { trabajo: { inicio: 5, fin: 10 }, recuperacion: { inicio: 60, fin: 90 }, series: { inicio: 4, fin: 8 } },
-      capFosf: { trabajo: { inicio: 10, fin: 20 }, recuperacion: { inicio: 90, fin: 120 }, series: { inicio: 4, fin: 6 } },
-      potGlucol: { trabajo: { inicio: 30, fin: 60 }, recuperacion: { inicio: 120, fin: 240 }, series: { inicio: 4, fin: 6 } },
-      capGlucol: { trabajo: { inicio: 60, fin: 120 }, recuperacion: { inicio: 180, fin: 300 }, series: { inicio: 3, fin: 5 } },
-      potAerobMax: { trabajo: { inicio: 60, fin: 240 }, recuperacion: { inicio: 60, fin: 240 }, series: { inicio: 4, fin: 8 } },
-      potAerob: { trabajo: { inicio: 600, fin: 2400 }, recuperacion: { inicio: 120, fin: 300 }, series: { inicio: 1, fin: 3 } },
-      capAerobMax: { trabajo: { inicio: 2400, fin: 3600 }, recuperacion: { inicio: 0, fin: 0 }, series: { inicio: 1, fin: 1 } },
-      capEfAerob2: { trabajo: { inicio: 5400, fin: 10800 }, recuperacion: { inicio: 0, fin: 0 }, series: { inicio: 1, fin: 1 } },
-      capAerob1: { trabajo: { inicio: 10800, fin: 21600 }, recuperacion: { inicio: 0, fin: 0 }, series: { inicio: 1, fin: 1 } },
-      pctPulsoMax: { inicio: 80, fin: 86 },
-    },
-  };
-}
-
-/* ========================= MIGRACIÓN DE ESQUEMAS VIEJOS ========================= */
-
-// Ciclos guardados antes de la función de series tenían zonas planas {inicio,fin}
-// (= tiempo de trabajo). Esto las convierte al formato con trabajo/recuperación/series.
-function migrarCiclo(config) {
-  if (config.eventoNombre === undefined) config.eventoNombre = '';
-  if (config.eventoFecha === undefined) config.eventoFecha = '';
-  if (!config.taper) config.taper = { dias: 0, reduccionPct: 0 };
-  if (config.disciplinas) {
-    Object.keys(config.disciplinas).forEach((k) => {
-      if (!config.disciplinas[k].diasSemana) config.disciplinas[k].diasSemana = [];
+function leerCamposFormulario(){
+  // vuelca los inputs actuales del DOM al array `ejercicios` antes de re-renderizar o guardar
+  document.querySelectorAll('.ejercicio').forEach(div => {
+    const ejId = div.dataset.id;
+    const ej = ejercicios.find(e => e.id === ejId);
+    if(!ej) return;
+    const nombreInput = div.querySelector('.nombre-ejercicio');
+    if(nombreInput) ej.nombre = nombreInput.value;
+    div.querySelectorAll('.serie').forEach((filaSerie, idx) => {
+      const cantidad = filaSerie.querySelector('.serie-cantidad');
+      const valor = filaSerie.querySelector('.serie-valor');
+      if(ej.series[idx]){
+        ej.series[idx].cantidad = cantidad ? cantidad.value : '';
+        ej.series[idx].valor = valor ? valor.value : '';
+      }
     });
-  }
-  if (!config.zonas) return config;
-  const defaults = configDefault().zonas;
-  const migradas = {};
-  Object.keys(config.zonas).forEach((key) => {
-    const z = config.zonas[key];
-    if (!z) return;
-    if (key === 'pctPulsoMax') { migradas[key] = z; return; }
-    if (z.trabajo) { migradas[key] = z; return; } // ya está en formato nuevo
-    const def = defaults[key] || { recuperacion: { inicio: 0, fin: 0 }, series: { inicio: 1, fin: 1 } };
-    migradas[key] = {
-      trabajo: { inicio: z.inicio || 0, fin: z.fin || 0 },
-      recuperacion: def.recuperacion,
-      series: def.series,
-    };
   });
-  config.zonas = migradas;
-  return config;
 }
 
-function migrarTodosLosCiclos(store) {
-  if (!store || !store.ciclos) return store;
-  Object.keys(store.ciclos).forEach((id) => { store.ciclos[id] = migrarCiclo(store.ciclos[id]); });
-  return store;
-}
-
-// Tolera tanto el formato correcto como el bug de doble anidado de versiones
-// anteriores del export ({ciclos:{ciclos:{...}, activoId}} en vez de {ciclos:{...}, activoId}).
-function normalizarImport(data) {
-  let ciclosMap, activoId;
-  if (data.ciclos && data.ciclos.ciclos) {
-    ciclosMap = data.ciclos.ciclos;
-    activoId = data.ciclos.activoId;
-  } else if (data.ciclos) {
-    ciclosMap = data.ciclos;
-    activoId = data.activoId !== undefined ? data.activoId : (Object.keys(data.ciclos)[0] || null);
-  } else {
-    ciclosMap = {};
-    activoId = null;
+function renderEjercicios(){
+  const cont = document.getElementById('listaEjercicios');
+  if(ejercicios.length === 0){
+    cont.innerHTML = '<div class="vacio">Todavía no agregaste ejercicios.</div>';
+    return;
   }
-  return { ciclos: ciclosMap, activoId, overrides: data.overrides || {} };
+  cont.innerHTML = ejercicios.map(ej => {
+    const cantidadPlaceholder = ej.tipo === 'tiempo' ? 'seg' : 'reps';
+    const valorPlaceholder = ej.carga === 'peso' ? 'kg' : 'RPE';
+    const valorStep = ej.carga === 'peso' ? '0.5' : '1';
+    const valorMax = ej.carga === 'rpe' ? 'max="10"' : '';
+    const seriesHtml = ej.series.map((s, idx) => `
+      <div class="serie">
+        <span class="n">${idx+1}</span>
+        <input type="number" class="serie-cantidad" min="0" step="1" placeholder="${cantidadPlaceholder}" value="${escapeAttr(s.cantidad)}">
+        <input type="number" class="serie-valor" min="0" step="${valorStep}" ${valorMax} placeholder="${valorPlaceholder}" value="${escapeAttr(s.valor)}">
+        <button onclick="quitarSerie('${ej.id}', ${idx})" title="Quitar serie">✕</button>
+      </div>
+    `).join('');
+    return `
+      <div class="ejercicio" data-id="${ej.id}">
+        <div class="ejercicio-cab">
+          <input type="text" class="nombre-ejercicio" placeholder="Nombre del ejercicio" value="${escapeAttr(ej.nombre)}">
+          <button class="quitar-ejercicio" onclick="leerCamposFormulario(); quitarEjercicio('${ej.id}')" title="Quitar ejercicio">🗑</button>
+        </div>
+        <div class="modos-fila">
+          <div class="toggle-modo">
+            <button class="${ej.tipo==='reps'?'on':''}" onclick="leerCamposFormulario(); cambiarTipoEjercicio('${ej.id}','reps')">🔢 REPS</button>
+            <button class="${ej.tipo==='tiempo'?'on':''}" onclick="leerCamposFormulario(); cambiarTipoEjercicio('${ej.id}','tiempo')">⏱️ TIEMPO</button>
+          </div>
+          <div class="toggle-modo">
+            <button class="${ej.carga==='peso'?'on':''}" onclick="leerCamposFormulario(); cambiarCargaEjercicio('${ej.id}','peso')">KG</button>
+            <button class="${ej.carga==='rpe'?'on':''}" onclick="leerCamposFormulario(); cambiarCargaEjercicio('${ej.id}','rpe')">RPE</button>
+          </div>
+        </div>
+        ${seriesHtml}
+        <button class="btn btn-mini agregar-serie" onclick="leerCamposFormulario(); agregarSerie('${ej.id}')">+ Serie</button>
+      </div>
+    `;
+  }).join('');
 }
 
-/* ========================= ESTADO ========================= */
-
-let store = cargarStore();
-let overridesAll = cargarOverrides();
-let cicloEnEdicion = null; // config temporal mientras se edita el formulario
-let discActivas = {}; // { fechaISO: {discKey: bool} } — selección en memoria del día
-
-// Encuentra qué ciclo guardado corresponde a una fecha (para encadenar ciclos:
-// Base → Media maratón+taper → Travesía → Ironman+taper → Vacaciones, cada uno
-// con sus propias fechas, sin superponerse). Si hay superposición, devuelve el primero que matchea.
-function cicloParaFecha(fechaISO) {
-  const ids = Object.keys(store.ciclos);
-  for (let i = 0; i < ids.length; i++) {
-    const id = ids[i];
-    const c = store.ciclos[id];
-    if (!c.fechaInicio) continue;
-    const fin = new Date(c.fechaInicio + 'T00:00:00');
-    fin.setDate(fin.getDate() + c.totalDias - 1);
-    const finIso = fin.toISOString().slice(0, 10);
-    if (fechaISO >= c.fechaInicio && fechaISO <= finIso) return { id, config: c };
+/* ============ Rutinas (circuitos reutilizables) ============ */
+function construirDefinicionRutina(){
+  const validos = ejercicios.filter(e => (e.nombre||'').trim() !== '');
+  if(validos.length === 0){
+    mostrarToast('⚠️ Agregá nombres a los ejercicios primero');
+    return null;
   }
-  return null;
+  return validos.map(e => ({
+    nombre: e.nombre.trim(),
+    tipo: e.tipo,
+    carga: e.carga,
+    seriesSugeridas: e.series.length || 1
+  }));
 }
 
-// Todos los ciclos guardados, ordenados por fecha de inicio — la "temporada" completa.
-function listaCiclosOrdenados() {
-  return Object.keys(store.ciclos)
-    .map((id) => ({ id, config: store.ciclos[id] }))
-    .filter((x) => x.config.fechaInicio)
-    .sort((a, b) => (a.config.fechaInicio < b.config.fechaInicio ? -1 : 1));
+function guardarComoRutinaNueva(){
+  leerCamposFormulario();
+  const definicion = construirDefinicionRutina();
+  if(!definicion) return;
+  const nombre = prompt('Nombre de la rutina:', '');
+  if(!nombre || !nombre.trim()) return;
+  const rutinas = leerRutinas();
+  const rutina = { id: idNuevo('rutina'), nombre: nombre.trim(), ejercicios: definicion };
+  rutinas.push(rutina);
+  guardarRutinas(rutinas);
+  rutinaActualId = rutina.id;
+  renderBotonRutina();
+  mostrarToast('✅ Rutina guardada');
 }
 
-function finCicloISO(config) {
-  const fin = new Date(config.fechaInicio + 'T00:00:00');
-  fin.setDate(fin.getDate() + config.totalDias - 1);
-  return fin.toISOString().slice(0, 10);
-}
-
-/* ========================= TABS ========================= */
-
-document.querySelectorAll('.tab').forEach((tab) => {
-  tab.addEventListener('click', () => {
-    document.querySelectorAll('.tab').forEach((t) => t.classList.remove('active'));
-    document.querySelectorAll('.panel').forEach((p) => p.classList.remove('active'));
-    tab.classList.add('active');
-    document.getElementById('panel-' + tab.dataset.tab).classList.add('active');
-    if (tab.dataset.tab === 'hoy') renderHoy();
-    if (tab.dataset.tab === 'calendario') renderCalendario();
-    if (tab.dataset.tab === 'grafico') { renderPanorama(); renderGraficoCiclo(); renderProyeccionForma(); }
-  });
-});
-
-/* ========================= TOAST ========================= */
-
-let toastTimeout;
-function toast(msg) {
-  const el = document.getElementById('toast');
-  el.textContent = msg;
-  el.classList.add('show');
-  clearTimeout(toastTimeout);
-  toastTimeout = setTimeout(() => el.classList.remove('show'), 2200);
-}
-
-/* ========================= CURVA SVG (firma visual del header) ========================= */
-
-function dibujarCurvaHeader(config) {
-  const svg = document.getElementById('curveSvg');
-  if (!config) { svg.innerHTML = ''; return; }
-  const pts = [];
-  const N = 60;
-  for (let i = 0; i <= N; i++) {
-    const dia = 1 + (config.totalDias - 1) * (i / N);
-    const c = curvaNormalizada(dia, config.totalDias, config.k);
-    const x = (i / N) * 400;
-    const y = 84 - c * 68;
-    pts.push(x.toFixed(1) + ',' + y.toFixed(1));
+function actualizarRutinaActual(){
+  leerCamposFormulario();
+  const definicion = construirDefinicionRutina();
+  if(!definicion) return;
+  const rutinas = leerRutinas();
+  const idx = rutinas.findIndex(r => r.id === rutinaActualId);
+  if(idx < 0){
+    mostrarToast('⚠️ No se encontró la rutina original');
+    return;
   }
-  const linea = 'M' + pts.join(' L');
-  const relleno = linea + ' L400,90 L0,90 Z';
-  svg.innerHTML =
-    '<path d="' + relleno + '" fill="url(#g)" opacity="0.35"></path>' +
-    '<path d="' + linea + '" fill="none" stroke="#e0a458" stroke-width="2"></path>' +
-    '<defs><linearGradient id="g" x1="0" y1="0" x2="0" y2="1">' +
-    '<stop offset="0%" stop-color="#e0a458"></stop><stop offset="100%" stop-color="#e0a458" stop-opacity="0"></stop>' +
-    '</linearGradient></defs>';
+  rutinas[idx].ejercicios = definicion;
+  guardarRutinas(rutinas);
+  mostrarToast('✅ Rutina actualizada');
 }
 
-/* ========================= SLIDER DE FORMA DE CURVA (k) ========================= */
-
-const K_MIN = 0.002;
-const K_MAX = 0.15;
-
-function kDesdePos(pos) {
-  return K_MIN * Math.pow(K_MAX / K_MIN, pos / 100);
-}
-function posDesdeK(k) {
-  const kk = Math.min(Math.max(k, K_MIN), K_MAX);
-  return 100 * Math.log(kk / K_MIN) / Math.log(K_MAX / K_MIN);
-}
-function actualizarLabelK(k) {
-  document.getElementById('fKValueLabel').textContent = 'k=' + k.toFixed(3);
-}
-
-document.getElementById('fKSlider').addEventListener('input', () => {
-  const pos = parseFloat(document.getElementById('fKSlider').value);
-  const k = kDesdePos(pos);
-  document.getElementById('fK').value = k.toFixed(4);
-  actualizarLabelK(k);
-  dibujarGraficoHoras();
-});
-
-/* ========================= GRÁFICO DE INCREMENTO DE HORAS (vista previa en el form) ========================= */
-
-function calcularSemanaMitad(totalDias, k) {
-  if (totalDias <= 1) return 1;
-  const expo = (d) => 1 - Math.exp(-k * d);
-  const b1 = expo(1);
-  const bN = expo(totalDias);
-  const target = b1 + 0.5 * (bN - b1);
-  const d = -Math.log(1 - target) / k;
-  return Math.max(1, Math.min(totalDias, d));
-}
-
-// Duración del ciclo: si hay fecha de evento cargada, se calcula desde el inicio hasta esa
-// fecha (el evento es el último día del ciclo, y el taper termina justo ahí). Si no, se usa
-// el campo de semanas de siempre.
-function calcularTotalDiasDesdeForm() {
-  const fechaInicio = document.getElementById('fFechaInicio').value;
-  const fechaEvento = document.getElementById('fEventoFecha').value;
-  if (fechaInicio && fechaEvento) {
-    const di = new Date(fechaInicio + 'T00:00:00');
-    const de = new Date(fechaEvento + 'T00:00:00');
-    const dias = Math.round((de - di) / 86400000) + 1;
-    if (dias >= 1) return dias;
+function renderBotonRutina(){
+  const info = document.getElementById('rutinaInfo');
+  const btnActualizar = document.getElementById('btnActualizarRutina');
+  if(rutinaActualId){
+    const r = leerRutinas().find(x => x.id === rutinaActualId);
+    if(r){
+      info.style.display = 'block';
+      info.textContent = '📂 Basado en la rutina: ' + r.nombre;
+      btnActualizar.style.display = 'block';
+      return;
+    }
   }
-  const semanas = Math.max(1, Math.round(parseFloat(document.getElementById('fSemanas').value) || 1));
-  return semanas * 7;
+  info.style.display = 'none';
+  btnActualizar.style.display = 'none';
 }
 
-function actualizarHintDuracion() {
-  const fechaInicio = document.getElementById('fFechaInicio').value;
-  const fechaEvento = document.getElementById('fEventoFecha').value;
-  const hint = document.getElementById('duracionCalculadaHint');
-  const wrapSemanas = document.getElementById('fSemanasWrap');
-  if (fechaInicio && fechaEvento) {
-    const dias = calcularTotalDiasDesdeForm();
-    const di = new Date(fechaInicio + 'T00:00:00');
-    const de = new Date(fechaEvento + 'T00:00:00');
-    const diasCrudos = Math.round((de - di) / 86400000) + 1;
-    if (diasCrudos >= 1) {
-      wrapSemanas.style.display = 'none';
-      hint.style.color = '';
-      hint.textContent = 'Duración calculada: ' + dias + ' días (~' + (dias / 7).toFixed(1) + ' semanas), del ' + fechaInicio + ' al ' + fechaEvento + '.';
+/* ============ Importar sesión de fuerza desde un .fit de Garmin ============ */
+// Parser binario mínimo del formato FIT (sin librerías externas), escrito y
+// validado contra un archivo .fit real exportado desde Garmin Connect.
+// Lee dinámicamente los mensajes de "definición" del propio archivo (no hay
+// offsets de byte fijos hardcodeados), así que tolera variaciones razonables
+// entre dispositivos/versiones de firmware.
+//
+// Campos usados (confirmados contra el archivo real de Hugo, num=225 "set"):
+//   0=duration(ms) 3=repetitions 4=weight(kg×16) 5=set_type(1=activo,0=descanso)
+//   7=category[] 8=category_subtype[] 10=message_index
+// Y del mensaje "session" (num=18): 7=total_elapsed_time(ms), 253=timestamp
+const OFFSET_GARMIN_UNIX = 631065600; // segundos entre 1970-01-01 y la época FIT (1989-12-31)
+
+// Nombres de categoría de ejercicio de Garmin. El archivo .fit de Hugo NO trae
+// el nombre específico del ejercicio (solo códigos numéricos de categoría), y
+// esta lista es una ESTIMACIÓN por posición según el catálogo público de la
+// FIT SDK — no una traducción oficial confirmada campo a campo. Por eso todo
+// ejercicio importado queda marcado "(Garmin)" para revisar/renombrar a mano.
+const CATEGORIAS_GARMIN_ESTIMADAS = [
+  'Press de banca', 'Elevación de talones', 'Cardio', 'Carga (carry)', 'Rotacional (chop)',
+  'Core', 'Abdominales (crunch)', 'Curl de bíceps', 'Peso muerto', 'Aperturas (flye)',
+  'Elevación de cadera', 'Estabilidad de cadera', 'Swing de cadera', 'Hiperextensión',
+  'Elevación lateral', 'Curl de pierna', 'Elevación de piernas', 'Zancada (lunge)',
+  'Levantamiento olímpico', 'Plancha', 'Pliometría', 'Dominadas', 'Flexiones', 'Remo',
+  'Press de hombro', 'Estabilidad de hombro', 'Encogimientos (shrug)', 'Abdominales (sit-up)',
+  'Sentadilla', 'Cuerpo completo', 'Extensión de tríceps', 'Entrada en calor', 'Correr'
+];
+
+function fitTipoBase(baseType){
+  const tabla = {
+    0x00:{size:1,kind:'uint'}, 0x01:{size:1,kind:'int'}, 0x02:{size:1,kind:'uint'},
+    0x83:{size:2,kind:'int'}, 0x84:{size:2,kind:'uint'},
+    0x85:{size:4,kind:'int'}, 0x86:{size:4,kind:'uint'},
+    0x07:{size:1,kind:'string'},
+    0x88:{size:4,kind:'float'}, 0x89:{size:8,kind:'float'},
+    0x0A:{size:1,kind:'uint'}, 0x8B:{size:2,kind:'uint'}, 0x8C:{size:4,kind:'uint'},
+    0x0D:{size:1,kind:'uint'},
+    0x8E:{size:8,kind:'int'}, 0x8F:{size:8,kind:'uint'}, 0x90:{size:8,kind:'uint'},
+  };
+  return tabla[baseType] || {size:1, kind:'uint'};
+}
+
+function fechaISODesdeGarminEpoch(segundosGarmin){
+  const ms = (segundosGarmin + OFFSET_GARMIN_UNIX) * 1000;
+  const d = new Date(ms);
+  const off = d.getTimezoneOffset();
+  const local = new Date(d.getTime() - off*60000);
+  return local.toISOString().slice(0,10);
+}
+
+function parseFitFuerza(arrayBuffer){
+  const view = new DataView(arrayBuffer);
+  let pos = 0;
+  const headerSize = view.getUint8(0);
+  const dataSize = view.getUint32(4, true);
+  pos = headerSize;
+  const end = headerSize + dataSize;
+
+  const localDefs = {};
+  const setRecords = [];
+  let sessionTotalElapsedSec = null;
+  let sessionTimestamp = null;
+
+  while(pos < end){
+    const header = view.getUint8(pos); pos += 1;
+    let localType, esDefinicion;
+    if(header & 0x80){
+      localType = (header >> 5) & 0x3;
+      esDefinicion = false;
     } else {
-      wrapSemanas.style.display = 'block';
-      hint.style.color = 'var(--warn)';
-      hint.textContent = 'La fecha del evento tiene que ser posterior a la fecha de inicio.';
+      esDefinicion = !!(header & 0x40);
+      localType = header & 0x0F;
     }
-  } else {
-    wrapSemanas.style.display = 'block';
-    hint.style.color = '';
-    hint.textContent = '';
-  }
-}
 
-function dibujarGraficoHoras() {
-  const svg = document.getElementById('graficoHoras');
-  if (!svg) return;
-  actualizarHintDuracion();
-  const k = parseFloat(document.getElementById('fK').value) || 0.001;
-  const totalDias = calcularTotalDiasDesdeForm();
-  const horasIni = parseFloat(document.getElementById('fHorasIni').value) || 0;
-  const horasFin = parseFloat(document.getElementById('fHorasFin').value) || 0;
-  const taperDias = Math.max(0, Math.round(parseFloat(document.getElementById('fTaperDias').value) || 0));
-  const taperPct = Math.max(0, Math.min(90, parseFloat(document.getElementById('fTaperPct').value) || 0));
-  const configTaper = { totalDias, taper: { dias: taperDias, reduccionPct: taperPct } };
-
-  const W = 400, H = 170, padL = 34, padB = 18, padT = 10, padR = 10;
-  const plotW = W - padL - padR, plotH = H - padT - padB;
-
-  const minH = Math.min(horasIni, horasFin);
-  const maxH = Math.max(horasIni, horasFin);
-  const rango = (maxH - minH) || 1;
-
-  const pts = [];
-  const N = 48;
-  for (let i = 0; i <= N; i++) {
-    const dia = 1 + (totalDias - 1) * (i / N);
-    const c = curvaNormalizada(dia, totalDias, k);
-    const horas = (horasIni + c * (horasFin - horasIni)) * calcularFactorTaper(configTaper, dia);
-    const x = padL + (i / N) * plotW;
-    const y = padT + (1 - (horas - minH) / rango) * plotH;
-    pts.push([x, y]);
-  }
-  const linea = 'M' + pts.map((p) => p[0].toFixed(1) + ',' + p[1].toFixed(1)).join(' L');
-
-  let svgHtml = '';
-  [0, 0.5, 1].forEach((f) => {
-    const y = padT + (1 - f) * plotH;
-    const val = minH + f * rango;
-    svgHtml += '<line x1="' + padL + '" y1="' + y.toFixed(1) + '" x2="' + (W - padR) + '" y2="' + y.toFixed(1) + '" stroke="#2a3a48" stroke-width="1" stroke-dasharray="2,3"></line>';
-    svgHtml += '<text x="' + (padL - 5) + '" y="' + (y + 3).toFixed(1) + '" text-anchor="end" font-size="9" fill="#8ea3b3" font-family="monospace">' + val.toFixed(1) + '</text>';
-  });
-  svgHtml += '<text x="' + padL + '" y="' + (H - 4) + '" font-size="9" fill="#8ea3b3" font-family="monospace">sem 1</text>';
-  svgHtml += '<text x="' + (W - padR) + '" y="' + (H - 4) + '" text-anchor="end" font-size="9" fill="#8ea3b3" font-family="monospace">sem ' + semanas + '</text>';
-  svgHtml += '<path d="' + linea + ' L' + (W - padR) + ',' + (padT + plotH) + ' L' + padL + ',' + (padT + plotH) + ' Z" fill="#e0a458" opacity="0.15"></path>';
-  svgHtml += '<path d="' + linea + '" fill="none" stroke="#e0a458" stroke-width="2.5"></path>';
-
-  svg.innerHTML = svgHtml;
-
-  const info = document.getElementById('curvaInfo');
-  const kt = k * totalDias;
-  let forma;
-  if (kt < 0.3) forma = 'casi lineal';
-  else if (kt < 1.5) forma = 'progresión suave, ya se nota el amesetado final';
-  else forma = 'incrementos grandes al principio, se amesetan fuerte después';
-  const semanaMitad = Math.round(calcularSemanaMitad(totalDias, k) / 7);
-  info.textContent = 'Con k=' + k + ': ' + forma + '. La mitad del incremento total ya pasó en la semana ' + semanaMitad + ' de ' + semanas + '.';
-}
-
-['fK', 'fSemanas', 'fHorasIni', 'fHorasFin', 'fTaperDias', 'fTaperPct', 'fFechaInicio', 'fEventoFecha'].forEach((id) => {
-  document.getElementById(id).addEventListener('input', dibujarGraficoHoras);
-});
-
-const LS_UMBRALES = 'entrenamiento_umbrales';
-
-function leerUmbrales() {
-  try {
-    return JSON.parse(localStorage.getItem(LS_UMBRALES)) || {};
-  } catch (e) {
-    return {};
-  }
-}
-function guardarUmbrales(u) {
-  localStorage.setItem(LS_UMBRALES, JSON.stringify(u));
-}
-
-// Traduce cada una de mis 10 zonas energéticas a %umbral, calcado de las tablas
-// que ya usan Correr (PACE_ZONAS/HR_ZONAS) y Bici (ZDEF 7 zonas Coggan).
-// pace/pulso: multiplicador del umbral (seg/km o lpm). watts: multiplicador de FTP.
-const MAPEO_ZONA_UMBRAL = {
-  potFosf:     { pace: 0.50, watts: 1.75, pulso: null },
-  capFosf:     { pace: 0.62, watts: 1.40, pulso: null },
-  potGlucol:   { pace: 0.85, watts: 1.15, pulso: 1.02 },
-  capGlucol:   { pace: 0.93, watts: 1.07, pulso: 1.00 },
-  potAerobMax: { pace: 0.98, watts: 1.02, pulso: 0.98 },
-  potAerob:    { pace: 1.03, watts: 0.95, pulso: 0.96 },
-  capAerobMax: { pace: 1.10, watts: 0.83, pulso: 0.91 },
-  capEfAerob2: { pace: 1.20, watts: 0.65, pulso: 0.87 },
-  capAerob1:   { pace: 1.32, watts: 0.50, pulso: 0.80 },
-};
-
-// Targets concretos (ritmo/vatios/pulso) para una zona, solo para las disciplinas
-// activas hoy y que tengan umbral cargado.
-function targetsPorZona(zonaKey, discActivasHoy) {
-  const u = leerUmbrales();
-  const mapa = MAPEO_ZONA_UMBRAL[zonaKey];
-  if (!mapa || !discActivasHoy) return [];
-  const out = [];
-  if (discActivasHoy.carrera && u.ritmoUmbralCarreraSegKm) {
-    out.push('Carrera ' + segARelojes(Math.round(u.ritmoUmbralCarreraSegKm * mapa.pace)) + '/km');
-  }
-  if (discActivasHoy.bici && u.ftpBici) {
-    out.push('Bici ' + Math.round(u.ftpBici * mapa.watts) + 'W');
-  }
-  if (discActivasHoy.kayak && u.pulsoUmbralKayak && mapa.pulso) {
-    out.push('Kayak ' + Math.round(u.pulsoUmbralKayak * mapa.pulso) + ' lpm');
-  }
-  return out;
-}
-
-const LS_PERFIL = 'entrenamiento_perfil';
-
-function leerPerfil() {
-  try {
-    return JSON.parse(localStorage.getItem(LS_PERFIL)) || {};
-  } catch (e) {
-    return {};
-  }
-}
-function guardarPerfil(p) {
-  localStorage.setItem(LS_PERFIL, JSON.stringify(p));
-}
-
-function cargarFormularioPerfil() {
-  const p = leerPerfil();
-  document.getElementById('uPeso').value = p.pesoKg || '';
-  document.getElementById('perfilActualizado').textContent = p.actualizado ? ('Última actualización: ' + p.actualizado) : 'Todavía no cargaste tu peso.';
-}
-
-document.getElementById('btnGuardarPerfil').addEventListener('click', () => {
-  const p = leerPerfil(); // objeto completo, para no pisar campos que agreguen otras apps (ej. edad)
-  p.pesoKg = parseFloat(document.getElementById('uPeso').value) || null;
-  p.actualizado = hoyISO();
-  guardarPerfil(p);
-  cargarFormularioPerfil();
-  toast('Perfil guardado ✓');
-});
-
-function cargarFormularioUmbrales() {
-  const u = leerUmbrales();
-  document.getElementById('uRitmoCarrera').value = u.ritmoUmbralCarreraSegKm ? segARelojes(u.ritmoUmbralCarreraSegKm) : '';
-  document.getElementById('uPulsoCarrera').value = u.pulsoUmbralCarrera || '';
-  document.getElementById('uFtpBici').value = u.ftpBici || '';
-  document.getElementById('uPulsoKayak').value = u.pulsoUmbralKayak || '';
-  document.getElementById('uRitmoNatacion').value = u.ritmoUmbralNatacion100m ? segARelojes(u.ritmoUmbralNatacion100m) : '';
-  document.getElementById('umbralesActualizado').textContent = u.actualizado ? ('Última actualización: ' + u.actualizado) : 'Todavía no cargaste ningún umbral.';
-}
-
-// Lee las claves privadas reales de Correr/Bici/Kayak (mismo origen) y precarga el
-// formulario de umbrales — no guarda solo; el usuario confirma con "Guardar umbrales".
-function importarUmbralesDeApps() {
-  function tryParse(key) {
-    try { return JSON.parse(localStorage.getItem(key)); } catch (e) { return null; }
-  }
-  const zonasCorrer = tryParse('correr_zonas');
-  const cfgBici = tryParse('bici_config');
-  const pulsoKayak = tryParse('kayak_umbral_pulso');
-  const perfilCorrer = tryParse('correr_perfil');
-
-  const encontrados = [];
-  if (zonasCorrer && zonasCorrer.umbralRitmoSegKm) {
-    document.getElementById('uRitmoCarrera').value = segARelojes(zonasCorrer.umbralRitmoSegKm);
-    encontrados.push('ritmo de Correr');
-  }
-  if (zonasCorrer && zonasCorrer.umbralPulso) {
-    document.getElementById('uPulsoCarrera').value = zonasCorrer.umbralPulso;
-    encontrados.push('pulso de Correr');
-  }
-  if (cfgBici && cfgBici.ftp) {
-    document.getElementById('uFtpBici').value = cfgBici.ftp;
-    encontrados.push('FTP de Bici');
-  }
-  if (pulsoKayak) {
-    document.getElementById('uPulsoKayak').value = pulsoKayak;
-    encontrados.push('pulso de Kayak');
-  }
-  if (perfilCorrer && perfilCorrer.pesoKg) {
-    document.getElementById('uPeso').value = perfilCorrer.pesoKg;
-    encontrados.push('peso de Correr');
-  }
-
-  if (encontrados.length) {
-    toast('Traído: ' + encontrados.join(', ') + ' — revisá y tocá Guardar');
-  } else {
-    toast('No encontré umbrales cargados en esas apps todavía');
-  }
-}
-document.getElementById('btnImportarUmbrales').addEventListener('click', importarUmbralesDeApps);
-
-document.getElementById('btnGuardarUmbrales').addEventListener('click', () => {
-  const u = {
-    ritmoUmbralCarreraSegKm: relojASegundos(document.getElementById('uRitmoCarrera').value) || null,
-    pulsoUmbralCarrera: parseFloat(document.getElementById('uPulsoCarrera').value) || null,
-    ftpBici: parseFloat(document.getElementById('uFtpBici').value) || null,
-    pulsoUmbralKayak: parseFloat(document.getElementById('uPulsoKayak').value) || null,
-    ritmoUmbralNatacion100m: relojASegundos(document.getElementById('uRitmoNatacion').value) || null,
-    actualizado: hoyISO(),
-  };
-  guardarUmbrales(u);
-  cargarFormularioUmbrales();
-  actualizarPlanHoy();
-  toast('Umbrales guardados ✓');
-});
-
-function renderDiasSemana() {
-  const cont = document.getElementById('diasSemanaCards');
-  cont.innerHTML = '';
-  const nombresDias = ['D', 'L', 'M', 'M', 'J', 'V', 'S'];
-  DISCIPLINAS.forEach((d) => {
-    const cfg = cicloEnEdicion.disciplinas[d.key];
-    if (!cfg.diasSemana) cfg.diasSemana = [];
-    const row = document.createElement('div');
-    row.className = 'diasRow';
-    let btns = '';
-    for (let i = 0; i < 7; i++) {
-      const activo = cfg.diasSemana.indexOf(i) !== -1;
-      btns += '<button type="button" class="diaChip' + (activo ? ' on' : '') + '" data-i="' + i + '" style="' + (activo ? ('background:' + d.color) : '') + '">' + nombresDias[i] + '</button>';
-    }
-    row.innerHTML =
-      '<span class="diasRow-label"><span class="dot" style="background:' + d.color + '"></span>' + d.label + '</span>' +
-      '<span class="diasRow-btns">' + btns + '</span>';
-    row.querySelectorAll('.diaChip').forEach((btn) => {
-      btn.addEventListener('click', () => {
-        const i = parseInt(btn.dataset.i, 10);
-        const idx = cfg.diasSemana.indexOf(i);
-        if (idx !== -1) cfg.diasSemana.splice(idx, 1); else cfg.diasSemana.push(i);
-        renderDiasSemana();
-      });
-    });
-    cont.appendChild(row);
-  });
-}
-
-/* ========================= CALENDARIO ========================= */
-
-let calMesActual = new Date(hoyISO() + 'T00:00:00');
-calMesActual.setDate(1);
-
-const DISC_LABEL = {};
-DISCIPLINAS.forEach((d) => { DISC_LABEL[d.key] = d.label; });
-
-// Lee el detalle real de sesiones directo de cada app (correr_sesiones, bici_sesiones,
-// kayak_sesiones — mismo origen, localStorage compartido) y lo normaliza a una forma común.
-// Más completo y más confiable que entrenamiento_forma_registro para mostrar detalle
-// (ese registro es solo {fecha,deporte,tss} pensado para el EWMA, y puede quedar con
-// "fantasmas" si algún borrado no se sincronizó bien).
-function leerSesionesCrudas() {
-  function tryParse(key) {
-    try { return JSON.parse(localStorage.getItem(key)) || []; } catch (e) { return []; }
-  }
-  const out = [];
-  tryParse('correr_sesiones').forEach((s) => {
-    if (!s.fecha) return;
-    out.push({
-      deporte: 'carrera', fecha: String(s.fecha).slice(0, 10),
-      duracionSeg: s.duracionSeg || 0, distanciaM: s.distanciaM || null,
-      ritmoSegKm: s.ritmoPromedioSegKm || null, watts: null, pulso: s.pulsoPromedio || null,
-      tss: s.tss || 0,
-    });
-  });
-  tryParse('bici_sesiones').forEach((s) => {
-    if (!s.date) return;
-    out.push({
-      deporte: 'bici', fecha: new Date(s.date).toISOString().slice(0, 10),
-      duracionSeg: Math.round(s.dur || 0), distanciaM: s.dist || null,
-      ritmoSegKm: null, watts: s.np || null, pulso: s.hrAvg || null,
-      tss: s.tss || 0,
-    });
-  });
-  tryParse('kayak_sesiones').forEach((s) => {
-    if (!s.fecha) return;
-    out.push({
-      deporte: 'kayak', fecha: String(s.fecha).slice(0, 10),
-      duracionSeg: s.duracionSeg || 0, distanciaM: s.distanciaM || null,
-      ritmoSegKm: null, watts: null, pulso: s.pulsoPromedio || null,
-      tss: s.tss || 0,
-    });
-  });
-  return out;
-}
-
-function formatSesionResumen(s) {
-  const partes = [DISC_LABEL[s.deporte] || s.deporte];
-  if (s.duracionSeg) partes.push(segARelojes(s.duracionSeg));
-  if (s.distanciaM) partes.push((s.distanciaM / 1000).toFixed(2) + ' km');
-  if (s.ritmoSegKm) partes.push(segARelojes(s.ritmoSegKm) + '/km');
-  if (s.watts) partes.push(Math.round(s.watts) + 'W');
-  if (s.pulso) partes.push(Math.round(s.pulso) + ' lpm');
-  if (s.tss) partes.push('TSS ' + Math.round(s.tss));
-  return partes.join(' · ');
-}
-
-function renderCalendario() {
-  const sesiones = leerSesionesCrudas();
-  const porDia = {};
-  sesiones.forEach((s) => {
-    if (!porDia[s.fecha]) porDia[s.fecha] = { sesiones: [], deportes: {}, tss: 0 };
-    porDia[s.fecha].sesiones.push(s);
-    porDia[s.fecha].deportes[s.deporte] = true;
-    porDia[s.fecha].tss += s.tss || 0;
-  });
-
-  document.getElementById('calTitulo').textContent = calMesActual.toLocaleDateString('es-AR', { month: 'long', year: 'numeric' });
-
-  const head = document.getElementById('calGridHead');
-  if (!head.dataset.built) {
-    head.innerHTML = ['D', 'L', 'M', 'M', 'J', 'V', 'S'].map((d) => '<div class="diaCab">' + d + '</div>').join('');
-    head.dataset.built = '1';
-  }
-
-  const hoy = hoyISO();
-
-  const body = document.getElementById('calGridBody');
-  body.innerHTML = '';
-  const inicioGrilla = new Date(calMesActual);
-  inicioGrilla.setDate(inicioGrilla.getDate() - inicioGrilla.getDay());
-
-  for (let i = 0; i < 42; i++) {
-    const d = new Date(inicioGrilla);
-    d.setDate(d.getDate() + i);
-    const iso = d.toISOString().slice(0, 10);
-    const esDelMes = d.getMonth() === calMesActual.getMonth();
-    const esFuturo = iso > hoy;
-
-    let dotsHtml = '';
-    if (porDia[iso]) {
-      DISCIPLINAS.forEach((disc) => {
-        if (porDia[iso].deportes[disc.key]) dotsHtml += '<span style="background:' + COLOR_DISCIPLINA[disc.key] + '"></span>';
-      });
-    }
-    if (esFuturo) {
-      const encontrado = cicloParaFecha(iso);
-      if (encontrado) {
-        const diaSemana = d.getDay();
-        DISCIPLINAS.forEach((disc) => {
-          const dias = encontrado.config.disciplinas[disc.key].diasSemana || [];
-          if (dias.indexOf(diaSemana) !== -1) {
-            dotsHtml += '<span class="plan" style="color:' + COLOR_DISCIPLINA[disc.key] + '"></span>';
-          }
-        });
+    if(esDefinicion){
+      pos += 1; // reservado
+      const arch = view.getUint8(pos); pos += 1;
+      const little = (arch === 0);
+      const globalNum = view.getUint16(pos, little);
+      pos += 2;
+      const numFields = view.getUint8(pos); pos += 1;
+      const fields = [];
+      for(let i=0; i<numFields; i++){
+        const num = view.getUint8(pos), size = view.getUint8(pos+1), baseType = view.getUint8(pos+2);
+        pos += 3;
+        fields.push({num, size, baseType});
+      }
+      if(header & 0x20){ // developer data flag: saltear campos de developer
+        const numDev = view.getUint8(pos); pos += 1;
+        pos += numDev * 3;
+      }
+      localDefs[localType] = {globalNum, little, fields};
+    } else {
+      const def = localDefs[localType];
+      if(!def) break; // registro sin definición previa: fin de lo que podemos leer con seguridad
+      const values = {};
+      for(const f of def.fields){
+        const info = fitTipoBase(f.baseType);
+        const count = Math.max(1, Math.floor(f.size / info.size));
+        const arr = [];
+        for(let i=0; i<count; i++){
+          const off = pos + i*info.size;
+          let v = null;
+          if(info.kind === 'string'){ v = null; }
+          else if(info.size === 1) v = info.kind==='int' ? view.getInt8(off) : view.getUint8(off);
+          else if(info.size === 2) v = info.kind==='int' ? view.getInt16(off, def.little) : view.getUint16(off, def.little);
+          else if(info.size === 4) v = info.kind==='int' ? view.getInt32(off, def.little) : (info.kind==='float' ? view.getFloat32(off, def.little) : view.getUint32(off, def.little));
+          arr.push(v);
+        }
+        pos += f.size;
+        values[f.num] = (arr.length === 1) ? arr[0] : arr;
+      }
+      if(def.globalNum === 18){ // session
+        if(values[7] !== undefined) sessionTotalElapsedSec = values[7] / 1000;
+        if(values[253] !== undefined) sessionTimestamp = values[253];
+      }
+      if(def.globalNum === 225){ // set
+        setRecords.push(values);
       }
     }
-
-    const div = document.createElement('div');
-    div.className = 'calDia' + (esDelMes ? '' : ' fuera') + (iso === hoy ? ' hoy' : '');
-    div.innerHTML = '<div class="num">' + d.getDate() + '</div><div class="dots">' + dotsHtml + '</div>';
-    div.addEventListener('click', () => mostrarDetalleDia(iso, porDia[iso]));
-    body.appendChild(div);
-  }
-}
-
-function mostrarDetalleDia(iso, real) {
-  const det = document.getElementById('calDetalle');
-  det.style.display = 'block';
-  const hoy = hoyISO();
-  let html = '<h3>' + iso + (iso === hoy ? ' · hoy' : '') + '</h3>';
-
-  if (real && real.sesiones.length) {
-    html += '<p style="margin-bottom:4px">Real (TSS total ' + Math.round(real.tss) + '):</p>';
-    real.sesiones.forEach((s) => {
-      html += '<div class="sesionCard" style="margin-bottom:6px"><div class="estructura" style="font-size:0.8rem">' + formatSesionResumen(s) + '</div></div>';
-    });
   }
 
-  const encontrado = cicloParaFecha(iso);
-  if (encontrado) {
-    const config = encontrado.config;
-    const overridesCiclo = overridesAll[encontrado.id] || {};
-    const configConOverrides = Object.assign({}, config, { cargaOverrides: overridesCiclo });
-    const diaSemana = new Date(iso + 'T00:00:00').getDay();
-    const r = calcularDia(configConOverrides, iso);
-    const planeadas = DISCIPLINAS.filter((d) => (config.disciplinas[d.key].diasSemana || []).indexOf(diaSemana) !== -1);
-    if (planeadas.length) {
-      html += '<p style="margin:8px 0 6px">' + (iso > hoy ? 'Planeado' : 'Plan de ese día') + ' — ' + config.nombre + ':</p>';
-      planeadas.forEach((d) => {
-        const dd = r.disciplinas[d.key];
-        html +=
-          '<div class="discCard" style="margin-bottom:6px">' +
-            '<div class="info"><div class="name"><span class="dot" style="background:' + d.color + '"></span>' + d.label + '</div>' +
-            '<div class="sub">semana ' + r.semanaIndex + ' · ' + r.pctCarga + '% carga</div></div>' +
-            '<div class="time">' + segARelojes(dd.tiempoSesionSeg) + '</div>' +
-          '</div>';
-      });
-    } else if (!real || !real.sesiones.length) {
-      html += '<p>Ninguna disciplina asignada a este día de la semana todavía (ciclo: ' + config.nombre + ') — asignalas en Ciclo → Días de la semana.</p>';
-    }
-  } else if (!real || !real.sesiones.length) {
-    html += '<p>Ningún ciclo guardado cubre esta fecha, y no hay sesiones reales registradas.</p>';
-  }
-
-  det.innerHTML = html;
-}
-
-document.getElementById('calPrev').addEventListener('click', () => {
-  calMesActual.setMonth(calMesActual.getMonth() - 1);
-  renderCalendario();
-});
-document.getElementById('calNext').addEventListener('click', () => {
-  calMesActual.setMonth(calMesActual.getMonth() + 1);
-  renderCalendario();
-});
-
-/* ========================= PANORAMA DE LA TEMPORADA ========================= */
-
-const PALETA_CICLOS = ['#e0a458', '#5aa9d6', '#5fb88a', '#b587c9', '#d9705a', '#f0c674', '#7ec8c8'];
-
-function renderPanorama() {
-  const ciclos = listaCiclosOrdenados();
-  document.getElementById('panoramaEmpty').style.display = ciclos.length ? 'none' : 'block';
-  document.getElementById('panoramaWrap').style.display = ciclos.length ? 'block' : 'none';
-  const leyenda = document.getElementById('panoramaLeyenda');
-  leyenda.style.display = ciclos.length ? 'block' : 'none';
-  if (!ciclos.length) return;
-
-  dibujarPanorama(ciclos);
-
-  leyenda.innerHTML = '<div class="zoneLegend">' + ciclos.map((c, i) => {
-    const color = PALETA_CICLOS[i % PALETA_CICLOS.length];
-    const taperTxt = (c.config.taper && c.config.taper.dias > 0) ? (' · taper ' + c.config.taper.dias + 'd') : '';
-    const eventoTxt = c.config.eventoNombre ? (' 🏁 ' + c.config.eventoNombre) : '';
-    return '<span><span class="dot" style="background:' + color + '"></span>' + c.config.nombre + eventoTxt + ' (' + c.config.fechaInicio + ' → ' + finCicloISO(c.config) + taperTxt + ')</span>';
-  }).join('') + '</div>';
-}
-
-function dibujarPanorama(ciclos) {
-  const svg = document.getElementById('panoramaSvg');
-  const padL = 6, padR = 8, padB = 22, padT = 16;
-  const plotH = 130;
-  const pxPorDia = 2.5;
-
-  const inicioTemporada = new Date(ciclos[0].config.fechaInicio + 'T00:00:00');
-  const finTemporadaISO = finCicloISO(ciclos[ciclos.length - 1].config);
-  const finTemporada = new Date(finTemporadaISO + 'T00:00:00');
-  const totalDiasTemporada = Math.max(1, Math.round((finTemporada - inicioTemporada) / 86400000) + 1);
-
-  const W = padL + totalDiasTemporada * pxPorDia + padR;
-  const H = padT + plotH + padB;
-  svg.setAttribute('viewBox', '0 0 ' + W + ' ' + H);
-  svg.setAttribute('width', W);
-  svg.setAttribute('height', H);
-
-  let maxHoras = 1;
-  ciclos.forEach((c) => {
-    maxHoras = Math.max(maxHoras, c.config.horasSemana.inicio, c.config.horasSemana.fin);
-  });
-  maxHoras = Math.ceil(maxHoras);
-
-  function xAtFecha(fechaISO) {
-    const d = new Date(fechaISO + 'T00:00:00');
-    const dias = Math.round((d - inicioTemporada) / 86400000);
-    return padL + dias * pxPorDia;
-  }
-  function yAt(horas) {
-    return padT + (1 - Math.min(1, horas / maxHoras)) * plotH;
-  }
-
-  let html = '<line x1="' + padL + '" y1="' + (padT + plotH) + '" x2="' + W + '" y2="' + (padT + plotH) + '" stroke="#2a3a48" stroke-width="1"></line>';
-
-  ciclos.forEach((c, ci) => {
-    const config = c.config;
-    const overridesCiclo = overridesAll[c.id] || {};
-    const configConOverrides = Object.assign({}, config, { cargaOverrides: overridesCiclo });
-    const color = PALETA_CICLOS[ci % PALETA_CICLOS.length];
-    const pts = [];
-    const paso = Math.max(1, Math.round(config.totalDias / 120));
-    for (let dia = 1; dia <= config.totalDias; dia += paso) {
-      const fecha = new Date(config.fechaInicio + 'T00:00:00');
-      fecha.setDate(fecha.getDate() + dia - 1);
-      const iso = fecha.toISOString().slice(0, 10);
-      const r = calcularDia(configConOverrides, iso);
-      pts.push([xAtFecha(iso), yAt(r.horasSemana)]);
-    }
-    const finIso = finCicloISO(config);
-    const rFin = calcularDia(configConOverrides, finIso);
-    pts.push([xAtFecha(finIso), yAt(rFin.horasSemana)]);
-
-    const linea = pts.map((p) => p[0].toFixed(1) + ',' + p[1].toFixed(1)).join(' L');
-    const base = padT + plotH;
-    const relleno = 'M' + linea + ' L' + pts[pts.length - 1][0].toFixed(1) + ',' + base + ' L' + pts[0][0].toFixed(1) + ',' + base + ' Z';
-    html += '<path d="' + relleno + '" fill="' + color + '" opacity="0.35"></path>';
-    html += '<path d="M' + linea + '" fill="none" stroke="' + color + '" stroke-width="2"></path>';
-
-    const xEtiqueta = xAtFecha(config.fechaInicio) + 3;
-    html += '<text x="' + xEtiqueta.toFixed(1) + '" y="' + (padT - 4) + '" font-size="9" fill="' + color + '" font-family="monospace" font-weight="bold">' + config.nombre + '</text>';
-
-    if (config.eventoNombre) {
-      const xEvento = xAtFecha(finIso);
-      html += '<text x="' + xEvento.toFixed(1) + '" y="' + (padT + plotH + 14) + '" text-anchor="end" font-size="9" fill="' + color + '">🏁</text>';
-    }
-  });
-
-  const hoy = hoyISO();
-  if (hoy >= ciclos[0].config.fechaInicio && hoy <= finTemporadaISO) {
-    const xHoy = xAtFecha(hoy);
-    html += '<line x1="' + xHoy.toFixed(1) + '" y1="' + padT + '" x2="' + xHoy.toFixed(1) + '" y2="' + (padT + plotH) + '" stroke="#e7edf2" stroke-width="1.5" stroke-dasharray="2,2"></line>';
-  }
-
-  const mesCursor = new Date(inicioTemporada.getFullYear(), inicioTemporada.getMonth(), 1);
-  while (mesCursor <= finTemporada) {
-    if (mesCursor >= inicioTemporada) {
-      const iso = mesCursor.toISOString().slice(0, 10);
-      const x = xAtFecha(iso);
-      html += '<line x1="' + x.toFixed(1) + '" y1="' + padT + '" x2="' + x.toFixed(1) + '" y2="' + (padT + plotH) + '" stroke="#2a3a48" stroke-width="1" stroke-dasharray="1,3"></line>';
-      html += '<text x="' + x.toFixed(1) + '" y="' + (padT + plotH + 14) + '" font-size="8" fill="#8ea3b3" font-family="monospace">' + mesCursor.toLocaleDateString('es-AR', { month: 'short' }) + '</text>';
-    }
-    mesCursor.setMonth(mesCursor.getMonth() + 1);
-  }
-
-  svg.innerHTML = html;
-}
-
-/* ========================= GRÁFICO DEL CICLO ========================= */
-
-const COLOR_DISCIPLINA = { natacion: '#5aa9d6', bici: '#e0a458', carrera: '#5fb88a', fuerza: '#b587c9', kayak: '#d9705a' };
-
-function renderGraficoCiclo() {
-  const config = store.activoId ? store.ciclos[store.activoId] : null;
-  document.getElementById('graficoCicloEmpty').style.display = config ? 'none' : 'block';
-  document.getElementById('graficoCicloWrap').style.display = config ? 'block' : 'none';
-  document.getElementById('graficoCicloLeyenda').style.display = config ? 'flex' : 'none';
-  if (!config) return;
-
-  const overridesCiclo = overridesAll[store.activoId] || {};
-  const configConOverrides = Object.assign({}, config, { cargaOverrides: overridesCiclo });
-  const semanas = Math.max(1, Math.round(config.totalDias / 7));
-
-  const datosSemana = [];
-  for (let w = 0; w < semanas; w++) {
-    const diaRepresentativo = Math.min(config.totalDias, w * 7 + 4);
-    const fecha = new Date(config.fechaInicio + 'T00:00:00');
-    fecha.setDate(fecha.getDate() + diaRepresentativo - 1);
-    const iso = fecha.toISOString().slice(0, 10);
-    datosSemana.push(calcularDia(configConOverrides, iso));
-  }
-
-  dibujarGraficoCiclo(datosSemana);
-
-  const leyenda = document.getElementById('graficoCicloLeyenda');
-  leyenda.innerHTML = DISCIPLINAS.map((d) =>
-    '<span><span class="dot" style="background:' + COLOR_DISCIPLINA[d.key] + '"></span>' + d.label + '</span>'
-  ).join('');
-}
-
-function dibujarGraficoCiclo(datosSemana) {
-  const svg = document.getElementById('graficoCicloSvg');
-  const padL = 42, padB = 24, padT = 10;
-  const grupoW = 30, barW = 5, gap = 1;
-  const plotH = 190;
-  const W = padL + datosSemana.length * grupoW + 8;
-  const H = padT + plotH + padB;
-  svg.setAttribute('viewBox', '0 0 ' + W + ' ' + H);
-  svg.setAttribute('width', W);
-  svg.setAttribute('height', H);
-
-  let maxMin = 1;
-  datosSemana.forEach((r) => {
-    DISCIPLINAS.forEach((d) => { maxMin = Math.max(maxMin, r.disciplinas[d.key].tiempoSesionSeg / 60); });
-  });
-  maxMin = Math.ceil(maxMin / 10) * 10 || 10;
-
-  let html = '';
-  [0, 0.25, 0.5, 0.75, 1].forEach((f) => {
-    const y = padT + (1 - f) * plotH;
-    const val = Math.round(maxMin * f);
-    html += '<line x1="' + padL + '" y1="' + y.toFixed(1) + '" x2="' + W + '" y2="' + y.toFixed(1) + '" stroke="#2a3a48" stroke-width="1" stroke-dasharray="2,3"></line>';
-    html += '<text x="' + (padL - 6) + '" y="' + (y + 3).toFixed(1) + '" text-anchor="end" font-size="9" fill="#8ea3b3" font-family="monospace">' + val + "'</text>";
-  });
-
-  datosSemana.forEach((r, i) => {
-    const gx = padL + i * grupoW;
-    DISCIPLINAS.forEach((d, j) => {
-      const min = r.disciplinas[d.key].tiempoSesionSeg / 60;
-      const h = (min / maxMin) * plotH;
-      const x = gx + j * (barW + gap);
-      const y = padT + plotH - h;
-      html += '<rect x="' + x.toFixed(1) + '" y="' + y.toFixed(1) + '" width="' + barW + '" height="' + h.toFixed(1) + '" fill="' + COLOR_DISCIPLINA[d.key] + '"><title>' + d.label + ' · semana ' + (i + 1) + ': ' + Math.round(min) + ' min</title></rect>';
-    });
-    if (i % 4 === 0 || i === datosSemana.length - 1) {
-      html += '<text x="' + (gx + 12) + '" y="' + (padT + plotH + 14) + '" text-anchor="middle" font-size="9" fill="#8ea3b3" font-family="monospace">' + (i + 1) + '</text>';
-    }
-  });
-
-  svg.innerHTML = html;
-}
-
-function renderProyeccionForma() {
-  const hayCiclos = listaCiclosOrdenados().length > 0;
-  const empty = document.getElementById('formaEmpty');
-  const wrap = document.getElementById('formaWrap');
-  const stats = document.getElementById('formaStats');
-  const leyenda = document.getElementById('formaLeyenda');
-  empty.style.display = hayCiclos ? 'none' : 'block';
-  wrap.style.display = hayCiclos ? 'block' : 'none';
-  stats.style.display = hayCiclos ? 'grid' : 'none';
-  leyenda.style.display = hayCiclos ? 'flex' : 'none';
-  if (!hayCiclos) return;
-
-  const hoy = hoyISO();
-  const registro = leerRegistroForma();
-  const estado = calcularEstadoActual(registro, hoy);
-  const futuros = proyectarFormaTemporada(hoy, estado.ctl, estado.atl);
-  const puntos = estado.serie.concat(futuros);
-  const idxHoy = estado.serie.length - 1;
-
-  dibujarGraficoForma(puntos, idxHoy);
-
-  const ctlFinal = puntos[puntos.length - 1].ctl;
-  const tsbMinPt = puntos.reduce((min, p) => (p.tsb < min.tsb ? p : min), puntos[0]);
-  stats.innerHTML =
-    '<div class="stat"><div class="v">' + Math.round(estado.ctl) + '</div><div class="l">CTL hoy</div></div>' +
-    '<div class="stat"><div class="v">' + Math.round(ctlFinal) + '</div><div class="l">CTL fin de temporada</div></div>' +
-    '<div class="stat"><div class="v">' + Math.round(tsbMinPt.tsb) + '</div><div class="l">TSB mín. (' + tsbMinPt.fecha.slice(5) + ')</div></div>';
-
-  const mapaPuntos = {};
-  puntos.forEach((p) => { mapaPuntos[p.fecha] = p; });
-  const eventosEl = document.getElementById('formaEventos');
-  const conEvento = listaCiclosOrdenados().filter((c) => c.config.eventoNombre && c.config.eventoFecha);
-  if (conEvento.length) {
-    eventosEl.style.display = 'block';
-    eventosEl.innerHTML = conEvento.map((c) => {
-      const p = mapaPuntos[c.config.eventoFecha];
-      if (!p) return '';
-      const tsb = Math.round(p.tsb);
-      let estadoTxt, color;
-      if (tsb >= 5 && tsb <= 25) { estadoTxt = '✅ zona óptima'; color = '#5fb88a'; }
-      else if (tsb > 25) { estadoTxt = '⚠️ capaz demasiado descansado'; color = '#e0a458'; }
-      else if (tsb < -10) { estadoTxt = '⚠️ todavía cargado'; color = '#d9705a'; }
-      else { estadoTxt = 'cerca, sin llegar del todo'; color = '#8ea3b3'; }
-      return '<div class="sesionCard" style="margin-bottom:6px">' +
-        '<div class="nombre">🏁 ' + c.config.eventoNombre + ' · ' + c.config.eventoFecha + '</div>' +
-        '<div class="estructura" style="color:' + color + '">TSB proyectado ' + tsb + ' · ' + estadoTxt + '</div>' +
-        '</div>';
-    }).join('');
-  } else {
-    eventosEl.style.display = 'none';
-    eventosEl.innerHTML = '';
-  }
-
-  const avisoEl = document.getElementById('formaAviso');
-  if (tsbMinPt.tsb < -30) {
-    avisoEl.style.display = 'block';
-    avisoEl.textContent = '⚠️ El TSB proyectado baja de -30 el ' + tsbMinPt.fecha + ' (' + Math.round(tsbMinPt.tsb) + ') — zona de riesgo de sobrecarga según las bandas de Coggan/TrainingPeaks. Capaz conviene bajar volumen o meter un día de descanso esa semana.';
-  } else {
-    avisoEl.style.display = 'none';
-  }
-
-  leyenda.innerHTML =
-    '<span><span class="dot" style="background:#5aa9d6"></span>CTL · aptitud</span>' +
-    '<span><span class="dot" style="background:#d9705a"></span>ATL · fatiga</span>' +
-    '<span><span class="dot" style="background:#e0a458"></span>TSB · forma</span>' +
-    '<span>línea llena = real, punteada = proyectado (todos los ciclos encadenados)</span>' +
-    (estado.tieneDatos ? '' : '<span>(sin historial real todavía, arranca en 0)</span>');
-}
-
-function dibujarGraficoForma(puntos, idxHoy) {
-  const svg = document.getElementById('formaSvg');
-  const padL = 42, padR = 8, padB = 24, padT = 10;
-  const plotH = 190;
-  const pxPorDia = 4;
-  const W = padL + (puntos.length - 1) * pxPorDia + padR;
-  const H = padT + plotH + padB;
-  svg.setAttribute('viewBox', '0 0 ' + W + ' ' + H);
-  svg.setAttribute('width', W);
-  svg.setAttribute('height', H);
-
-  const vals = [];
-  puntos.forEach((p) => { vals.push(p.ctl, p.atl, p.tsb); });
-  const minV = Math.min(0, Math.min.apply(null, vals));
-  const maxV = Math.max(1, Math.max.apply(null, vals));
-  const rango = (maxV - minV) || 1;
-
-  const xAt = (i) => padL + i * pxPorDia;
-  const yAt = (v) => padT + (1 - (v - minV) / rango) * plotH;
-
-  let html = '';
-
-  // bandas de referencia TSB (Coggan/TrainingPeaks): rojo = riesgo de sobrecarga,
-  // verde = zona óptima pre-competencia. Son bandas empíricas, no un cálculo exacto.
-  function bandaTsb(desde, hasta, color) {
-    const yDesde = yAt(Math.min(maxV, Math.max(minV, hasta)));
-    const yHasta = yAt(Math.min(maxV, Math.max(minV, desde)));
-    if (yHasta <= yDesde) return '';
-    return '<rect x="' + padL + '" y="' + yDesde.toFixed(1) + '" width="' + (W - padL) + '" height="' + (yHasta - yDesde).toFixed(1) + '" fill="' + color + '" opacity="0.08"></rect>';
-  }
-  html += bandaTsb(-1000, -30, '#d9705a');
-  html += bandaTsb(5, 25, '#5fb88a');
-
-  if (minV < 0) {
-    const y0 = yAt(0);
-    html += '<line x1="' + padL + '" y1="' + y0.toFixed(1) + '" x2="' + W + '" y2="' + y0.toFixed(1) + '" stroke="#8ea3b3" stroke-width="1" stroke-dasharray="3,3"></line>';
-  }
-  [0, 0.5, 1].forEach((f) => {
-    const val = minV + f * rango;
-    const y = padT + (1 - f) * plotH;
-    html += '<line x1="' + padL + '" y1="' + y.toFixed(1) + '" x2="' + W + '" y2="' + y.toFixed(1) + '" stroke="#2a3a48" stroke-width="1" stroke-dasharray="2,3"></line>';
-    html += '<text x="' + (padL - 6) + '" y="' + (y + 3).toFixed(1) + '" text-anchor="end" font-size="9" fill="#8ea3b3" font-family="monospace">' + Math.round(val) + '</text>';
-  });
-
-  // línea vertical marcando "hoy" — separa lo real (izquierda) de lo proyectado (derecha)
-  const xHoy = xAt(idxHoy);
-  html += '<line x1="' + xHoy.toFixed(1) + '" y1="' + padT + '" x2="' + xHoy.toFixed(1) + '" y2="' + (padT + plotH) + '" stroke="#e7edf2" stroke-width="1" stroke-dasharray="2,2" opacity="0.5"></line>';
-
-  function segmento(color, key, desde, hasta, dash) {
-    const pts = [];
-    for (let i = desde; i <= hasta; i++) pts.push(xAt(i).toFixed(1) + ',' + yAt(puntos[i][key]).toFixed(1));
-    if (pts.length < 2) return '';
-    return '<path d="M' + pts.join(' L') + '" fill="none" stroke="' + color + '" stroke-width="2"' + (dash ? ' stroke-dasharray="4,3"' : '') + '></path>';
-  }
-  ['ctl', 'atl', 'tsb'].forEach((key, idx) => {
-    const color = ['#5aa9d6', '#d9705a', '#e0a458'][idx];
-    html += segmento(color, key, 0, idxHoy, false);
-    html += segmento(color, key, idxHoy, puntos.length - 1, true);
-  });
-
-  html += '<circle cx="' + xHoy.toFixed(1) + '" cy="' + yAt(puntos[idxHoy].ctl).toFixed(1) + '" r="2.5" fill="#e7edf2"></circle>';
-
-  puntos.forEach((p, i) => {
-    if (i % 14 === 0 || i === puntos.length - 1) {
-      html += '<text x="' + xAt(i) + '" y="' + (padT + plotH + 14) + '" text-anchor="middle" font-size="8" fill="#8ea3b3" font-family="monospace">' + p.fecha.slice(5) + '</text>';
-    }
-  });
-
-  // cursor arrastrable — arranca en "hoy", el usuario lo desliza para explorar cualquier día
-  html += '<line id="cursorLinea" x1="' + xHoy.toFixed(1) + '" y1="' + padT + '" x2="' + xHoy.toFixed(1) + '" y2="' + (padT + plotH) + '" stroke="#e7edf2" stroke-width="1.5"></line>';
-  html += '<circle id="cursorCtl" cx="' + xHoy.toFixed(1) + '" cy="0" r="3.5" fill="#5aa9d6" stroke="#0f1720" stroke-width="1"></circle>';
-  html += '<circle id="cursorAtl" cx="' + xHoy.toFixed(1) + '" cy="0" r="3.5" fill="#d9705a" stroke="#0f1720" stroke-width="1"></circle>';
-  html += '<circle id="cursorTsb" cx="' + xHoy.toFixed(1) + '" cy="0" r="3.5" fill="#e0a458" stroke="#0f1720" stroke-width="1"></circle>';
-  // rect invisible que cubre todo el gráfico: agranda el área táctil para arrastrar desde cualquier punto
-  html += '<rect x="' + padL + '" y="0" width="' + (W - padL) + '" height="' + H + '" fill="transparent"></rect>';
-
-  svg.innerHTML = html;
-
-  const cursorLinea = document.getElementById('cursorLinea');
-  const cursorCtl = document.getElementById('cursorCtl');
-  const cursorAtl = document.getElementById('cursorAtl');
-  const cursorTsb = document.getElementById('cursorTsb');
-  const infoEl = document.getElementById('formaCursorInfo');
-
-  function actualizarCursor(idx) {
-    idx = Math.max(0, Math.min(puntos.length - 1, idx));
-    const p = puntos[idx];
-    const x = xAt(idx);
-    cursorLinea.setAttribute('x1', x); cursorLinea.setAttribute('x2', x);
-    cursorCtl.setAttribute('cx', x); cursorCtl.setAttribute('cy', yAt(p.ctl).toFixed(1));
-    cursorAtl.setAttribute('cx', x); cursorAtl.setAttribute('cy', yAt(p.atl).toFixed(1));
-    cursorTsb.setAttribute('cx', x); cursorTsb.setAttribute('cy', yAt(p.tsb).toFixed(1));
-    const etiqueta = idx === idxHoy ? ' · hoy' : (idx > idxHoy ? ' · proyectado' : ' · real');
-    infoEl.innerHTML = '<b>' + p.fecha + '</b>' + etiqueta + ' — CTL ' + Math.round(p.ctl) + ' · ATL ' + Math.round(p.atl) + ' · TSB ' + Math.round(p.tsb);
-  }
-
-  function posicionAIndice(clientX) {
-    const rect = svg.getBoundingClientRect();
-    const escala = rect.width / W;
-    const xLocal = (clientX - rect.left) / escala;
-    return Math.round((xLocal - padL) / pxPorDia);
-  }
-
-  function moverCursor(e) {
-    actualizarCursor(posicionAIndice(e.clientX));
-  }
-  function terminarDrag(e) {
-    svg.removeEventListener('pointermove', moverCursor);
-    try { svg.releasePointerCapture(e.pointerId); } catch (err) {}
-  }
-  svg.onpointerdown = function (e) {
-    svg.setPointerCapture(e.pointerId);
-    moverCursor(e);
-    svg.addEventListener('pointermove', moverCursor);
-    svg.addEventListener('pointerup', terminarDrag);
-    svg.addEventListener('pointercancel', terminarDrag);
-  };
-
-  actualizarCursor(idxHoy);
-}
-
-/* ========================= HEADER ========================= */
-
-function renderHeader() {
-  const config = store.activoId ? store.ciclos[store.activoId] : null;
-  const nombreEl = document.getElementById('hdrNombre');
-  const metaEl = document.getElementById('hdrMeta');
-  if (!config) {
-    nombreEl.textContent = 'Sin ciclo activo';
-    metaEl.textContent = '—';
-    dibujarCurvaHeader(null);
-    return;
-  }
-  nombreEl.textContent = config.nombre;
-  const semanas = Math.round(config.totalDias / 7);
-  metaEl.textContent = 'desde ' + config.fechaInicio + ' · ' + semanas + ' semanas · k=' + config.k;
-  dibujarCurvaHeader(config);
-}
-
-/* ========================= PLAN DE HOY ========================= */
-
-function hoyISO() {
-  const d = new Date();
-  const tz = d.getTimezoneOffset() * 60000;
-  return new Date(d - tz).toISOString().slice(0, 10);
-}
-
-function renderHoy() {
-  const hayCiclos = Object.keys(store.ciclos).length > 0;
-  document.getElementById('hoyEmpty').style.display = hayCiclos ? 'none' : 'block';
-  document.getElementById('hoyContent').style.display = hayCiclos ? 'block' : 'none';
-  if (!hayCiclos) return;
-
-  const fechaInput = document.getElementById('fechaPlan');
-  if (!fechaInput.value) fechaInput.value = hoyISO();
-
-  actualizarPlanHoy();
-}
-
-function limpiarPlanHoy(mensaje) {
-  document.getElementById('fueraDeRangoHint').style.display = 'block';
-  document.getElementById('fueraDeRangoHint').textContent = mensaje;
-  document.getElementById('statDia').textContent = '—';
-  document.getElementById('statSemana').textContent = '—';
-  document.getElementById('statHoras').textContent = '—';
-  document.getElementById('discList').innerHTML = '';
-  document.getElementById('zoneBar').innerHTML = '';
-  document.getElementById('sesionesZonas').innerHTML = '';
-  document.getElementById('pulsoHint').textContent = '';
-}
-
-function actualizarPlanHoy() {
-  const fechaISO = document.getElementById('fechaPlan').value || hoyISO();
-  const encontrado = cicloParaFecha(fechaISO);
-  if (!encontrado) {
-    limpiarPlanHoy('Ningún ciclo guardado cubre esta fecha. Revisá las fechas de tus ciclos en la pestaña Ciclo, o creá uno nuevo que la cubra.');
-    return;
-  }
-  const cicloId = encontrado.id;
-  const config = encontrado.config;
-  const overridesCiclo = overridesAll[cicloId] || {};
-  const configConOverrides = Object.assign({}, config, { cargaOverrides: overridesCiclo });
-  const r = calcularDia(configConOverrides, fechaISO);
-
-  document.getElementById('fueraDeRangoHint').style.display = 'none';
-  document.getElementById('statDia').textContent = r.diaIndex + ' / ' + config.totalDias;
-  document.getElementById('statSemana').textContent = r.semanaIndex;
-  document.getElementById('statHoras').textContent = r.horasSemana.toFixed(1);
-
-  const cargaInput = document.getElementById('cargaOverride');
-  if (document.activeElement !== cargaInput) cargaInput.value = r.pctCarga;
-
-  if (!discActivas[fechaISO]) discActivas[fechaISO] = {};
-
-  const listEl = document.getElementById('discList');
-  listEl.innerHTML = '';
-  DISCIPLINAS.forEach((d) => {
-    const dd = r.disciplinas[d.key];
-    const activa = discActivas[fechaISO][d.key] !== undefined ? discActivas[fechaISO][d.key] : dd.sesionesSemana > 0;
-    discActivas[fechaISO][d.key] = activa;
-
-    const card = document.createElement('div');
-    card.className = 'discCard' + (activa ? '' : ' inactive');
-    card.innerHTML =
-      '<div class="toggle' + (activa ? ' on' : '') + '"><div class="knob"></div></div>' +
-      '<div class="info">' +
-        '<div class="name"><span class="dot" style="background:' + d.color + '"></span>' + d.label + '</div>' +
-        '<div class="sub">' + dd.pct + '% del plan · ' + dd.sesionesSemana + ' ses/sem</div>' +
-      '</div>' +
-      '<div class="time">' + segARelojes(dd.tiempoSesionSeg) + '</div>';
-    card.querySelector('.toggle').addEventListener('click', () => {
-      discActivas[fechaISO][d.key] = !discActivas[fechaISO][d.key];
-      actualizarPlanHoy();
-    });
-    listEl.appendChild(card);
-  });
-
-  // zonas: barra apilada por duración total de sesión + tarjetas de estructura de series
-  const zoneBar = document.getElementById('zoneBar');
-  zoneBar.innerHTML = '';
-  const zonasSesion = METRICAS_ZONA.filter((z) => z.key !== 'pctPulsoMax');
-  const totalDuracion = zonasSesion.reduce((acc, z) => acc + r.zonas[z.key].duracionTotalSeg, 0) || 1;
-  const coloresFase = { fosf: '#d9705a', glucol: '#e0a458', aerob: '#5fb88a' };
-  zonasSesion.forEach((z) => {
-    const dz = r.zonas[z.key];
-    const pct = (dz.duracionTotalSeg / totalDuracion) * 100;
-    if (pct < 1) return;
-    const seg = document.createElement('div');
-    seg.style.width = pct + '%';
-    seg.style.background = coloresFase[z.fase];
-    seg.title = z.label + ': ' + segARelojes(dz.duracionTotalSeg);
-    if (pct > 8) seg.textContent = segARelojes(dz.duracionTotalSeg);
-    zoneBar.appendChild(seg);
-  });
-
-  const sesionesEl = document.getElementById('sesionesZonas');
-  sesionesEl.innerHTML = '';
-  zonasSesion.forEach((z) => {
-    const dz = r.zonas[z.key];
-    const card = document.createElement('div');
-    card.className = 'sesionCard';
-    const estructura = dz.series > 1
-      ? dz.series + ' × ' + segARelojes(dz.trabajoSeg) + ' / ' + segARelojes(dz.recuperacionSeg) + ' desc.'
-      : '1 × ' + segARelojes(dz.trabajoSeg) + ' (continuo)';
-    const targets = targetsPorZona(z.key, discActivas[fechaISO]);
-    const targetsHtml = targets.length ? '<div class="targets">' + targets.join(' · ') + '</div>' : '';
-    card.innerHTML =
-      '<div class="nombre"><span class="dot" style="background:' + coloresFase[z.fase] + '"></span>' + z.label + '</div>' +
-      '<div class="estructura">' + estructura + '</div>' +
-      targetsHtml +
-      '<div class="totalizado">sesión total ' + segARelojes(dz.duracionTotalSeg) + '</div>';
-    sesionesEl.appendChild(card);
-  });
-
-  document.getElementById('pulsoHint').textContent = '% pulso máx sugerido para el trabajo aeróbico de esta semana: ' + r.zonas.pctPulsoMax.valor + '% · ciclo: ' + config.nombre;
-}
-
-document.getElementById('fechaPlan').addEventListener('change', actualizarPlanHoy);
-document.getElementById('cargaOverride').addEventListener('change', () => {
-  const fechaISO = document.getElementById('fechaPlan').value;
-  const encontrado = cicloParaFecha(fechaISO);
-  if (!encontrado) return;
-  const val = parseFloat(document.getElementById('cargaOverride').value);
-  if (!overridesAll[encontrado.id]) overridesAll[encontrado.id] = {};
-  if (isNaN(val)) {
-    delete overridesAll[encontrado.id][fechaISO];
-  } else {
-    overridesAll[encontrado.id][fechaISO] = val;
-  }
-  guardarOverrides(overridesAll);
-  actualizarPlanHoy();
-});
-
-document.getElementById('btnGuardarPlan').addEventListener('click', () => {
-  const fechaISO = document.getElementById('fechaPlan').value || hoyISO();
-  const encontrado = cicloParaFecha(fechaISO);
-  if (!encontrado) { toast('No hay ciclo para esta fecha'); return; }
-  const config = encontrado.config;
-  const overridesCiclo = overridesAll[encontrado.id] || {};
-  const configConOverrides = Object.assign({}, config, { cargaOverrides: overridesCiclo });
-  const r = calcularDia(configConOverrides, fechaISO);
-  const activas = discActivas[fechaISO] || {};
-
-  const salida = {
-    fecha: fechaISO,
-    cicloNombre: config.nombre,
-    diaIndex: r.diaIndex,
-    semanaIndex: r.semanaIndex,
-    pctCarga: r.pctCarga,
-    disciplinas: {},
-    zonas: {},
-  };
-  DISCIPLINAS.forEach((d) => {
-    const dd = r.disciplinas[d.key];
-    salida.disciplinas[d.key] = {
-      label: dd.label,
-      activa: !!activas[d.key],
-      tiempoSesionSeg: Math.round(dd.tiempoSesionSeg),
-      sesionesSemana: dd.sesionesSemana,
-    };
-  });
-  METRICAS_ZONA.forEach((z) => {
-    const zz = r.zonas[z.key];
-    if (z.key === 'pctPulsoMax') {
-      salida.zonas[z.key] = { label: zz.label, pctPulsoMax: zz.valor };
-    } else {
-      salida.zonas[z.key] = {
-        label: zz.label,
-        trabajoSeg: Math.round(zz.trabajoSeg),
-        recuperacionSeg: Math.round(zz.recuperacionSeg),
-        series: zz.series,
-        duracionTotalSeg: Math.round(zz.duracionTotalSeg),
+  const activos = setRecords
+    .filter(v => v[5] === 1) // set_type: 1 = serie activa (0 = descanso, se descarta)
+    .sort((a,b) => (a[10] ?? 0) - (b[10] ?? 0)); // message_index: orden real de ejecución
+
+  const esValido = (x) => x !== undefined && x !== 0xFFFF && x !== 0xFFFE;
+  const grupos = {};
+  const orden = [];
+
+  activos.forEach(v => {
+    const duracionSeg = (v[0] !== undefined) ? v[0] / 1000 : null;
+    const repsRaw = v[3];
+    const repsValid = esValido(repsRaw);
+    const pesoRaw = v[4];
+    const pesoValid = esValido(pesoRaw);
+
+    const catArr = Array.isArray(v[7]) ? v[7] : (v[7]!==undefined ? [v[7]] : []);
+    const subArr = Array.isArray(v[8]) ? v[8] : (v[8]!==undefined ? [v[8]] : []);
+    const cat0 = catArr.find(esValido);
+    const sub0 = subArr.find(esValido);
+    const clave = (cat0 !== undefined ? cat0 : 'x') + '_' + (sub0 !== undefined ? sub0 : 'x');
+
+    if(!grupos[clave]){
+      const nombre = (cat0 !== undefined && CATEGORIAS_GARMIN_ESTIMADAS[cat0])
+        ? CATEGORIAS_GARMIN_ESTIMADAS[cat0] + ' (Garmin)'
+        : 'Ejercicio sin clasificar (Garmin)';
+      grupos[clave] = {
+        nombre,
+        tipo: repsValid ? 'reps' : 'tiempo', // sin reps válidas pero con duración = ejercicio isométrico
+        carga: 'peso',
+        series: []
       };
+      orden.push(clave);
     }
+    grupos[clave].series.push({
+      cantidad: repsValid ? repsRaw : (duracionSeg !== null ? Math.round(duracionSeg) : ''),
+      valor: pesoValid ? Math.round((pesoRaw/16) * 100) / 100 : ''
+    });
   });
 
-  localStorage.setItem(LS_COMPARTIDO, JSON.stringify(salida));
-  toast('Plan de hoy guardado ✓');
-});
+  return {
+    ejercicios: orden.map(clave => grupos[clave]),
+    duracionMin: sessionTotalElapsedSec !== null ? Math.max(1, Math.round(sessionTotalElapsedSec/60)) : null,
+    fechaISO: sessionTimestamp !== null ? fechaISODesdeGarminEpoch(sessionTimestamp) : null,
+  };
+}
 
-/* ========================= LISTA DE CICLOS ========================= */
+function importarArchivoFit(event){
+  const archivo = event.target.files && event.target.files[0];
+  event.target.value = ''; // permite reimportar el mismo archivo si hace falta
+  if(!archivo) return;
 
-function renderListaCiclos() {
-  const el = document.getElementById('listaCiclos');
-  const ids = Object.keys(store.ciclos);
-  if (!ids.length) {
-    el.innerHTML = '<p>Todavía no hay ciclos guardados.</p>';
+  const lector = new FileReader();
+  lector.onload = () => {
+    let resultado;
+    try{
+      resultado = parseFitFuerza(lector.result);
+    }catch(e){
+      console.error('Error al parsear el archivo FIT', e);
+      mostrarToast('⚠️ No pude leer ese archivo .fit');
+      return;
+    }
+    aplicarImportacionFit(resultado, archivo.name);
+  };
+  lector.onerror = () => mostrarToast('⚠️ No pude leer ese archivo .fit');
+  lector.readAsArrayBuffer(archivo);
+}
+
+function aplicarImportacionFit(resultado, nombreArchivo){
+  if(!resultado || resultado.ejercicios.length === 0){
+    mostrarToast('⚠️ No encontré series de fuerza en ese archivo');
     return;
   }
-  el.innerHTML = '';
-  ids.forEach((id) => {
-    const c = store.ciclos[id];
-    const row = document.createElement('div');
-    row.className = 'savedRow' + (id === store.activoId ? ' active' : '');
-    row.innerHTML =
-      '<div class="n">' + c.nombre + '</div>' +
-      '<button class="small" data-act="usar">Usar</button>' +
-      '<button class="small" data-act="editar">Editar</button>';
-    row.querySelector('[data-act=usar]').addEventListener('click', () => {
-      store.activoId = id;
-      guardarStore(store);
-      renderHeader();
-      renderListaCiclos();
-      toast('Ciclo activo: ' + c.nombre);
-    });
-    row.querySelector('[data-act=editar]').addEventListener('click', () => {
-      abrirFormularioCiclo(id);
-    });
-    el.appendChild(row);
-  });
+  if(hayDatosEnFormulario() && !confirm('Esto va a reemplazar los ejercicios que ya cargaste en el formulario. ¿Continuar?')) return;
+
+  editandoId = null;
+  rutinaActualId = null;
+
+  if(resultado.fechaISO) document.getElementById('inFecha').value = resultado.fechaISO;
+  if(resultado.duracionMin) document.getElementById('inDuracion').value = resultado.duracionMin;
+  document.getElementById('inRpeSesion').value = 5;
+  document.getElementById('rpeSesionNum').textContent = '5';
+
+  ejercicios = resultado.ejercicios.map(e => Object.assign({id: idNuevo('ej')}, e));
+
+  renderEjercicios();
+  renderBotonRutina();
+  actualizarTSS();
+  document.getElementById('btnGuardar').textContent = '💾 Guardar sesión';
+  document.getElementById('btnCancelarEdicion').style.display = 'none';
+
+  mostrarTab('registrar');
+  mostrarToast(`⌚ Importado de ${nombreArchivo} — revisá nombres y cargá el RPE antes de guardar`);
 }
 
-/* ========================= FORMULARIO DE CICLO ========================= */
-
-let idEnEdicion = null;
-
-function abrirFormularioCiclo(id) {
-  idEnEdicion = id || null;
-  cicloEnEdicion = id ? JSON.parse(JSON.stringify(store.ciclos[id])) : configDefault();
-
-  document.getElementById('formCicloCard').style.display = 'block';
-  document.getElementById('fNombre').value = cicloEnEdicion.nombre;
-  document.getElementById('fFechaInicio').value = cicloEnEdicion.fechaInicio;
-  document.getElementById('fEventoNombre').value = cicloEnEdicion.eventoNombre || '';
-  document.getElementById('fEventoFecha').value = cicloEnEdicion.eventoFecha || '';
-  document.getElementById('fSemanas').value = Math.round(cicloEnEdicion.totalDias / 7);
-  document.getElementById('fK').value = cicloEnEdicion.k;
-  document.getElementById('fKSlider').value = posDesdeK(cicloEnEdicion.k);
-  actualizarLabelK(cicloEnEdicion.k);
-  document.getElementById('fHorasIni').value = cicloEnEdicion.horasSemana.inicio;
-  document.getElementById('fHorasFin').value = cicloEnEdicion.horasSemana.fin;
-  document.getElementById('fTaperDias').value = cicloEnEdicion.taper.dias;
-  document.getElementById('fTaperPct').value = cicloEnEdicion.taper.reduccionPct;
-
-  renderChipsCarga();
-  renderTablaDisciplinas();
-  renderDiasSemana();
-  renderTablaZonas();
-  dibujarGraficoHoras();
-  document.getElementById('formCicloCard').scrollIntoView({ behavior: 'smooth', block: 'start' });
+function hayDatosEnFormulario(){
+  leerCamposFormulario();
+  return ejercicios.some(e => (e.nombre||'').trim() !== '' ||
+    e.series.some(s => s.cantidad !== '' || s.valor !== ''));
 }
 
-function renderChipsCarga() {
-  const el = document.getElementById('patronCargaChips');
-  el.innerHTML = '';
-  cicloEnEdicion.patronCargaSemanal.forEach((pct, idx) => {
-    const chip = document.createElement('span');
-    chip.className = 'chip';
-    chip.innerHTML = pct + '%<button>×</button>';
-    chip.querySelector('button').addEventListener('click', () => {
-      cicloEnEdicion.patronCargaSemanal.splice(idx, 1);
-      renderChipsCarga();
-    });
-    el.appendChild(chip);
-  });
+function usarRutina(id){
+  const rutina = leerRutinas().find(r => r.id === id);
+  if(!rutina) return;
+  if(hayDatosEnFormulario() && !confirm('Esto va a reemplazar los ejercicios que ya cargaste en el formulario. ¿Continuar?')) return;
+
+  ejercicios = rutina.ejercicios.map(def => ({
+    id: idNuevo('ej'),
+    nombre: def.nombre,
+    tipo: def.tipo || 'reps',
+    carga: def.carga || 'peso',
+    series: Array.from({length: def.seriesSugeridas || 1}, () => ({cantidad:'', valor:''}))
+  }));
+  rutinaActualId = id;
+  renderEjercicios();
+  renderBotonRutina();
+  mostrarTab('registrar');
+  mostrarToast('📂 Rutina cargada: ' + rutina.nombre);
 }
-document.getElementById('btnAgregarPct').addEventListener('click', () => {
-  const input = document.getElementById('nuevoPct');
-  const val = parseFloat(input.value);
-  if (!isNaN(val)) {
-    cicloEnEdicion.patronCargaSemanal.push(val);
-    input.value = '';
-    renderChipsCarga();
+
+function renombrarRutina(id){
+  const rutinas = leerRutinas();
+  const r = rutinas.find(x => x.id === id);
+  if(!r) return;
+  const nuevoNombre = prompt('Nuevo nombre:', r.nombre);
+  if(!nuevoNombre || !nuevoNombre.trim()) return;
+  r.nombre = nuevoNombre.trim();
+  guardarRutinas(rutinas);
+  renderRutinas();
+  if(rutinaActualId === id) renderBotonRutina();
+}
+
+function borrarRutina(id){
+  if(!confirm('¿Borrar esta rutina guardada? No afecta a las sesiones ya registradas.')) return;
+  const rutinas = leerRutinas().filter(r => r.id !== id);
+  guardarRutinas(rutinas);
+  if(rutinaActualId === id){
+    rutinaActualId = null;
+    renderBotonRutina();
+  }
+  renderRutinas();
+  mostrarToast('🗑 Rutina borrada');
+}
+
+function renderRutinas(){
+  const cont = document.getElementById('listaRutinas');
+  const rutinas = leerRutinas();
+
+  if(rutinas.length === 0){
+    cont.innerHTML = '<div class="vacio">Todavía no guardaste ninguna rutina.<br>Armá los ejercicios en "Registrar" y tocá "💾 Guardar como rutina".</div>';
+    return;
+  }
+
+  const hint = `<div class="hint-rutinas">🏁 <b>Iniciar</b>: arranca el cronómetro y elegís cuántas rondas del circuito — vas tildando cada ejercicio a medida que lo hacés.<br>📝 <b>Cargar</b>: completa el formulario de Registrar para anotar todo a mano, sin cronómetro.</div>`;
+
+  cont.innerHTML = hint + rutinas.map(r => {
+    const tags = r.ejercicios.map(e => {
+      const icono = e.tipo === 'tiempo' ? '⏱️' : '🔢';
+      const unidad = e.carga === 'peso' ? 'KG' : 'RPE';
+      return `<span class="tag-ejercicio">${icono} ${escapeHtml(e.nombre)} · ${unidad}</span>`;
+    }).join('');
+    return `
+      <div class="card">
+        <div class="sesion-cab">
+          <div class="sesion-fecha">${escapeHtml(r.nombre)}</div>
+        </div>
+        <div class="sesion-meta">${r.ejercicios.length} ejercicio${r.ejercicios.length===1?'':'s'}</div>
+        <div class="tags-rutina">${tags}</div>
+        <div class="acciones-hist">
+          <button class="btn btn-primario" style="width:auto;" onclick="iniciarSesionEnVivo('${r.id}')">🏁 Iniciar</button>
+          <button class="btn btn-secundario" onclick="usarRutina('${r.id}')">📝 Cargar</button>
+        </div>
+        <div class="acciones-hist" style="margin-top:8px;">
+          <button class="btn btn-mini" style="flex:1;" onclick="renombrarRutina('${r.id}')">✏️ Renombrar</button>
+          <button class="btn btn-mal" style="flex:1;" onclick="borrarRutina('${r.id}')">🗑 Borrar</button>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+/* ============ Sesión "en vivo" (rutina iniciada con cronómetro) ============ */
+async function solicitarWakeLock(){
+  try{
+    if('wakeLock' in navigator){
+      vivoWakeLock = await navigator.wakeLock.request('screen');
+    }
+  }catch(e){
+    console.error('Bloqueo de pantalla no disponible', e);
+  }
+}
+
+function liberarWakeLock(){
+  if(vivoWakeLock){
+    try{ vivoWakeLock.release(); }catch(e){ console.error(e); }
+    vivoWakeLock = null;
+  }
+}
+
+document.addEventListener('visibilitychange', () => {
+  if(vivoInicio && document.visibilityState === 'visible'){
+    solicitarWakeLock();
   }
 });
 
-function renderTablaDisciplinas() {
-  const tbody = document.getElementById('discTableBody');
-  tbody.innerHTML = '';
-  DISCIPLINAS.forEach((d) => {
-    const cfg = cicloEnEdicion.disciplinas[d.key];
-    const tr = document.createElement('tr');
-    tr.innerHTML =
-      '<td><span class="dot" style="background:' + d.color + '"></span>' + d.label + '</td>' +
-      '<td><input type="number" data-k="pctInicio" value="' + cfg.pctInicio + '" style="width:60px"></td>' +
-      '<td><input type="number" data-k="pctFin" value="' + cfg.pctFin + '" style="width:60px"></td>' +
-      '<td><input type="number" data-k="sesionesInicio" value="' + cfg.sesionesInicio + '" style="width:50px"></td>' +
-      '<td><input type="number" data-k="sesionesFin" value="' + cfg.sesionesFin + '" style="width:50px"></td>';
-    tr.querySelectorAll('input').forEach((inp) => {
-      inp.addEventListener('input', () => {
-        cfg[inp.dataset.k] = parseFloat(inp.value) || 0;
-        chequearSumaPct();
-      });
-    });
-    tbody.appendChild(tr);
-  });
-  chequearSumaPct();
+// --- Contabilidad de trabajo/pausa dentro de la rutina en vivo ---
+// Basado en timestamps (no en sumar 1 seg por tick), para que sea robusto si
+// el navegador se va a segundo plano o el tick del setInterval se retrasa —
+// misma lógica que ya usa el cronómetro total.
+
+// Avanza `estado` hasta el instante `ahora`: cierra el segmento en curso
+// (trabajo o pausa, según estado.enPausa) sumándolo al acumulador que
+// corresponda, y abre uno nuevo desde `ahora`. Muta y devuelve `estado`.
+function segmentosVivoAvanzar(estado, ahora){
+  const transcurrido = (estado.segmentoInicio !== null && estado.segmentoInicio !== undefined)
+    ? (ahora - estado.segmentoInicio) / 1000 : 0;
+  if(estado.enPausa) estado.segundosPausaAcum += transcurrido;
+  else estado.segundosTrabajoAcum += transcurrido;
+  estado.segmentoInicio = ahora;
+  return estado;
 }
 
-function chequearSumaPct() {
-  const sumaIni = DISCIPLINAS.reduce((a, d) => a + (cicloEnEdicion.disciplinas[d.key].pctInicio || 0), 0);
-  const sumaFin = DISCIPLINAS.reduce((a, d) => a + (cicloEnEdicion.disciplinas[d.key].pctFin || 0), 0);
-  const warn = document.getElementById('pctWarning');
-  if (sumaIni !== 100 || sumaFin !== 100) {
-    warn.style.display = 'block';
-    warn.textContent = 'La suma de % no da 100 (inicio: ' + sumaIni + '%, fin: ' + sumaFin + '%). No rompe nada, pero conviene ajustarlo.';
-  } else {
-    warn.style.display = 'none';
-  }
-}
-
-function renderTablaZonas() {
-  const cont = document.getElementById('zonaCards');
-  cont.innerHTML = '';
-  METRICAS_ZONA.forEach((z) => {
-    const cfg = cicloEnEdicion.zonas[z.key];
-    const card = document.createElement('div');
-    card.className = 'zonaCard';
-
-    if (z.key === 'pctPulsoMax') {
-      card.innerHTML =
-        '<div class="titulo">' + z.label + '</div>' +
-        '<div class="subrow"><span class="lbl">Inicio</span><input type="number" data-k="inicio" value="' + cfg.inicio + '"><span class="arrow">→</span>' +
-        '<span class="lbl">Fin</span><input type="number" data-k="fin" value="' + cfg.fin + '"></div>';
-      card.querySelectorAll('input').forEach((inp) => {
-        inp.addEventListener('change', () => { cfg[inp.dataset.k] = parseFloat(inp.value) || 0; });
-      });
-      cont.appendChild(card);
-      return;
-    }
-
-    card.innerHTML =
-      '<div class="titulo">' + z.label + '</div>' +
-      '<div class="subrow"><span class="lbl">Trabajo</span>' +
-        '<input type="text" data-g="trabajo" data-k="inicio" value="' + segARelojes(cfg.trabajo.inicio) + '">' +
-        '<span class="arrow">→</span>' +
-        '<input type="text" data-g="trabajo" data-k="fin" value="' + segARelojes(cfg.trabajo.fin) + '">' +
-      '</div>' +
-      '<div class="subrow"><span class="lbl">Descanso</span>' +
-        '<input type="text" data-g="recuperacion" data-k="inicio" value="' + segARelojes(cfg.recuperacion.inicio) + '">' +
-        '<span class="arrow">→</span>' +
-        '<input type="text" data-g="recuperacion" data-k="fin" value="' + segARelojes(cfg.recuperacion.fin) + '">' +
-      '</div>' +
-      '<div class="subrow"><span class="lbl">Series</span>' +
-        '<input type="number" min="1" step="1" data-g="series" data-k="inicio" value="' + cfg.series.inicio + '">' +
-        '<span class="arrow">→</span>' +
-        '<input type="number" min="1" step="1" data-g="series" data-k="fin" value="' + cfg.series.fin + '">' +
-      '</div>';
-
-    card.querySelectorAll('input').forEach((inp) => {
-      inp.addEventListener('change', () => {
-        const grupo = inp.dataset.g;
-        const val = grupo === 'series' ? (parseInt(inp.value, 10) || 1) : relojASegundos(inp.value);
-        cfg[grupo][inp.dataset.k] = val;
-      });
-    });
-    cont.appendChild(card);
-  });
-}
-
-document.getElementById('btnNuevoCiclo').addEventListener('click', () => abrirFormularioCiclo(null));
-document.getElementById('btnCancelarCiclo').addEventListener('click', () => {
-  document.getElementById('formCicloCard').style.display = 'none';
-});
-
-document.getElementById('btnGuardarCiclo').addEventListener('click', () => {
-  cicloEnEdicion.nombre = document.getElementById('fNombre').value.trim() || 'Ciclo sin nombre';
-  cicloEnEdicion.fechaInicio = document.getElementById('fFechaInicio').value;
-  cicloEnEdicion.eventoNombre = document.getElementById('fEventoNombre').value.trim();
-  cicloEnEdicion.eventoFecha = document.getElementById('fEventoFecha').value;
-  cicloEnEdicion.totalDias = calcularTotalDiasDesdeForm();
-  cicloEnEdicion.k = parseFloat(document.getElementById('fK').value) || 0.02;
-  cicloEnEdicion.horasSemana.inicio = parseFloat(document.getElementById('fHorasIni').value) || 0;
-  cicloEnEdicion.horasSemana.fin = parseFloat(document.getElementById('fHorasFin').value) || 0;
-  cicloEnEdicion.taper.dias = Math.max(0, Math.round(parseFloat(document.getElementById('fTaperDias').value) || 0));
-  cicloEnEdicion.taper.reduccionPct = Math.max(0, Math.min(90, parseFloat(document.getElementById('fTaperPct').value) || 0));
-
-  const id = idEnEdicion || ('c' + Date.now());
-  store.ciclos[id] = cicloEnEdicion;
-  if (!store.activoId) store.activoId = id;
-  guardarStore(store);
-
-  document.getElementById('formCicloCard').style.display = 'none';
-  renderListaCiclos();
-  renderHeader();
-  toast('Ciclo guardado ✓');
-});
-
-/* ========================= DATOS: BACKUP ========================= */
-
-document.getElementById('btnExportar').addEventListener('click', () => {
-  const data = { ciclos: store.ciclos, activoId: store.activoId, overrides: overridesAll };
-  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = 'plan-ciclos-backup-' + hoyISO() + '.json';
-  a.click();
-  URL.revokeObjectURL(url);
-});
-
-document.getElementById('btnImportar').addEventListener('click', () => {
-  document.getElementById('fileImportar').click();
-});
-document.getElementById('fileImportar').addEventListener('change', (e) => {
-  const file = e.target.files[0];
-  if (!file) return;
-  const reader = new FileReader();
-  reader.onload = () => {
-    let data;
-    try {
-      data = JSON.parse(reader.result);
-    } catch (err) {
-      toast('Ese archivo no es un JSON válido');
-      return;
-    }
-    try {
-      const norm = normalizarImport(data);
-      store = { ciclos: norm.ciclos, activoId: norm.activoId };
-      overridesAll = norm.overrides;
-      migrarTodosLosCiclos(store);
-      guardarStore(store);
-      guardarOverrides(overridesAll);
-      renderHeader();
-      renderListaCiclos();
-      renderHoy();
-      toast('Datos restaurados ✓');
-    } catch (err) {
-      console.error('Error importando backup:', err);
-      toast('El archivo es JSON válido pero no tiene la forma esperada');
-    }
+// Total trabajo/pausa "a esta altura", SIN cerrar el segmento en curso
+// (para refrescar la pantalla cada segundo sin tocar los acumuladores reales).
+function calcularTotalesVivo(estado, ahora){
+  const transcurrido = (estado.segmentoInicio !== null && estado.segmentoInicio !== undefined)
+    ? (ahora - estado.segmentoInicio) / 1000 : 0;
+  return {
+    trabajo: estado.segundosTrabajoAcum + (estado.enPausa ? 0 : transcurrido),
+    pausa: estado.segundosPausaAcum + (estado.enPausa ? transcurrido : 0),
   };
-  reader.readAsText(file);
-});
+}
 
-document.getElementById('btnBorrarCiclo').addEventListener('click', () => {
-  if (!store.activoId) { toast('No hay ciclo activo'); return; }
-  if (!confirm('¿Borrar el ciclo "' + store.ciclos[store.activoId].nombre + '"? No se puede deshacer.')) return;
-  delete store.ciclos[store.activoId];
-  delete overridesAll[store.activoId];
-  store.activoId = Object.keys(store.ciclos)[0] || null;
-  guardarStore(store);
-  guardarOverrides(overridesAll);
-  renderHeader();
-  renderListaCiclos();
-  renderHoy();
-  toast('Ciclo borrado');
-});
+function cerrarSegmentoVivo(){
+  const estado = { enPausa: vivoEnPausa, segundosTrabajoAcum: vivoSegundosTrabajoAcum, segundosPausaAcum: vivoSegundosPausaAcum, segmentoInicio: vivoSegmentoInicio };
+  segmentosVivoAvanzar(estado, Date.now());
+  vivoSegundosTrabajoAcum = estado.segundosTrabajoAcum;
+  vivoSegundosPausaAcum = estado.segundosPausaAcum;
+  vivoSegmentoInicio = estado.segmentoInicio;
+}
 
-/* ========================= INIT ========================= */
+function cambiarEstadoVivo(pausar){
+  cerrarSegmentoVivo();
+  vivoEnPausa = pausar;
+  actualizarBotonPausaVivo();
+  actualizarCronometroVivo();
+  guardarEstadoVivo();
+}
 
-renderHeader();
-renderListaCiclos();
-renderHoy();
-cargarFormularioUmbrales();
-cargarFormularioPerfil();
+function alternarPausaVivo(){
+  cambiarEstadoVivo(!vivoEnPausa);
+}
+
+function actualizarBotonPausaVivo(){
+  const btn = document.getElementById('btnPausaVivo');
+  if(btn) btn.textContent = vivoEnPausa ? '▶️ Reanudar' : '⏸️ Pausa';
+}
+
+function iniciarSesionEnVivo(rutinaId){
+  const rutina = leerRutinas().find(r => r.id === rutinaId);
+  if(!rutina) return;
+
+  const rondasTexto = prompt('¿Cuántas rondas del circuito?', '1');
+  if(rondasTexto === null) return; // canceló
+  const rondas = Math.max(1, parseInt(rondasTexto, 10) || 1);
+
+  const items = [];
+  for(let ronda = 1; ronda <= rondas; ronda++){
+    rutina.ejercicios.forEach(e => {
+      items.push({ ronda, nombre: e.nombre, tipo: e.tipo, carga: e.carga, hecho: false });
+    });
+  }
+
+  vivoRutinaId = rutina.id;
+  vivoRutinaNombre = rutina.nombre;
+  vivoInicio = Date.now();
+  vivoItems = items;
+  vivoEnPausa = false;
+  vivoSegundosTrabajoAcum = 0;
+  vivoSegundosPausaAcum = 0;
+  vivoSegmentoInicio = vivoInicio;
+
+  guardarEstadoVivo();
+  mostrarSeccionVivo();
+}
+
+function mostrarSeccionVivo(){
+  document.getElementById('navTabs').style.display = 'none';
+  document.getElementById('tab-registrar').classList.remove('activa');
+  document.getElementById('tab-historial').classList.remove('activa');
+  document.getElementById('tab-rutinas').classList.remove('activa');
+  document.getElementById('tab-vivo').classList.add('activa');
+
+  document.getElementById('vivoNombreRutina').textContent = vivoRutinaNombre;
+  renderVivoLista();
+  actualizarBotonPausaVivo();
+
+  if(vivoTimerHandle) clearInterval(vivoTimerHandle);
+  actualizarCronometroVivo();
+  vivoTimerHandle = setInterval(actualizarCronometroVivo, 1000);
+
+  solicitarWakeLock();
+}
+
+function actualizarCronometroVivo(){
+  const ms = Date.now() - vivoInicio;
+  document.getElementById('vivoCronometro').textContent = formatearDuracion(ms);
+
+  const estado = { enPausa: vivoEnPausa, segundosTrabajoAcum: vivoSegundosTrabajoAcum, segundosPausaAcum: vivoSegundosPausaAcum, segmentoInicio: vivoSegmentoInicio };
+  const totales = calcularTotalesVivo(estado, Date.now());
+  const elTrabajo = document.getElementById('vivoTrabajo');
+  const elPausa = document.getElementById('vivoPausa');
+  if(elTrabajo) elTrabajo.textContent = formatearDuracion(totales.trabajo * 1000);
+  if(elPausa) elPausa.textContent = formatearDuracion(totales.pausa * 1000);
+}
+
+function renderVivoLista(){
+  const cont = document.getElementById('vivoLista');
+  const porRonda = {};
+  vivoItems.forEach((it, idx) => {
+    if(!porRonda[it.ronda]) porRonda[it.ronda] = [];
+    porRonda[it.ronda].push(Object.assign({idx}, it));
+  });
+  const rondas = Object.keys(porRonda).sort((a,b) => Number(a) - Number(b));
+  const hayVariasRondas = rondas.length > 1;
+
+  cont.innerHTML = rondas.map(rn => `
+    <div class="ronda-grupo">
+      ${hayVariasRondas ? `<div class="ronda-titulo">Ronda ${rn}</div>` : ''}
+      ${porRonda[rn].map(it => `
+        <label class="item-vivo ${it.hecho ? 'hecho' : ''}">
+          <input type="checkbox" ${it.hecho ? 'checked' : ''} onchange="toggleItemVivo(${it.idx})">
+          <span>${it.tipo === 'tiempo' ? '⏱️' : '🔢'} ${escapeHtml(it.nombre)}</span>
+        </label>
+      `).join('')}
+    </div>
+  `).join('');
+
+  const hechos = vivoItems.filter(i => i.hecho).length;
+  document.getElementById('vivoProgreso').textContent = `${hechos} / ${vivoItems.length} completados`;
+}
+
+function toggleItemVivo(idx){
+  const marcandoHecho = !vivoItems[idx].hecho; // true si estaba sin tildar y lo estoy tildando ahora
+  vivoItems[idx].hecho = marcandoHecho;
+  if(marcandoHecho) cambiarEstadoVivo(true); // asumo que termina y empieza a descansar
+  guardarEstadoVivo();
+  renderVivoLista();
+}
+
+function finalizarSesionEnVivo(){
+  // Si todavía no tildó nada, no tiene sentido pedirle el RPE ni cerrar la
+  // sesión en vivo: se lo advierte con un diálogo que hay que responder sí o
+  // sí (nada de un cartelito que se esfuma solo), y se le da la opción de
+  // seguir con el cronómetro corriendo en vez de perder la sesión.
+  const hechosCount = vivoItems.filter(it => it.hecho).length;
+  if(hechosCount === 0){
+    const seguir = confirm('Todavía no tildaste ningún ejercicio, así que no hay nada para guardar.\n\nAceptar = volver al checklist (el cronómetro sigue corriendo).\nCancelar = descartar esta sesión en vivo.');
+    if(seguir) return; // vuelve a la vista en vivo tal cual estaba, sin tocar nada
+    if(vivoTimerHandle){ clearInterval(vivoTimerHandle); vivoTimerHandle = null; }
+    liberarWakeLock();
+    borrarEstadoVivo();
+    vivoRutinaId = null;
+    vivoRutinaNombre = '';
+    vivoInicio = null;
+    vivoItems = [];
+    vivoEnPausa = false;
+    vivoSegundosTrabajoAcum = 0;
+    vivoSegundosPausaAcum = 0;
+    vivoSegmentoInicio = null;
+    document.getElementById('navTabs').style.display = '';
+    mostrarTab('rutinas');
+    return;
+  }
+
+  const ms = Date.now() - vivoInicio;
+  const minutos = Math.max(1, Math.round(ms / 60000));
+  cerrarSegmentoVivo(); // último segmento (trabajo o pausa) hasta este instante
+  const minutosTrabajo = Math.round(vivoSegundosTrabajoAcum / 60);
+  const minutosPausa = Math.round(vivoSegundosPausaAcum / 60);
+
+  const rpeTexto = prompt('¿Cuál fue tu RPE de la sesión (esfuerzo percibido, 1 a 10)?', '5');
+  if(rpeTexto === null) return; // canceló: no guarda nada, la sesión en vivo sigue como estaba
+  let rpeSesion = Math.round(Number(rpeTexto));
+  if(!Number.isFinite(rpeSesion)) rpeSesion = 5;
+  rpeSesion = Math.min(10, Math.max(1, rpeSesion));
+
+  if(vivoTimerHandle){ clearInterval(vivoTimerHandle); vivoTimerHandle = null; }
+  liberarWakeLock();
+
+  // Un ejercicio por nombre+tipo+carga, con una serie por cada ronda tildada.
+  // Reps/peso quedan en 0/sin dato — el checklist no los captura — para que
+  // Hugo los complete después desde Historial → ✏️ Editar.
+  const porClave = {};
+  vivoItems.forEach(it => {
+    if(!it.hecho) return;
+    const clave = it.nombre + '||' + it.tipo + '||' + it.carga;
+    if(!porClave[clave]) porClave[clave] = { nombre: it.nombre, tipo: it.tipo, carga: it.carga, series: [] };
+    porClave[clave].series.push({ cantidad: 0, valor: null });
+  });
+  const ejerciciosGuardados = Object.values(porClave);
+
+  borrarEstadoVivo();
+  vivoRutinaId = null;
+  vivoRutinaNombre = '';
+  vivoInicio = null;
+  vivoItems = [];
+  vivoEnPausa = false;
+  vivoSegundosTrabajoAcum = 0;
+  vivoSegundosPausaAcum = 0;
+  vivoSegmentoInicio = null;
+
+  document.getElementById('navTabs').style.display = '';
+
+  const fecha = hoyISO();
+  const tss = calcularTSS(rpeSesion, minutos);
+  const id = idNuevo('fuerza');
+  const sesion = { id, fecha, duracionMin: minutos, rpeSesion, tss, ejercicios: ejerciciosGuardados, tiempoTrabajoMin: minutosTrabajo, tiempoPausaMin: minutosPausa };
+
+  const lista = leerSesiones();
+  lista.push(sesion);
+  guardarSesiones(lista);
+  upsertEnRegistroForma({ fecha, deporte: 'fuerza', tss, id });
+
+  mostrarTab('historial');
+  mostrarToast(`✅ Guardada (${minutos} min · ${minutosTrabajo}' trabajo / ${minutosPausa}' pausa, RPE ${rpeSesion}) — completá reps y peso en ✏️ Editar`);
+}
+
+function descartarSesionEnVivo(){
+  if(!confirm('¿Descartar esta sesión en vivo? Se pierde el tiempo y lo tildado.')) return;
+
+  if(vivoTimerHandle){ clearInterval(vivoTimerHandle); vivoTimerHandle = null; }
+  liberarWakeLock();
+  borrarEstadoVivo();
+  vivoRutinaId = null;
+  vivoRutinaNombre = '';
+  vivoInicio = null;
+  vivoItems = [];
+  vivoEnPausa = false;
+  vivoSegundosTrabajoAcum = 0;
+  vivoSegundosPausaAcum = 0;
+  vivoSegmentoInicio = null;
+
+  document.getElementById('navTabs').style.display = '';
+  mostrarTab('rutinas');
+}
+
+/* ============ Grupos musculares (estimado por palabras clave del nombre) ============ */
+// Mapea cada id de región del SVG a su grupo muscular.
+const REGIONES_SVG = {
+  hombros: ['mHombroI','mHombroD'],
+  pecho: ['mPecho'],
+  biceps: ['mBicepsI','mBicepsD'],
+  antebrazos: ['mAntebrazoI','mAntebrazoD'],
+  abdominales: ['mAbdomen'],
+  cuadriceps: ['mCuadricepsI','mCuadricepsD'],
+  trapecios: ['mTrapecio'],
+  espalda: ['mEspalda'],
+  triceps: ['mTricepsI','mTricepsD'],
+  lumbares: ['mLumbares'],
+  gluteos: ['mGluteoI','mGluteoD'],
+  isquiotibiales: ['mIsquioI','mIsquioD'],
+  gemelos: ['mGemeloI','mGemeloD'],
+};
+
+const NOMBRES_GRUPOS = {
+  hombros:'Hombros', pecho:'Pecho', biceps:'Bíceps', antebrazos:'Antebrazos',
+  abdominales:'Abdominales', cuadriceps:'Cuádriceps', trapecios:'Trapecios',
+  espalda:'Espalda', triceps:'Tríceps', lumbares:'Lumbares', gluteos:'Glúteos',
+  isquiotibiales:'Isquiotibiales', gemelos:'Gemelos',
+};
+
+function normalizarTexto(t){
+  return (t||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+}
+
+// Estima qué grupos musculares trabaja un ejercicio a partir de su nombre.
+// Devuelve un objeto {grupo: peso} — peso 1 = movimiento principal, <1 = asistido.
+// No es un análisis biomecánico: es una búsqueda de palabras clave en español
+// (más algunas en inglés) pensada para cubrir tanto nombres tipeados a mano
+// como los que genera el importador de Garmin (ver CATEGORIAS_GARMIN_ESTIMADAS).
+function inferirGruposEjercicio(nombreOriginal){
+  const t = normalizarTexto(nombreOriginal);
+  const grupos = {};
+  const sumar = (grupo, peso) => { grupos[grupo] = (grupos[grupo]||0) + peso; };
+  const contiene = (...palabras) => palabras.some(p => t.includes(p));
+
+  // curl de pierna vs curl de brazo: la frase compuesta se chequea primero
+  const esCurlPierna = contiene('curl de pierna','leg curl','curl femoral','curl de isquio');
+  if(esCurlPierna) sumar('isquiotibiales', 1);
+  else if(contiene('curl')) sumar('biceps', 1);
+
+  if(contiene('press de banca','bench','pecho','apertura','flye','fondos','dip')){
+    sumar('pecho', 1); sumar('triceps', 0.5);
+  }
+  if(contiene('flexion','flexiones','push up','pushup')){
+    sumar('pecho', 1); sumar('triceps', 0.5); sumar('hombros', 0.3);
+  }
+  if(contiene('press de hombro','shoulder press','militar','arnold','elevacion lateral','elevacion frontal')){
+    sumar('hombros', 1);
+  }
+  if(contiene('dominada','pull up','pullup','chin up','jalon','lat pulldown','pulldown')){
+    sumar('espalda', 1); sumar('biceps', 0.5);
+  }
+  if(contiene('remo','row','face pull')){
+    sumar('espalda', 1); sumar('biceps', 0.3);
+  }
+  if(contiene('peso muerto','deadlift')){
+    sumar('isquiotibiales', 1); sumar('gluteos', 1); sumar('espalda', 0.5); sumar('lumbares', 0.5);
+  }
+  if(contiene('sentadilla','squat')){
+    sumar('cuadriceps', 1); sumar('gluteos', 0.5);
+  }
+  if(contiene('zancada','lunge','estocada')){
+    sumar('cuadriceps', 1); sumar('gluteos', 0.7);
+  }
+  if(contiene('gluteo','glúteo','puente','hip thrust','elevacion de cadera','swing de cadera','hip raise')){
+    sumar('gluteos', 1);
+  }
+  if(contiene('triceps','skull crusher','press frances')){
+    sumar('triceps', 1);
+  }
+  if(contiene('abdominal','abdominales','crunch','sit up','situp','plancha','plank','core','elevacion de piernas','russian twist')){
+    sumar('abdominales', 1);
+  }
+  if(contiene('hiperextension','lumbar','back extension','superman')){
+    sumar('lumbares', 1);
+  }
+  if(contiene('trapecio','encogimiento','shrug')){
+    sumar('trapecios', 1);
+  }
+  if(contiene('gemelo','pantorrilla','calf','talon')){
+    sumar('gemelos', 1);
+  }
+  if(contiene('antebrazo','muñeca','muneca','forearm','farmer')){
+    sumar('antebrazos', 1);
+  }
+  if(contiene('femoral','isquio','hamstring') && !esCurlPierna){
+    sumar('isquiotibiales', 1);
+  }
+  if(contiene('cuerpo completo','total body','olimpico','olímpico','clean','snatch','thruster')){
+    sumar('pecho', 0.3); sumar('espalda', 0.3); sumar('cuadriceps', 0.3); sumar('hombros', 0.3);
+  }
+  if(contiene('estabilidad de cadera')){
+    sumar('gluteos', 0.7); sumar('abdominales', 0.3);
+  }
+  if(contiene('estabilidad de hombro')){
+    sumar('hombros', 0.7);
+  }
+  if(contiene('carga','carry')){
+    sumar('antebrazos', 0.5); sumar('abdominales', 0.5);
+  }
+  if(contiene('rotacional','chop')){
+    sumar('abdominales', 1);
+  }
+
+  return grupos;
+}
+
+// Suma el volumen (peso del grupo × cantidad de series) de una lista de
+// ejercicios (de una sesión, o de varias sesiones ya combinadas en un array).
+function calcularVolumenMuscular(listaEjercicios){
+  const totales = {};
+  (listaEjercicios||[]).forEach(ej => {
+    const grupos = inferirGruposEjercicio(ej.nombre);
+    const numSeries = (ej.series||[]).length || 0;
+    if(numSeries === 0) return;
+    Object.keys(grupos).forEach(g => {
+      totales[g] = (totales[g]||0) + grupos[g] * numSeries;
+    });
+  });
+  return totales;
+}
+
+// Interpola un color entre gris (sin trabajo), ámbar y rojo según intensidad 0-1.
+function colorParaIntensidad(t){
+  t = Math.max(0, Math.min(1, t));
+  const stops = [ [42,52,65], [255,176,32], [255,84,112] ]; // --borde, --acento2, --mal
+  const [a, b] = t <= 0.5 ? [stops[0], stops[1]] : [stops[1], stops[2]];
+  const localT = t <= 0.5 ? (t/0.5) : ((t-0.5)/0.5);
+  const mezclar = (i) => Math.round(a[i] + (b[i]-a[i])*localT);
+  return `rgb(${mezclar(0)},${mezclar(1)},${mezclar(2)})`;
+}
+
+function fechaISOHaceNDias(n){
+  const d = new Date();
+  d.setDate(d.getDate() - n);
+  const off = d.getTimezoneOffset();
+  const local = new Date(d.getTime() - off*60000);
+  return local.toISOString().slice(0,10);
+}
+
+let modoMusculos = 'sesion';       // 'sesion' | 'periodo'
+let periodoMusculosDias = 30;      // 7 | 30 | 90 | null (null = todo)
+
+function mostrarSubModoMusculos(modo){
+  modoMusculos = modo;
+  document.getElementById('btnModoMusculosSesion').classList.toggle('on', modo==='sesion');
+  document.getElementById('btnModoMusculosPeriodo').classList.toggle('on', modo==='periodo');
+  renderMusculos();
+}
+
+function cambiarPeriodoMusculos(dias){
+  periodoMusculosDias = dias;
+  renderMusculos();
+}
+
+function renderMusculos(){
+  const cont = document.getElementById('musculosSelector');
+  const lista = leerSesiones().slice().sort((a,b) => b.fecha.localeCompare(a.fecha) || b.id.localeCompare(a.id));
+
+  if(modoMusculos === 'sesion'){
+    if(lista.length === 0){
+      cont.innerHTML = '<div class="vacio">Todavía no hay sesiones guardadas.</div>';
+    } else {
+      cont.innerHTML = `<select id="selectSesionMusculos" onchange="renderDiagramaMusculos()">
+        ${lista.map(s => `<option value="${s.id}">${formatearFecha(s.fecha)} · ${s.ejercicios.length} ejercicio${s.ejercicios.length===1?'':'s'} · TSS ${s.tss.toFixed(0)}</option>`).join('')}
+      </select>`;
+    }
+  } else {
+    const opciones = [[7,'7 días'],[30,'30 días'],[90,'90 días'],[null,'Todo']];
+    cont.innerHTML = `<div class="toggle-modo">
+      ${opciones.map(([dias,etiqueta]) => `<button class="${periodoMusculosDias===dias?'on':''}" onclick="cambiarPeriodoMusculos(${dias})">${etiqueta}</button>`).join('')}
+    </div>`;
+  }
+  renderDiagramaMusculos();
+}
+
+function obtenerEjerciciosParaVista(){
+  const lista = leerSesiones();
+  if(modoMusculos === 'sesion'){
+    const id = document.getElementById('selectSesionMusculos')?.value;
+    const s = lista.find(x => x.id === id);
+    return s ? s.ejercicios : [];
+  }
+  const desdeISO = periodoMusculosDias !== null ? fechaISOHaceNDias(periodoMusculosDias) : null;
+  const filtradas = desdeISO ? lista.filter(s => s.fecha >= desdeISO) : lista;
+  return filtradas.flatMap(s => s.ejercicios);
+}
+
+function renderDiagramaMusculos(){
+  const ejerciciosVista = obtenerEjerciciosParaVista();
+  const totales = calcularVolumenMuscular(ejerciciosVista);
+  const valores = Object.values(totales);
+  const max = valores.length ? Math.max(...valores) : 0;
+
+  Object.keys(REGIONES_SVG).forEach(grupo => {
+    const intensidad = max > 0 ? (totales[grupo]||0)/max : 0;
+    const color = intensidad > 0 ? colorParaIntensidad(intensidad) : 'var(--card2)';
+    REGIONES_SVG[grupo].forEach(id => {
+      const el = document.getElementById(id);
+      if(el) el.setAttribute('fill', color);
+    });
+  });
+
+  const cont = document.getElementById('musculosLeyenda');
+  const entradas = Object.entries(totales).filter(([,v]) => v > 0).sort((a,b) => b[1]-a[1]);
+  if(entradas.length === 0){
+    cont.innerHTML = '<div class="vacio">No hay ejercicios clasificados en esta vista todavía.</div>';
+    return;
+  }
+  const maxV = entradas[0][1];
+  cont.innerHTML = entradas.map(([g,v]) => {
+    const pct = Math.round((v/maxV)*100);
+    return `<div class="musculo-fila">
+      <span class="musculo-nombre">${NOMBRES_GRUPOS[g]||g}</span>
+      <div class="musculo-barra-fondo"><div class="musculo-barra" style="width:${pct}%; background:${colorParaIntensidad(v/maxV)}"></div></div>
+      <span class="musculo-pct">${pct}%</span>
+    </div>`;
+  }).join('');
+}
+
+/* ============ Guardar / limpiar formulario ============ */
+function limpiarFormulario(){
+  editandoId = null;
+  rutinaActualId = null;
+  document.getElementById('inFecha').value = hoyISO();
+  document.getElementById('inDuracion').value = '';
+  document.getElementById('inRpeSesion').value = 5;
+  document.getElementById('rpeSesionNum').textContent = '5';
+  ejercicios = [];
+  agregarEjercicio();
+  actualizarTSS();
+  renderBotonRutina();
+  document.getElementById('btnGuardar').textContent = '💾 Guardar sesión';
+  document.getElementById('btnCancelarEdicion').style.display = 'none';
+}
+
+function cancelarEdicion(){
+  limpiarFormulario();
+  mostrarTab('historial');
+}
+
+function guardarSesion(){
+  leerCamposFormulario();
+
+  const fecha = document.getElementById('inFecha').value || hoyISO();
+  const duracion = Number(document.getElementById('inDuracion').value) || 0;
+  const rpeSesion = Number(document.getElementById('inRpeSesion').value) || 0;
+
+  if(duracion <= 0){
+    mostrarToast('⚠️ Cargá la duración de la sesión');
+    return;
+  }
+
+  // limpiar ejercicios vacíos (sin nombre y sin ninguna serie con datos)
+  const ejerciciosLimpios = ejercicios
+    .map(ej => ({
+      nombre: (ej.nombre || '').trim(),
+      tipo: ej.tipo,
+      carga: ej.carga,
+      series: ej.series
+        .filter(s => s.cantidad !== '' && s.cantidad !== null && s.cantidad !== undefined)
+        .map(s => ({ cantidad: Number(s.cantidad) || 0, valor: s.valor === '' ? null : Number(s.valor) }))
+    }))
+    .filter(ej => ej.nombre !== '' || ej.series.length > 0);
+
+  if(ejerciciosLimpios.length === 0){
+    mostrarToast('⚠️ Agregá al menos un ejercicio con series');
+    return;
+  }
+
+  const tss = calcularTSS(rpeSesion, duracion);
+  const id = editandoId || idNuevo('fuerza');
+
+  const sesion = {
+    id,
+    fecha,
+    duracionMin: duracion,
+    rpeSesion,
+    tss,
+    ejercicios: ejerciciosLimpios
+  };
+
+  const lista = leerSesiones();
+  const idx = lista.findIndex(s => s.id === id);
+  if(idx >= 0) lista[idx] = sesion; else lista.push(sesion);
+  guardarSesiones(lista);
+
+  upsertEnRegistroForma({ fecha, deporte: 'fuerza', tss, id });
+
+  mostrarToast(editandoId ? '✅ Sesión actualizada' : '✅ Sesión guardada');
+  limpiarFormulario();
+  mostrarTab('historial');
+}
+
+/* ============ Historial ============ */
+function renderHistorial(){
+  const cont = document.getElementById('listaHistorial');
+  const lista = leerSesiones().slice().sort((a,b) => b.fecha.localeCompare(a.fecha) || b.id.localeCompare(a.id));
+
+  if(lista.length === 0){
+    cont.innerHTML = '<div class="vacio">Todavía no hay sesiones guardadas.</div>';
+    return;
+  }
+
+  cont.innerHTML = lista.map(s => {
+    const nombresEjercicios = s.ejercicios.map(e => escapeHtml(e.nombre || '(sin nombre)')).join(' · ');
+    const tieneDesglose = s.tiempoTrabajoMin !== undefined && s.tiempoPausaMin !== undefined;
+    const desglose = tieneDesglose ? ` · <span style="color:var(--ok)">${s.tiempoTrabajoMin}' trabajo</span> / <span style="color:var(--acento2)">${s.tiempoPausaMin}' pausa</span>` : '';
+    return `
+      <div class="card sesion-card" onclick="cargarSesionEnFormulario('${s.id}')">
+        <div class="sesion-cab">
+          <div class="sesion-fecha">${formatearFecha(s.fecha)}</div>
+          <div class="sesion-tss">TSS ${s.tss.toFixed(0)}</div>
+        </div>
+        <div class="sesion-meta">${s.duracionMin} min · RPE ${s.rpeSesion} · ${s.ejercicios.length} ejercicio${s.ejercicios.length===1?'':'s'}${desglose}</div>
+        <div class="sesion-ejercicios">${nombresEjercicios}</div>
+        <div class="acciones-hist">
+          <button class="btn btn-secundario" onclick="event.stopPropagation(); cargarSesionEnFormulario('${s.id}')">✏️ Editar</button>
+          <button class="btn btn-mal" onclick="event.stopPropagation(); borrarSesion('${s.id}')">🗑 Borrar</button>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function cargarSesionEnFormulario(id){
+  const lista = leerSesiones();
+  const s = lista.find(x => x.id === id);
+  if(!s) return;
+
+  editandoId = id;
+  rutinaActualId = null;
+  document.getElementById('inFecha').value = s.fecha;
+  document.getElementById('inDuracion').value = s.duracionMin;
+  document.getElementById('inRpeSesion').value = s.rpeSesion;
+  document.getElementById('rpeSesionNum').textContent = s.rpeSesion;
+
+  // Defensivo: sesiones guardadas con una versión anterior de la app usaban
+  // 'modo' en vez de 'carga' y 'reps' en vez de 'cantidad' — se traducen acá.
+  ejercicios = s.ejercicios.map(e => ({
+    id: idNuevo('ej'),
+    nombre: e.nombre,
+    tipo: e.tipo || 'reps',
+    carga: e.carga || e.modo || 'peso',
+    series: (e.series || []).map(ser => ({
+      cantidad: (ser.cantidad !== undefined ? ser.cantidad : ser.reps) ?? '',
+      valor: (ser.valor === null || ser.valor === undefined) ? '' : ser.valor
+    }))
+  }));
+  if(ejercicios.length === 0) agregarEjercicio();
+
+  renderEjercicios();
+  renderBotonRutina();
+  actualizarTSS();
+  document.getElementById('btnGuardar').textContent = '💾 Guardar cambios';
+  document.getElementById('btnCancelarEdicion').style.display = 'block';
+  mostrarTab('registrar');
+}
+
+function borrarSesion(id){
+  if(!confirm('¿Borrar esta sesión? No se puede deshacer.')) return;
+  const lista = leerSesiones().filter(s => s.id !== id);
+  guardarSesiones(lista);
+  borrarDeRegistroForma(id);
+  if(editandoId === id) limpiarFormulario();
+  renderHistorial();
+  mostrarToast('🗑 Sesión borrada');
+}
+
+/* ============ Inicio ============ */
+const estadoVivoGuardado = leerEstadoVivo();
+if(estadoVivoGuardado){
+  vivoRutinaId = estadoVivoGuardado.rutinaId;
+  vivoRutinaNombre = estadoVivoGuardado.rutinaNombre;
+  vivoInicio = estadoVivoGuardado.inicio;
+  vivoItems = estadoVivoGuardado.items || [];
+  // Defensivo: si quedó una sesión en vivo guardada con una versión anterior
+  // de la app (sin esta contabilidad de trabajo/pausa), arranca en 'trabajo'
+  // desde ahora en vez de romper.
+  vivoEnPausa = estadoVivoGuardado.enPausa || false;
+  vivoSegundosTrabajoAcum = estadoVivoGuardado.segundosTrabajoAcum || 0;
+  vivoSegundosPausaAcum = estadoVivoGuardado.segundosPausaAcum || 0;
+  vivoSegmentoInicio = estadoVivoGuardado.segmentoInicio || estadoVivoGuardado.inicio || Date.now();
+  mostrarSeccionVivo();
+} else {
+  document.getElementById('inFecha').value = hoyISO();
+  agregarEjercicio();
+  actualizarTSS();
+  renderBotonRutina();
+}
 </script>
+
 </body>
 </html>
