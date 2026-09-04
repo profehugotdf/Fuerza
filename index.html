@@ -1281,6 +1281,19 @@ function normalizarTexto(t){
 // No es un análisis biomecánico: es una búsqueda de palabras clave en español
 // (más algunas en inglés) pensada para cubrir tanto nombres tipeados a mano
 // como los que genera el importador de Garmin (ver CATEGORIAS_GARMIN_ESTIMADAS).
+// Estima qué grupos musculares trabaja un ejercicio a partir de su nombre.
+// Devuelve un objeto {grupo: peso} — 1 = músculo primario, 0.5 = secundario
+// (siguiendo la misma distinción primary/secondary que usan las bases de
+// datos abiertas de ejercicios) o pesos menores para asistencia leve.
+//
+// Los pesos de los movimientos comunes (sentadilla, peso muerto, press de
+// banca, dominadas, remo, press de hombro, zancada, hip thrust, curl,
+// elevación de talones, fondos) están cruzados contra Free Exercise DB
+// (github.com/yuhonas/free-exercise-db, dominio público / Unlicense) —
+// consultada una sola vez al escribir este código, no en tiempo real: la
+// app sigue sin llamadas a servidores externos ni dependencias. El resto
+// de las palabras clave (variantes en español, sinónimos) son criterio
+// propio para cubrir cómo tipeás vos los nombres.
 function inferirGruposEjercicio(nombreOriginal){
   const t = normalizarTexto(nombreOriginal);
   const grupos = {};
@@ -1289,41 +1302,59 @@ function inferirGruposEjercicio(nombreOriginal){
 
   // curl de pierna vs curl de brazo: la frase compuesta se chequea primero
   const esCurlPierna = contiene('curl de pierna','leg curl','curl femoral','curl de isquio');
-  if(esCurlPierna) sumar('isquiotibiales', 1);
-  else if(contiene('curl')) sumar('biceps', 1);
+  if(esCurlPierna){
+    sumar('isquiotibiales', 1); sumar('gemelos', 0.5); sumar('gluteos', 0.5);
+  } else if(contiene('curl')){
+    sumar('biceps', 1); sumar('antebrazos', 0.5);
+  }
 
-  if(contiene('press de banca','bench','pecho','apertura','flye','fondos','dip')){
-    sumar('pecho', 1); sumar('triceps', 0.5);
+  if(contiene('press de banca','bench')){
+    sumar('pecho', 1); sumar('hombros', 0.5); sumar('triceps', 0.5);
+  }
+  if(contiene('apertura','flye')){
+    sumar('pecho', 1);
+  }
+  if(contiene('fondos','dip')){
+    sumar('triceps', 1); sumar('pecho', 0.5); sumar('hombros', 0.5);
   }
   if(contiene('flexion','flexiones','push up','pushup')){
-    sumar('pecho', 1); sumar('triceps', 0.5); sumar('hombros', 0.3);
+    sumar('pecho', 1); sumar('hombros', 0.5); sumar('triceps', 0.5);
   }
-  if(contiene('press de hombro','shoulder press','militar','arnold','elevacion lateral','elevacion frontal')){
+  if(contiene('press de hombro','shoulder press','militar','arnold')){
+    sumar('hombros', 1); sumar('triceps', 0.5);
+  }
+  if(contiene('elevacion lateral','elevacion frontal')){
     sumar('hombros', 1);
   }
   if(contiene('dominada','pull up','pullup','chin up','jalon','lat pulldown','pulldown')){
-    sumar('espalda', 1); sumar('biceps', 0.5);
+    sumar('espalda', 1); sumar('abdominales', 0.5); sumar('antebrazos', 0.5); sumar('biceps', 0.3);
   }
   if(contiene('remo','row','face pull')){
-    sumar('espalda', 1); sumar('biceps', 0.3);
+    sumar('espalda', 1); sumar('biceps', 0.5);
   }
   if(contiene('peso muerto','deadlift')){
-    sumar('isquiotibiales', 1); sumar('gluteos', 1); sumar('espalda', 0.5); sumar('lumbares', 0.5);
+    sumar('lumbares', 1);
+    sumar('isquiotibiales', 0.5); sumar('gluteos', 0.5); sumar('espalda', 0.5);
+    sumar('cuadriceps', 0.5); sumar('trapecios', 0.5); sumar('gemelos', 0.5); sumar('antebrazos', 0.5);
   }
   if(contiene('sentadilla','squat')){
-    sumar('cuadriceps', 1); sumar('gluteos', 0.5);
+    sumar('cuadriceps', 1);
+    sumar('gluteos', 0.5); sumar('isquiotibiales', 0.5); sumar('gemelos', 0.5); sumar('lumbares', 0.5);
   }
   if(contiene('zancada','lunge','estocada')){
-    sumar('cuadriceps', 1); sumar('gluteos', 0.7);
+    sumar('cuadriceps', 1); sumar('gluteos', 0.5); sumar('isquiotibiales', 0.5); sumar('gemelos', 0.5);
   }
   if(contiene('gluteo','glúteo','puente','hip thrust','elevacion de cadera','swing de cadera','hip raise')){
-    sumar('gluteos', 1);
+    sumar('gluteos', 1); sumar('isquiotibiales', 0.5); sumar('gemelos', 0.3);
   }
   if(contiene('triceps','skull crusher','press frances')){
     sumar('triceps', 1);
   }
   if(contiene('abdominal','abdominales','crunch','sit up','situp','plancha','plank','core','elevacion de piernas','russian twist')){
     sumar('abdominales', 1);
+  }
+  if(contiene('rollout','ab wheel','rueda abdominal')){
+    sumar('abdominales', 1); sumar('hombros', 0.5); sumar('lumbares', 0.3);
   }
   if(contiene('hiperextension','lumbar','back extension','superman')){
     sumar('lumbares', 1);
@@ -1338,10 +1369,11 @@ function inferirGruposEjercicio(nombreOriginal){
     sumar('antebrazos', 1);
   }
   if(contiene('femoral','isquio','hamstring') && !esCurlPierna){
-    sumar('isquiotibiales', 1);
+    sumar('isquiotibiales', 1); sumar('gemelos', 0.3);
   }
   if(contiene('cuerpo completo','total body','olimpico','olímpico','clean','snatch','thruster')){
-    sumar('pecho', 0.3); sumar('espalda', 0.3); sumar('cuadriceps', 0.3); sumar('hombros', 0.3);
+    sumar('pecho', 0.3); sumar('espalda', 0.5); sumar('cuadriceps', 0.5);
+    sumar('hombros', 0.5); sumar('trapecios', 0.5); sumar('gluteos', 0.3);
   }
   if(contiene('estabilidad de cadera')){
     sumar('gluteos', 0.7); sumar('abdominales', 0.3);
@@ -1350,7 +1382,7 @@ function inferirGruposEjercicio(nombreOriginal){
     sumar('hombros', 0.7);
   }
   if(contiene('carga','carry')){
-    sumar('antebrazos', 0.5); sumar('abdominales', 0.5);
+    sumar('antebrazos', 0.7); sumar('abdominales', 0.5); sumar('trapecios', 0.3);
   }
   if(contiene('rotacional','chop')){
     sumar('abdominales', 1);
