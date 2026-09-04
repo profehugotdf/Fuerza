@@ -937,6 +937,17 @@ function usarRutina(id){
   mostrarToast('📂 Rutina cargada: ' + rutina.nombre);
 }
 
+// Igual que usarRutina, pero pensado para corregir la rutina en sí (nombres,
+// KG/RPE, cantidad de series) — no para registrar una sesión. Usa el mismo
+// mecanismo (el botón "🔄 Actualizar rutina" ya aparece solo al cargar desde
+// una rutina existente); esto solo deja más claro el punto de entrada y el
+// mensaje, para no tener que pasar por "Cargar" y descubrirlo de casualidad.
+function editarRutina(id){
+  const rutina = leerRutinas().find(r => r.id === id);
+  usarRutina(id);
+  if(rutina) mostrarToast('🛠️ Editando "' + rutina.nombre + '" — ajustá los ejercicios y tocá 🔄 Actualizar rutina');
+}
+
 function renombrarRutina(id){
   const rutinas = leerRutinas();
   const r = rutinas.find(x => x.id === id);
@@ -970,7 +981,7 @@ function renderRutinas(){
     return;
   }
 
-  const hint = `<div class="hint-rutinas">🏁 <b>Iniciar</b>: arranca el cronómetro y elegís cuántas rondas del circuito — vas tildando cada ejercicio a medida que lo hacés.<br>📝 <b>Cargar</b>: completa el formulario de Registrar para anotar todo a mano, sin cronómetro.</div>`;
+  const hint = `<div class="hint-rutinas">🏁 <b>Iniciar</b>: arranca el cronómetro y elegís cuántas rondas del circuito.<br>📝 <b>Cargar</b>: completa el formulario para anotar una sesión a mano, sin cronómetro.<br>🛠️ <b>Editar</b>: corregí los ejercicios de la rutina en sí (nombres, KG/RPE, cantidad de series) sin registrar ninguna sesión.</div>`;
 
   cont.innerHTML = hint + rutinas.map(r => {
     const tags = r.ejercicios.map(e => {
@@ -990,6 +1001,7 @@ function renderRutinas(){
           <button class="btn btn-secundario" onclick="usarRutina('${r.id}')">📝 Cargar</button>
         </div>
         <div class="acciones-hist" style="margin-top:8px;">
+          <button class="btn btn-mini" style="flex:1;" onclick="editarRutina('${r.id}')">🛠️ Editar</button>
           <button class="btn btn-mini" style="flex:1;" onclick="renombrarRutina('${r.id}')">✏️ Renombrar</button>
           <button class="btn btn-mal" style="flex:1;" onclick="borrarRutina('${r.id}')">🗑 Borrar</button>
         </div>
