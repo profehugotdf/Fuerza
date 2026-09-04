@@ -269,6 +269,23 @@
         ⚠️ Estimado a partir del nombre del ejercicio (busca palabras clave como "sentadilla", "press de banca", "dominadas", etc.) y la cantidad de series — no de un análisis biomecánico real. Ejercicios con nombres poco claros o no reconocidos no suman a ningún grupo.
       </div>
     </div>
+
+    <div class="card">
+      <h2>Ajustar un ejercicio</h2>
+      <input type="text" id="inEjercicioAjustar" list="datalistEjerciciosAjustar" placeholder="Nombre del ejercicio..." oninput="cargarAjusteEjercicio()">
+      <datalist id="datalistEjerciciosAjustar"></datalist>
+      <div id="ajusteNota" class="tss-nota" style="margin-bottom:8px;"></div>
+      <div id="ajusteGruposLista"></div>
+      <div class="fila" style="margin-top:6px;">
+        <button class="btn btn-primario" onclick="guardarAjusteEjercicio()">💾 Guardar ajuste</button>
+        <button class="btn btn-secundario" id="btnQuitarAjuste" style="display:none;" onclick="quitarAjusteEjercicio()">↩️ Automático</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Ejercicios ajustados a mano</h2>
+      <div id="listaAjustesGuardados"></div>
+    </div>
   </section>
 
   <section id="tab-vivo">
@@ -1393,10 +1410,50 @@ function inferirGruposEjercicio(nombreOriginal){
 
 // Suma el volumen (peso del grupo × cantidad de series) de una lista de
 // ejercicios (de una sesión, o de varias sesiones ya combinadas en un array).
+/* ============ Ajustes manuales de grupos musculares por ejercicio ============ */
+const K_MUSCULOS_PERSONALIZADOS = 'fuerza_musculos_personalizados';
+
+function leerMusculosPersonalizados(){
+  try{
+    const raw = localStorage.getItem(K_MUSCULOS_PERSONALIZADOS);
+    return raw ? JSON.parse(raw) : {};
+  }catch(e){
+    console.error('Error leyendo ajustes de grupos musculares', e);
+    return {};
+  }
+}
+
+function guardarMusculosPersonalizados(obj){
+  try{
+    localStorage.setItem(K_MUSCULOS_PERSONALIZADOS, JSON.stringify(obj));
+    return true;
+  }catch(e){
+    console.error('Error guardando ajustes de grupos musculares', e);
+    return false;
+  }
+}
+
+// Punto único de entrada para saber qué grupos trabaja un ejercicio: si hay
+// un ajuste manual guardado para ese nombre (por texto normalizado), se usa
+// ESE en vez de la estimación automática — no se combinan, el manual manda.
+function obtenerGruposDeEjercicio(nombre){
+  const clave = normalizarTexto(nombre);
+  const personalizados = leerMusculosPersonalizados();
+  if(personalizados[clave]) return personalizados[clave].grupos;
+  return inferirGruposEjercicio(nombre);
+}
+
+function nombresEjerciciosConocidos(){
+  const set = new Set();
+  leerSesiones().forEach(s => (s.ejercicios||[]).forEach(e => { if(e.nombre) set.add(e.nombre); }));
+  leerRutinas().forEach(r => (r.ejercicios||[]).forEach(e => { if(e.nombre) set.add(e.nombre); }));
+  return [...set].sort((a,b) => a.localeCompare(b, 'es'));
+}
+
 function calcularVolumenMuscular(listaEjercicios){
   const totales = {};
   (listaEjercicios||[]).forEach(ej => {
-    const grupos = inferirGruposEjercicio(ej.nombre);
+    const grupos = obtenerGruposDeEjercicio(ej.nombre);
     const numSeries = (ej.series||[]).length || 0;
     if(numSeries === 0) return;
     Object.keys(grupos).forEach(g => {
@@ -1458,6 +1515,136 @@ function renderMusculos(){
     </div>`;
   }
   renderDiagramaMusculos();
+  actualizarDatalistEjerciciosAjustar();
+  renderListaAjustesGuardados();
+}
+
+/* ============ Editor de ajustes musculares por ejercicio ============ */
+let ajusteActual = {}; // {grupo: peso} del ejercicio que se está editando ahora mismo
+
+function actualizarDatalistEjerciciosAjustar(){
+  const dl = document.getElementById('datalistEjerciciosAjustar');
+  if(!dl) return;
+  dl.innerHTML = nombresEjerciciosConocidos().map(n => `<option value="${escapeAttr(n)}"></option>`).join('');
+}
+
+function cargarAjusteEjercicio(){
+  const nombre = document.getElementById('inEjercicioAjustar').value.trim();
+  const nota = document.getElementById('ajusteNota');
+  const btnQuitar = document.getElementById('btnQuitarAjuste');
+
+  if(!nombre){
+    ajusteActual = {};
+    document.getElementById('ajusteGruposLista').innerHTML = '';
+    nota.textContent = '';
+    btnQuitar.style.display = 'none';
+    return;
+  }
+
+  const clave = normalizarTexto(nombre);
+  const personalizados = leerMusculosPersonalizados();
+
+  if(personalizados[clave]){
+    ajusteActual = Object.assign({}, personalizados[clave].grupos);
+    nota.textContent = '✏️ Ya tenés un ajuste manual guardado para este ejercicio — lo estás editando.';
+    btnQuitar.style.display = 'block';
+  } else {
+    const estimado = inferirGruposEjercicio(nombre);
+    ajusteActual = {};
+    Object.keys(estimado).forEach(g => { ajusteActual[g] = estimado[g] >= 0.75 ? 1 : 0.5; });
+    nota.textContent = Object.keys(ajusteActual).length > 0
+      ? '🤖 Esto es lo que la app adivina sola para este nombre — ajustalo y guardá para dejarlo fijo.'
+      : '🤖 La app todavía no reconoce este ejercicio — marcá los grupos a mano.';
+    btnQuitar.style.display = 'none';
+  }
+  renderAjusteGruposLista();
+}
+
+function setPesoAjuste(grupo, peso){
+  if(peso === 0) delete ajusteActual[grupo];
+  else ajusteActual[grupo] = peso;
+  renderAjusteGruposLista();
+}
+
+function renderAjusteGruposLista(){
+  const cont = document.getElementById('ajusteGruposLista');
+  cont.innerHTML = Object.keys(NOMBRES_GRUPOS).map(g => {
+    const peso = ajusteActual[g] || 0;
+    return `<div class="fila" style="align-items:center; margin-bottom:6px;">
+      <span style="flex:1; font-size:13px;">${NOMBRES_GRUPOS[g]}</span>
+      <div class="toggle-modo" style="flex:2;">
+        <button class="${peso===0?'on':''}" onclick="setPesoAjuste('${g}',0)">—</button>
+        <button class="${peso===0.5?'on':''}" onclick="setPesoAjuste('${g}',0.5)">Secund.</button>
+        <button class="${peso===1?'on':''}" onclick="setPesoAjuste('${g}',1)">Principal</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function guardarAjusteEjercicio(){
+  const nombre = document.getElementById('inEjercicioAjustar').value.trim();
+  if(!nombre){ mostrarToast('⚠️ Escribí el nombre del ejercicio'); return; }
+  if(Object.keys(ajusteActual).length === 0){ mostrarToast('⚠️ Marcá al menos un grupo muscular'); return; }
+
+  const clave = normalizarTexto(nombre);
+  const personalizados = leerMusculosPersonalizados();
+  personalizados[clave] = { nombre, grupos: Object.assign({}, ajusteActual) };
+  guardarMusculosPersonalizados(personalizados);
+
+  document.getElementById('ajusteNota').textContent = '✏️ Ya tenés un ajuste manual guardado para este ejercicio — lo estás editando.';
+  document.getElementById('btnQuitarAjuste').style.display = 'block';
+  mostrarToast('✅ Ajuste guardado para "' + nombre + '"');
+  renderListaAjustesGuardados();
+  renderDiagramaMusculos();
+}
+
+function quitarAjusteEjercicio(){
+  const nombre = document.getElementById('inEjercicioAjustar').value.trim();
+  const clave = normalizarTexto(nombre);
+  const personalizados = leerMusculosPersonalizados();
+  if(!personalizados[clave]) return;
+  if(!confirm('¿Volver a la estimación automática para "' + nombre + '"? Se borra el ajuste manual.')) return;
+
+  delete personalizados[clave];
+  guardarMusculosPersonalizados(personalizados);
+  mostrarToast('↩️ Ajuste eliminado');
+  cargarAjusteEjercicio();
+  renderListaAjustesGuardados();
+  renderDiagramaMusculos();
+}
+
+function editarAjusteExistente(clave){
+  const personalizados = leerMusculosPersonalizados();
+  const item = personalizados[clave];
+  if(!item) return;
+  document.getElementById('inEjercicioAjustar').value = item.nombre;
+  cargarAjusteEjercicio();
+}
+
+function renderListaAjustesGuardados(){
+  const cont = document.getElementById('listaAjustesGuardados');
+  if(!cont) return;
+  const personalizados = leerMusculosPersonalizados();
+  const claves = Object.keys(personalizados);
+
+  if(claves.length === 0){
+    cont.innerHTML = '<div class="vacio">Todavía no ajustaste ningún ejercicio a mano.</div>';
+    return;
+  }
+
+  cont.innerHTML = claves.map(clave => {
+    const item = personalizados[clave];
+    const gruposTexto = Object.entries(item.grupos)
+      .sort((a,b) => b[1]-a[1])
+      .map(([g,p]) => `${NOMBRES_GRUPOS[g]||g}${p===1?'':' (sec.)'}`)
+      .join(', ');
+    return `<label class="item-vivo" onclick="editarAjusteExistente(${JSON.stringify(clave)})">
+      <span style="flex:1;">
+        <b>${escapeHtml(item.nombre)}</b><br>
+        <span style="color:var(--texto-sec); font-size:11.5px;">${escapeHtml(gruposTexto)}</span>
+      </span>
+    </label>`;
+  }).join('');
 }
 
 function obtenerEjerciciosParaVista(){
