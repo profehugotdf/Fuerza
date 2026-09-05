@@ -78,6 +78,8 @@
   .tss-box .num{font-size:30px; font-weight:800; color:var(--acento2); line-height:1;}
   .tss-box .lbl{font-size:11px; color:var(--texto-sec); text-transform:uppercase; letter-spacing:.5px;}
   .tss-nota{font-size:11px; color:var(--texto-sec); margin-top:8px; line-height:1.5;}
+  .alerta-sobrecarga{background:rgba(255,84,112,.12); border:1px solid rgba(255,84,112,.35);
+    border-radius:12px; padding:12px; margin-bottom:12px; font-size:12.5px; line-height:1.55; color:var(--texto);}
   .sesion-card{cursor:pointer;}
   .sesion-cab{display:flex; justify-content:space-between; align-items:baseline; gap:8px;}
   .sesion-fecha{font-weight:700; font-size:14.5px;}
@@ -205,6 +207,7 @@
   </section>
 
   <section id="tab-musculos">
+    <div id="alertaSobrecarga"></div>
     <div class="card">
       <div class="modos-fila" style="margin-bottom:2px;">
         <div class="toggle-modo">
@@ -326,6 +329,14 @@ function idNuevo(prefijo){
 
 function hoyISO(){
   const d = new Date();
+  const off = d.getTimezoneOffset();
+  const local = new Date(d.getTime() - off*60000);
+  return local.toISOString().slice(0,10);
+}
+
+function fechaISOMasNDias(fechaISO, n){
+  const d = new Date(fechaISO + 'T12:00:00'); // mediodía: evita líos de límite de día/horario de verano
+  d.setDate(d.getDate() + n);
   const off = d.getTimezoneOffset();
   const local = new Date(d.getTime() - off*60000);
   return local.toISOString().slice(0,10);
@@ -1479,6 +1490,102 @@ function fechaISOHaceNDias(n){
 
 let modoMusculos = 'sesion';       // 'sesion' | 'periodo'
 let periodoMusculosDias = 30;      // 7 | 30 | 90 | null (null = todo)
+let incluirOtrasDisciplinas = false; // solo aplica en modo 'periodo'
+
+// Perfil FIJO y aproximado de grupos musculares por disciplina — no analiza
+// la sesión real (no distingue una corrida suave de series de velocidad, ni
+// un kayak técnico de uno de resistencia). Sirve para tener una foto general
+// de la semana/mes, no el detalle fino que sí da Fuerza ejercicio por ejercicio.
+const PERFILES_DISCIPLINA = {
+  correr: { cuadriceps: 1, isquiotibiales: 0.75, gemelos: 1, gluteos: 0.75, abdominales: 0.3 },
+  bici: { cuadriceps: 1, gemelos: 0.5, isquiotibiales: 0.4, gluteos: 0.5 },
+  kayak: { espalda: 1, hombros: 0.75, abdominales: 0.75, biceps: 0.5, triceps: 0.3, antebrazos: 0.4 },
+};
+
+function alternarOtrasDisciplinas(marcado){
+  incluirOtrasDisciplinas = marcado;
+  renderDiagramaMusculos();
+}
+
+// Reparte el TSS de sesiones de OTRAS disciplinas (Correr/Bici/Kayak) entre
+// sus grupos musculares típicos, usando el registro compartido de Forma.
+// El TSS se divide por 10 como unidad aproximada para que quede en un orden
+// de magnitud comparable a "series" de Fuerza — no es una equivalencia real
+// entre carga cardiovascular y volumen de series, es solo para que ninguna
+// de las dos fuentes ahogue completamente a la otra en el gráfico combinado.
+function calcularVolumenOtrasDisciplinas(desdeISO, hastaISO){
+  const totales = {};
+  const registro = leerRegistroForma();
+  registro.forEach(entrada => {
+    const deporte = (entrada.deporte || '').toLowerCase();
+    const perfil = PERFILES_DISCIPLINA[deporte];
+    if(!perfil) return; // 'fuerza' u otra disciplina sin perfil definido: se ignora acá
+    if(desdeISO && entrada.fecha < desdeISO) return;
+    if(hastaISO && entrada.fecha > hastaISO) return;
+    const unidad = (entrada.tss || 0) / 10;
+    Object.keys(perfil).forEach(g => {
+      totales[g] = (totales[g] || 0) + perfil[g] * unidad;
+    });
+  });
+  return totales;
+}
+
+function combinarTotalesMusculares(a, b){
+  const combinado = Object.assign({}, a);
+  Object.keys(b).forEach(g => { combinado[g] = (combinado[g] || 0) + b[g]; });
+  return combinado;
+}
+
+// CTL/ATL/TSB estándar (modelo de Coggan), sumando el TSS de TODAS las
+// disciplinas del registro compartido de Forma día por día — igual al que
+// ya usa Plan de Ciclos. TSB es un indicador de fatiga de TODO EL CUERPO,
+// no distingue por músculo; se usa acá solo como disparador de una alerta,
+// no como diagnóstico de qué músculo puntual está sobrecargado.
+const UMBRAL_TSB_SOBRECARGA = -30; // mismo umbral de riesgo que usa Plan de Ciclos (TrainingPeaks/Coggan)
+
+function calcularCTLATLTSB(){
+  const registro = leerRegistroForma();
+  if(registro.length === 0) return null;
+
+  const tssPorDia = {};
+  registro.forEach(e => {
+    if(!e.fecha) return;
+    tssPorDia[e.fecha] = (tssPorDia[e.fecha] || 0) + (e.tss || 0);
+  });
+
+  const fechas = Object.keys(tssPorDia).sort();
+  const hoy = hoyISO();
+  let ctl = 0, atl = 0;
+  let cursor = fechas[0];
+  // si por algún motivo la primera fecha registrada fuera posterior a "hoy"
+  // (reloj del dispositivo mal puesto, etc.), no hay nada que iterar
+  if(cursor > hoy) return null;
+
+  while(cursor <= hoy){
+    const tss = tssPorDia[cursor] || 0;
+    ctl = ctl + (tss - ctl) / 42;
+    atl = atl + (tss - atl) / 7;
+    cursor = fechaISOMasNDias(cursor, 1);
+  }
+
+  return { ctl, atl, tsb: ctl - atl };
+}
+
+function renderAlertaSobrecarga(){
+  const cont = document.getElementById('alertaSobrecarga');
+  if(!cont) return;
+  const datos = calcularCTLATLTSB();
+  if(!datos || datos.tsb >= UMBRAL_TSB_SOBRECARGA){
+    cont.innerHTML = '';
+    return;
+  }
+  cont.innerHTML = `<div class="alerta-sobrecarga">
+    ⚠️ Tu Forma general (todas las disciplinas) está en zona de sobrecarga — TSB ${datos.tsb.toFixed(0)}.
+    El TSB es de todo el cuerpo, no indica qué músculo puntual está cargado — pero mirando abajo qué grupos
+    acumularon más volumen en los últimos días (probá "Por período · 7 días") podés decidir a cuáles darles
+    más descanso primero.
+  </div>`;
+}
 
 function mostrarSubModoMusculos(modo){
   modoMusculos = modo;
@@ -1493,6 +1600,7 @@ function cambiarPeriodoMusculos(dias){
 }
 
 function renderMusculos(){
+  renderAlertaSobrecarga();
   const cont = document.getElementById('musculosSelector');
   const lista = leerSesiones().slice().sort((a,b) => b.fecha.localeCompare(a.fecha) || b.id.localeCompare(a.id));
 
@@ -1508,7 +1616,11 @@ function renderMusculos(){
     const opciones = [[7,'7 días'],[30,'30 días'],[90,'90 días'],[null,'Todo']];
     cont.innerHTML = `<div class="toggle-modo">
       ${opciones.map(([dias,etiqueta]) => `<button class="${periodoMusculosDias===dias?'on':''}" onclick="cambiarPeriodoMusculos(${dias})">${etiqueta}</button>`).join('')}
-    </div>`;
+    </div>
+    <label class="item-vivo" style="padding-left:2px;">
+      <input type="checkbox" ${incluirOtrasDisciplinas ? 'checked' : ''} onchange="alternarOtrasDisciplinas(this.checked)">
+      <span style="flex:1; font-size:13px;">Incluir Correr / Bici / Kayak (perfil aproximado por disciplina)</span>
+    </label>`;
   }
   renderDiagramaMusculos();
   actualizarDatalistEjerciciosAjustar();
@@ -1692,7 +1804,13 @@ function construirBodyStateMusculos(totales, mapaRegiones){
 
 function renderDiagramaMusculos(){
   const ejerciciosVista = obtenerEjerciciosParaVista();
-  const totales = calcularVolumenMuscular(ejerciciosVista);
+  let totales = calcularVolumenMuscular(ejerciciosVista);
+
+  if(modoMusculos === 'periodo' && incluirOtrasDisciplinas){
+    const desdeISO = periodoMusculosDias !== null ? fechaISOHaceNDias(periodoMusculosDias) : null;
+    const totalesOtras = calcularVolumenOtrasDisciplinas(desdeISO, null);
+    totales = combinarTotalesMusculares(totales, totalesOtras);
+  }
 
   const bodyState = construirBodyStateMusculos(totales, REGIONES_BODYMUSCLES);
   if(chartCuerpoFrente) chartCuerpoFrente.update({ bodyState });
