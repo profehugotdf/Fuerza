@@ -614,12 +614,20 @@ function construirDefinicionRutina(){
     mostrarToast('⚠️ Agregá nombres a los ejercicios primero');
     return null;
   }
-  return validos.map(e => ({
-    nombre: e.nombre.trim(),
-    tipo: e.tipo,
-    carga: e.carga,
-    seriesSugeridas: e.series.length || 1
-  }));
+  return validos.map(e => {
+    // Objetivo (reps o segundos, según tipo): se toma de la primera serie que
+    // tenga algo cargado en "cantidad" — asume que todas las series de un
+    // mismo ejercicio apuntan al mismo número (lo más común en una rutina).
+    const serieConValor = e.series.find(s => s.cantidad !== '' && s.cantidad !== null && s.cantidad !== undefined);
+    const objetivo = serieConValor ? Number(serieConValor.cantidad) : null;
+    return {
+      nombre: e.nombre.trim(),
+      tipo: e.tipo,
+      carga: e.carga,
+      seriesSugeridas: e.series.length || 1,
+      objetivo: (objetivo !== null && !isNaN(objetivo) && objetivo > 0) ? objetivo : null,
+    };
+  });
 }
 
 function guardarComoRutinaNueva(){
@@ -900,7 +908,7 @@ function usarRutina(id){
     nombre: def.nombre,
     tipo: def.tipo || 'reps',
     carga: def.carga || 'peso',
-    series: Array.from({length: def.seriesSugeridas || 1}, () => ({cantidad:'', valor:''}))
+    series: Array.from({length: def.seriesSugeridas || 1}, () => ({cantidad: def.objetivo ?? '', valor:''}))
   }));
   rutinaActualId = id;
   renderEjercicios();
@@ -959,7 +967,8 @@ function renderRutinas(){
     const tags = r.ejercicios.map(e => {
       const icono = e.tipo === 'tiempo' ? '⏱️' : '🔢';
       const unidad = e.carga === 'peso' ? 'KG' : 'RPE';
-      return `<span class="tag-ejercicio">${icono} ${escapeHtml(e.nombre)} · ${unidad}</span>`;
+      const objetivo = e.objetivo ? ` · ${e.objetivo}${e.tipo === 'tiempo' ? 's' : ' reps'}` : '';
+      return `<span class="tag-ejercicio">${icono} ${escapeHtml(e.nombre)} · ${unidad}${objetivo}</span>`;
     }).join('');
     return `
       <div class="card">
@@ -1070,7 +1079,7 @@ function iniciarSesionEnVivo(rutinaId){
   const items = [];
   for(let ronda = 1; ronda <= rondas; ronda++){
     rutina.ejercicios.forEach(e => {
-      items.push({ ronda, nombre: e.nombre, tipo: e.tipo, carga: e.carga, hecho: false });
+      items.push({ ronda, nombre: e.nombre, tipo: e.tipo, carga: e.carga, objetivo: e.objetivo || null, hecho: false });
     });
   }
 
@@ -1133,7 +1142,7 @@ function renderVivoLista(){
       ${porRonda[rn].map(it => `
         <label class="item-vivo ${it.hecho ? 'hecho' : ''}">
           <input type="checkbox" ${it.hecho ? 'checked' : ''} onchange="toggleItemVivo(${it.idx})">
-          <span>${it.tipo === 'tiempo' ? '⏱️' : '🔢'} ${escapeHtml(it.nombre)}</span>
+          <span>${it.tipo === 'tiempo' ? '⏱️' : '🔢'} ${escapeHtml(it.nombre)}${it.objetivo ? ` — <b>${it.objetivo}${it.tipo === 'tiempo' ? ' seg' : ' reps'}</b>` : ''}</span>
         </label>
       `).join('')}
     </div>
