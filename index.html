@@ -1243,7 +1243,7 @@ function finalizarSesionEnVivo(){
   const lista = leerSesiones();
   lista.push(sesion);
   guardarSesiones(lista);
-  upsertEnRegistroForma({ fecha, deporte: 'fuerza', tss, id });
+  upsertEnRegistroForma({ fecha, deporte: 'fuerza', tss, duracionSeg: minutos * 60, id });
 
   mostrarTab('historial');
   mostrarToast(`✅ Guardada (${minutos} min · ${minutosTrabajo}' trabajo / ${minutosPausa}' pausa, RPE ${rpeSesion}) — completá reps y peso en ✏️ Editar`);
@@ -1900,7 +1900,7 @@ function guardarSesion(){
   if(idx >= 0) lista[idx] = sesion; else lista.push(sesion);
   guardarSesiones(lista);
 
-  upsertEnRegistroForma({ fecha, deporte: 'fuerza', tss, id });
+  upsertEnRegistroForma({ fecha, deporte: 'fuerza', tss, duracionSeg: duracion * 60, id });
 
   mostrarToast(editandoId ? '✅ Sesión actualizada' : '✅ Sesión guardada');
   limpiarFormulario();
