@@ -238,9 +238,14 @@
           <button class="btn btn-secundario" id="btnCancelarEdicionPlan" style="display:none;" onclick="cancelarEdicionPlan()">Cancelar</button>
         </div>
         <div class="fila" style="margin-top:8px;">
-          <button class="btn btn-mini" onclick="document.getElementById('inputImportarRutinaPlan').click()">📥 Importar rutina o plan (.json)</button>
+          <button class="btn btn-mini" onclick="document.getElementById('inputImportarRutinaPlan').click()">📥 Importar archivo (.json)</button>
+          <button class="btn btn-mini" onclick="mostrarPegarTexto()">📋 Pegar texto</button>
         </div>
-        <input type="file" id="inputImportarRutinaPlan" accept=".json,application/json" style="display:none" onchange="leerArchivoImportar(event)">
+        <input type="file" id="inputImportarRutinaPlan" accept=".json,application/json,.txt,text/plain" style="display:none" onchange="leerArchivoImportar(event)">
+        <div id="bloquePegarTexto" style="display:none; margin-top:8px;">
+          <textarea id="inTextoImportar" rows="4" style="width:100%; background:var(--card2); border:1px solid var(--borde); color:var(--texto); border-radius:10px; padding:10px 11px; font-size:13px; font-family:monospace; margin-bottom:8px;" placeholder="Pegá acá el texto que te mandaron por WhatsApp..."></textarea>
+          <button class="btn btn-secundario" style="width:100%;" onclick="procesarTextoImportado()">Leer texto pegado</button>
+        </div>
       </div>
 
       <div id="previaImportarPlan"></div>
@@ -493,9 +498,20 @@ function guardarPlanes(lista){
 // cancela el cuadro de compartir a propósito, NO sigue con los respaldos.
 async function compartirComoArchivoJSON(nombreArchivo, objetoDatos, titulo){
   const contenido = JSON.stringify(objetoDatos);
+  // El contenido sigue siendo JSON — pero Chrome/Brave solo permiten
+  // compartir archivos con extensión "segura" según Safe Browsing (imágenes,
+  // video, texto); .json con tipo application/json queda afuera de esa lista
+  // y navigator.canShare() lo rechaza, cayendo directo al respaldo de
+  // portapapeles. Usando .txt / text/plain (que sí está permitido) se
+  // consigue que WhatsApp lo reciba como archivo adjunto de verdad.
   try{
     if(typeof File !== 'undefined' && navigator.canShare){
-      const archivo = new File([contenido], nombreArchivo, { type: 'application/json' });
+      // El NOMBRE del archivo también tiene que terminar en una extensión
+      // "seguros" para Chrome/Brave (no alcanza con cambiar el tipo MIME) —
+      // si sigue diciendo "plan.json" lo sigue rechazando aunque el type
+      // declarado sea text/plain.
+      const nombreCompartible = nombreArchivo.replace(/\.json$/i, '.txt');
+      const archivo = new File([contenido], nombreCompartible, { type: 'text/plain' });
       if(navigator.canShare({ files: [archivo] })){
         await navigator.share({ files: [archivo], title: titulo });
         return;
@@ -507,7 +523,7 @@ async function compartirComoArchivoJSON(nombreArchivo, objetoDatos, titulo){
   try{
     if(navigator.clipboard && navigator.clipboard.writeText){
       await navigator.clipboard.writeText(contenido);
-      mostrarToast('📋 Copiado al portapapeles (tu navegador no deja compartir el archivo directo)');
+      mostrarToast('📋 Copiado al portapapeles — pegalo en el chat. Del otro lado, que lo peguen con el botón "📋 Pegar texto"');
       return;
     }
   }catch(e){ /* seguimos al respaldo final */ }
@@ -1539,23 +1555,45 @@ function leerArchivoImportar(event){
 
   const lector = new FileReader();
   lector.onload = () => {
-    let datos;
-    try{
-      datos = JSON.parse(lector.result);
-    }catch(e){
-      console.error('Error al parsear el archivo importado', e);
-      mostrarToast('⚠️ No pude leer ese archivo');
-      return;
-    }
-    if(!datos || (datos.tipo !== 'rutina_fuerza' && datos.tipo !== 'plan_fuerza')){
-      mostrarToast('⚠️ Ese archivo no es una rutina ni un plan de Fuerza');
-      return;
-    }
-    datosImportarPendiente = datos;
-    renderPreviaImportarPlan();
+    procesarTextoDatos(lector.result, '⚠️ No pude leer ese archivo');
   };
   lector.onerror = () => mostrarToast('⚠️ No pude leer ese archivo');
   lector.readAsText(archivo);
+}
+
+// Núcleo compartido entre "elegir archivo" y "pegar texto": valida que sea
+// JSON de una rutina o plan de Fuerza, y arma la vista previa.
+function procesarTextoDatos(texto, mensajeErrorLectura){
+  let datos;
+  try{
+    datos = JSON.parse(texto);
+  }catch(e){
+    console.error('Error al parsear los datos importados', e);
+    mostrarToast(mensajeErrorLectura || '⚠️ No pude leer ese texto');
+    return false;
+  }
+  if(!datos || (datos.tipo !== 'rutina_fuerza' && datos.tipo !== 'plan_fuerza')){
+    mostrarToast('⚠️ Eso no es una rutina ni un plan de Fuerza');
+    return false;
+  }
+  datosImportarPendiente = datos;
+  renderPreviaImportarPlan();
+  return true;
+}
+
+function mostrarPegarTexto(){
+  const bloque = document.getElementById('bloquePegarTexto');
+  bloque.style.display = bloque.style.display === 'none' ? 'block' : 'none';
+}
+
+function procesarTextoImportado(){
+  const texto = document.getElementById('inTextoImportar').value.trim();
+  if(!texto){ mostrarToast('⚠️ Pegá el texto primero'); return; }
+  const ok = procesarTextoDatos(texto, '⚠️ No pude leer ese texto — ¿lo pegaste completo?');
+  if(ok){
+    document.getElementById('inTextoImportar').value = '';
+    document.getElementById('bloquePegarTexto').style.display = 'none';
+  }
 }
 
 function renderPreviaImportarPlan(){
