@@ -140,6 +140,8 @@
 
   <section id="tab-registrar" class="activa">
 
+    <div id="planHoyBanner"></div>
+
     <div class="card">
       <h2>Datos de la sesión</h2>
       <div class="fila">
@@ -203,7 +205,51 @@
   </section>
 
   <section id="tab-rutinas">
-    <div id="listaRutinas"></div>
+    <div class="modos-fila" style="margin-bottom:10px;">
+      <div class="toggle-modo">
+        <button id="btnModoRutinasLista" class="on" onclick="mostrarSubModoRutinas('rutinas')">Rutinas</button>
+        <button id="btnModoRutinasPlanes" onclick="mostrarSubModoRutinas('planes')">Planes</button>
+      </div>
+    </div>
+
+    <div id="subtabRutinasLista">
+      <div id="listaRutinas"></div>
+    </div>
+
+    <div id="subtabRutinasPlanes" style="display:none;">
+      <div class="card">
+        <h2 id="tituloFormPlan">Crear plan</h2>
+        <label for="inPlanNombre">Nombre del plan</label>
+        <input type="text" id="inPlanNombre" placeholder="Ej: Plan de Juan - Septiembre">
+        <div class="fila">
+          <div>
+            <label for="inPlanFechaInicio">Fecha de inicio</label>
+            <input type="date" id="inPlanFechaInicio">
+          </div>
+          <div>
+            <label for="inPlanDuracion">Duración (semanas)</label>
+            <input type="number" id="inPlanDuracion" min="1" step="1" value="4">
+          </div>
+        </div>
+        <label>Rutina por día de la semana</label>
+        <div id="listaAsignacionesPlan"></div>
+        <div class="fila" style="margin-top:10px;">
+          <button class="btn btn-primario" onclick="guardarPlanFormulario()">💾 Guardar plan</button>
+          <button class="btn btn-secundario" id="btnCancelarEdicionPlan" style="display:none;" onclick="cancelarEdicionPlan()">Cancelar</button>
+        </div>
+        <div class="fila" style="margin-top:8px;">
+          <button class="btn btn-mini" onclick="document.getElementById('inputImportarRutinaPlan').click()">📥 Importar rutina o plan (.json)</button>
+        </div>
+        <input type="file" id="inputImportarRutinaPlan" accept=".json,application/json" style="display:none" onchange="leerArchivoImportar(event)">
+      </div>
+
+      <div id="previaImportarPlan"></div>
+
+      <div class="card">
+        <h2>Mis planes</h2>
+        <div id="listaPlanes"></div>
+      </div>
+    </div>
   </section>
 
   <section id="tab-musculos">
@@ -416,6 +462,88 @@ function guardarRutinas(lista){
   }
 }
 
+/* ============ localStorage: planes (rutinas asignadas a días de la semana) ============ */
+const K_PLANES = 'fuerza_planes';
+
+function leerPlanes(){
+  try{
+    const raw = localStorage.getItem(K_PLANES);
+    return raw ? JSON.parse(raw) : [];
+  }catch(e){
+    console.error('Error leyendo planes de fuerza', e);
+    return [];
+  }
+}
+
+function guardarPlanes(lista){
+  try{
+    localStorage.setItem(K_PLANES, JSON.stringify(lista));
+    return true;
+  }catch(e){
+    console.error('Error guardando planes de fuerza', e);
+    return false;
+  }
+}
+
+/* ============ Compartir (archivo/portapapeles/descarga como respaldo) ============ */
+// Comparte un objeto de datos como archivo .json — Web Share API con archivo
+// adjunto primero (lo que mejor integra con WhatsApp/Drive/mail en Android),
+// portapapeles si el navegador no puede compartir archivos, descarga directa
+// como último respaldo (mismo patrón que ya usa la app Backup). Si el usuario
+// cancela el cuadro de compartir a propósito, NO sigue con los respaldos.
+async function compartirComoArchivoJSON(nombreArchivo, objetoDatos, titulo){
+  const contenido = JSON.stringify(objetoDatos);
+  try{
+    if(typeof File !== 'undefined' && navigator.canShare){
+      const archivo = new File([contenido], nombreArchivo, { type: 'application/json' });
+      if(navigator.canShare({ files: [archivo] })){
+        await navigator.share({ files: [archivo], title: titulo });
+        return;
+      }
+    }
+  }catch(e){
+    if(e && e.name === 'AbortError') return; // el usuario canceló el cuadro de compartir a propósito
+  }
+  try{
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      await navigator.clipboard.writeText(contenido);
+      mostrarToast('📋 Copiado al portapapeles (tu navegador no deja compartir el archivo directo)');
+      return;
+    }
+  }catch(e){ /* seguimos al respaldo final */ }
+  const blob = new Blob([contenido], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = nombreArchivo;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(url), 2000);
+  mostrarToast('⬇️ Descargado (no se pudo compartir ni copiar directo)');
+}
+
+// Comparte texto plano (para el reporte de cumplimiento) — pensado para que
+// se pueda leer directo en WhatsApp, sin necesidad de abrir un archivo.
+async function compartirComoTexto(texto, titulo){
+  try{
+    if(navigator.share){
+      await navigator.share({ title: titulo, text: texto });
+      return;
+    }
+  }catch(e){
+    if(e && e.name === 'AbortError') return;
+  }
+  try{
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      await navigator.clipboard.writeText(texto);
+      mostrarToast('📋 Copiado al portapapeles (no se pudo compartir directo)');
+      return;
+    }
+  }catch(e){ /* no hay más respaldos para texto */ }
+  mostrarToast('⚠️ No se pudo compartir ni copiar — revisá los permisos del navegador');
+}
+
 /* ============ localStorage: sesión "en vivo" (para sobrevivir un cierre accidental) ============ */
 function guardarEstadoVivo(){
   try{
@@ -509,7 +637,7 @@ function mostrarTab(nombre){
   document.getElementById('tabBtnRutinas').classList.toggle('activa', nombre==='rutinas');
   document.getElementById('tabBtnMusculos').classList.toggle('activa', nombre==='musculos');
   if(nombre === 'historial') renderHistorial();
-  if(nombre === 'rutinas') renderRutinas();
+  if(nombre === 'rutinas') mostrarSubModoRutinas(modoRutinasVista);
   if(nombre === 'musculos') renderMusculos();
 }
 
@@ -997,9 +1125,405 @@ function renderRutinas(){
           <button class="btn btn-mini" style="flex:1;" onclick="renombrarRutina('${r.id}')">✏️ Renombrar</button>
           <button class="btn btn-mal" style="flex:1;" onclick="borrarRutina('${r.id}')">🗑 Borrar</button>
         </div>
+        <div class="acciones-hist" style="margin-top:8px;">
+          <button class="btn btn-mini" style="flex:1;" onclick="compartirRutina('${r.id}')">🔗 Compartir</button>
+        </div>
       </div>
     `;
   }).join('');
+}
+
+function compartirRutina(id){
+  const rutina = leerRutinas().find(r => r.id === id);
+  if(!rutina) return;
+  const payload = { tipo: 'rutina_fuerza', version: 1, rutina: { nombre: rutina.nombre, ejercicios: rutina.ejercicios } };
+  const nombreArchivo = 'rutina-' + normalizarTexto(rutina.nombre).replace(/\s+/g,'-') + '.json';
+  compartirComoArchivoJSON(nombreArchivo, payload, 'Rutina de Fuerza: ' + rutina.nombre);
+}
+
+/* ============ Planes (rutinas asignadas a días de la semana) ============ */
+const NOMBRES_DIA_ISO = {1:'Lunes',2:'Martes',3:'Miércoles',4:'Jueves',5:'Viernes',6:'Sábado',7:'Domingo'};
+
+// Día ISO de una fecha (1=lunes .. 7=domingo) — JS da 0=domingo..6=sábado.
+function diaISOSemana(fechaISO){
+  const d = new Date(fechaISO + 'T12:00:00'); // mediodía: evita líos de límite de día/horario de verano
+  const dow = d.getDay();
+  return dow === 0 ? 7 : dow;
+}
+
+function fechaFinPlan(plan){
+  return fechaISOMasNDias(plan.fechaInicio, plan.duracionSemanas * 7 - 1);
+}
+
+// ¿Se registró una sesión de ESTA rutina en ESTA fecha? Es toda la lógica de
+// "cumplimiento": no hay que marcar nada a mano, se infiere de si guardó o no
+// una sesión con rutinaOrigenId === rutinaId ese día.
+function seRealizoRutinaEseDia(fechaISO, rutinaId){
+  return leerSesiones().some(s => s.fecha === fechaISO && s.rutinaOrigenId === rutinaId);
+}
+
+// El plan "activo" es el que tiene a "hoy" dentro de su rango de fechas. Si
+// hay varios superpuestos, se toma el de fechaInicio más reciente.
+function obtenerPlanActivoHoy(){
+  const hoy = hoyISO();
+  const candidatos = leerPlanes().filter(p => hoy >= p.fechaInicio && hoy <= fechaFinPlan(p));
+  if(candidatos.length === 0) return null;
+  candidatos.sort((a,b) => b.fechaInicio.localeCompare(a.fechaInicio));
+  return candidatos[0];
+}
+
+// Rutina asignada a hoy según el plan activo, o null si no hay plan activo o
+// hoy no tiene nada asignado.
+function obtenerRutinaDeHoy(){
+  const plan = obtenerPlanActivoHoy();
+  if(!plan) return null;
+  const dia = diaISOSemana(hoyISO());
+  const rutinaId = (plan.asignaciones || {})[String(dia)];
+  if(!rutinaId) return null;
+  const rutina = leerRutinas().find(r => r.id === rutinaId);
+  if(!rutina) return null;
+  return { plan, rutina };
+}
+
+function renderPlanHoyBanner(){
+  const cont = document.getElementById('planHoyBanner');
+  if(!cont) return;
+  const info = obtenerRutinaDeHoy();
+  if(!info){ cont.innerHTML = ''; return; }
+
+  const yaHecha = seRealizoRutinaEseDia(hoyISO(), info.rutina.id);
+  cont.innerHTML = `<div class="card" style="border-color:var(--acento);">
+    <div class="lbl" style="text-transform:uppercase; font-size:11px; color:var(--texto-sec); letter-spacing:.5px;">Tu plan de hoy · ${escapeHtml(info.plan.nombre)}</div>
+    <div style="font-weight:800; font-size:16px; margin:4px 0 10px;">${escapeHtml(info.rutina.nombre)}</div>
+    ${yaHecha
+      ? '<div style="color:var(--ok); font-weight:700; font-size:13.5px;">✅ Ya la hiciste hoy</div>'
+      : `<button class="btn btn-primario" onclick="iniciarSesionEnVivo('${info.rutina.id}')">🏁 Iniciar</button>`}
+  </div>`;
+}
+
+/* --- Compartir / importar un plan (empaqueta las rutinas POR VALOR) --- */
+function compartirPlan(id){
+  const plan = leerPlanes().find(p => p.id === id);
+  if(!plan) return;
+  const rutinas = leerRutinas();
+  const asignacionesPorValor = {};
+  let faltantes = 0;
+  Object.keys(plan.asignaciones || {}).forEach(dia => {
+    const rutina = rutinas.find(r => r.id === plan.asignaciones[dia]);
+    if(rutina) asignacionesPorValor[dia] = { nombre: rutina.nombre, ejercicios: rutina.ejercicios };
+    else faltantes++;
+  });
+  const payload = {
+    tipo: 'plan_fuerza', version: 1,
+    plan: { nombre: plan.nombre, fechaInicio: plan.fechaInicio, duracionSemanas: plan.duracionSemanas, asignaciones: asignacionesPorValor }
+  };
+  const nombreArchivo = 'plan-' + normalizarTexto(plan.nombre).replace(/\s+/g,'-') + '.json';
+  compartirComoArchivoJSON(nombreArchivo, payload, 'Plan de Fuerza: ' + plan.nombre);
+  if(faltantes > 0) mostrarToast(`⚠️ ${faltantes} día(s) del plan tenían una rutina ya borrada — se compartió sin esos días`);
+}
+
+// Crea rutinas NUEVAS (ids propios) a partir de las rutinas por valor que
+// trae un plan importado, sin pisar ninguna rutina existente, y arma el plan
+// local apuntando a esas rutinas nuevas por id.
+function importarPlanDesdeObjeto(planPorValor){
+  const rutinasActuales = leerRutinas();
+  const nuevasAsignaciones = {};
+
+  Object.keys(planPorValor.asignaciones || {}).forEach(dia => {
+    const rutinaValor = planPorValor.asignaciones[dia];
+    const nuevaRutina = {
+      id: idNuevo('rutina'),
+      nombre: rutinaValor.nombre,
+      ejercicios: rutinaValor.ejercicios,
+    };
+    rutinasActuales.push(nuevaRutina);
+    nuevasAsignaciones[dia] = nuevaRutina.id;
+  });
+  guardarRutinas(rutinasActuales);
+
+  const nuevoPlan = {
+    id: idNuevo('plan'),
+    nombre: planPorValor.nombre,
+    fechaInicio: planPorValor.fechaInicio,
+    duracionSemanas: planPorValor.duracionSemanas,
+    asignaciones: nuevasAsignaciones,
+  };
+  const planes = leerPlanes();
+  planes.push(nuevoPlan);
+  guardarPlanes(planes);
+
+  return nuevoPlan;
+}
+
+function importarRutinaDesdeObjeto(rutinaValor){
+  const rutinas = leerRutinas();
+  const nueva = { id: idNuevo('rutina'), nombre: rutinaValor.nombre, ejercicios: rutinaValor.ejercicios };
+  rutinas.push(nueva);
+  guardarRutinas(rutinas);
+  return nueva;
+}
+
+/* --- Reporte de cumplimiento (texto plano, para mandar de vuelta) --- */
+function generarReporteCumplimiento(planId){
+  const plan = leerPlanes().find(p => p.id === planId);
+  if(!plan) return null;
+  const rutinas = leerRutinas();
+  const hoy = hoyISO();
+  const fin = fechaFinPlan(plan);
+  const hastaISO = hoy < fin ? hoy : fin;
+
+  const lineas = [];
+  let cumplidos = 0, totalAsignados = 0;
+  let cursor = plan.fechaInicio;
+  while(cursor <= hastaISO){
+    const diaSemana = diaISOSemana(cursor);
+    const rutinaId = (plan.asignaciones || {})[String(diaSemana)];
+    if(rutinaId){
+      const rutina = rutinas.find(r => r.id === rutinaId);
+      const nombreRutina = rutina ? rutina.nombre : '(rutina eliminada)';
+      const hecho = seRealizoRutinaEseDia(cursor, rutinaId);
+      if(hecho) cumplidos++;
+      totalAsignados++;
+      lineas.push(`${hecho ? '✅' : '❌'} ${NOMBRES_DIA_ISO[diaSemana]} ${formatearFecha(cursor)} — ${nombreRutina}`);
+    }
+    cursor = fechaISOMasNDias(cursor, 1);
+  }
+
+  const pct = totalAsignados > 0 ? Math.round((cumplidos / totalAsignados) * 100) : 0;
+  const encabezado = `📋 Cumplimiento — ${plan.nombre} (${formatearFecha(plan.fechaInicio)} al ${formatearFecha(hastaISO)})\n\n`;
+  const cuerpo = totalAsignados > 0 ? lineas.join('\n') : '(todavía no pasó ningún día con rutina asignada)';
+  const resumen = totalAsignados > 0 ? `\n\nResumen: ${cumplidos} de ${totalAsignados} sesiones cumplidas (${pct}%)` : '';
+  return encabezado + cuerpo + resumen;
+}
+
+function compartirCumplimiento(planId){
+  const texto = generarReporteCumplimiento(planId);
+  if(!texto){ mostrarToast('⚠️ No encontré ese plan'); return; }
+  compartirComoTexto(texto, 'Cumplimiento de plan de Fuerza');
+}
+
+/* --- UI de Planes: sub-tabs, formulario, listas, importar (faltaba conectar) --- */
+let modoRutinasVista = 'rutinas'; // 'rutinas' | 'planes'
+let editandoPlanId = null;
+let asignacionPlanActual = {}; // {'1': rutinaId, ...} día ISO (1=lunes..7=domingo) -> rutinaId
+let datosImportarPendiente = null; // payload parseado de un .json de rutina o plan, esperando confirmación
+
+function mostrarSubModoRutinas(modo){
+  modoRutinasVista = modo;
+  document.getElementById('btnModoRutinasLista').classList.toggle('on', modo === 'rutinas');
+  document.getElementById('btnModoRutinasPlanes').classList.toggle('on', modo === 'planes');
+  document.getElementById('subtabRutinasLista').style.display = modo === 'rutinas' ? '' : 'none';
+  document.getElementById('subtabRutinasPlanes').style.display = modo === 'planes' ? '' : 'none';
+  if(modo === 'rutinas'){
+    renderRutinas();
+  } else {
+    renderListaAsignacionesPlan();
+    renderListaPlanes();
+  }
+}
+
+function limpiarFormularioPlan(){
+  editandoPlanId = null;
+  document.getElementById('inPlanNombre').value = '';
+  document.getElementById('inPlanFechaInicio').value = hoyISO();
+  document.getElementById('inPlanDuracion').value = 4;
+  asignacionPlanActual = {};
+  document.getElementById('tituloFormPlan').textContent = 'Crear plan';
+  document.getElementById('btnCancelarEdicionPlan').style.display = 'none';
+  renderListaAsignacionesPlan();
+}
+
+function cancelarEdicionPlan(){
+  limpiarFormularioPlan();
+}
+
+function setAsignacionPlanDia(dia, rutinaId){
+  if(rutinaId) asignacionPlanActual[String(dia)] = rutinaId;
+  else delete asignacionPlanActual[String(dia)];
+}
+
+function renderListaAsignacionesPlan(){
+  const cont = document.getElementById('listaAsignacionesPlan');
+  if(!cont) return;
+  const rutinas = leerRutinas();
+  if(rutinas.length === 0){
+    cont.innerHTML = '<div class="vacio">Todavía no tenés rutinas guardadas — creá una primero en "Rutinas".</div>';
+    return;
+  }
+  cont.innerHTML = [1,2,3,4,5,6,7].map(dia => {
+    const seleccionActual = asignacionPlanActual[String(dia)] || '';
+    return `<div class="fila" style="align-items:center; margin-bottom:6px;">
+      <span style="flex:1; font-size:13px;">${NOMBRES_DIA_ISO[dia]}</span>
+      <select style="flex:2; margin-bottom:0;" onchange="setAsignacionPlanDia(${dia}, this.value)">
+        <option value="">— Ninguna —</option>
+        ${rutinas.map(r => `<option value="${r.id}" ${seleccionActual===r.id?'selected':''}>${escapeHtml(r.nombre)}</option>`).join('')}
+      </select>
+    </div>`;
+  }).join('');
+}
+
+function guardarPlanFormulario(){
+  const nombre = document.getElementById('inPlanNombre').value.trim();
+  const fechaInicio = document.getElementById('inPlanFechaInicio').value;
+  const duracionSemanas = Number(document.getElementById('inPlanDuracion').value) || 0;
+
+  if(!nombre){ mostrarToast('⚠️ Escribí un nombre para el plan'); return; }
+  if(!fechaInicio){ mostrarToast('⚠️ Elegí la fecha de inicio'); return; }
+  if(duracionSemanas <= 0){ mostrarToast('⚠️ La duración tiene que ser de al menos 1 semana'); return; }
+  if(Object.keys(asignacionPlanActual).length === 0){ mostrarToast('⚠️ Asigná una rutina a al menos un día'); return; }
+
+  const id = editandoPlanId || idNuevo('plan');
+  const plan = { id, nombre, fechaInicio, duracionSemanas, asignaciones: Object.assign({}, asignacionPlanActual) };
+
+  const planes = leerPlanes();
+  const idx = planes.findIndex(p => p.id === id);
+  if(idx >= 0) planes[idx] = plan; else planes.push(plan);
+  guardarPlanes(planes);
+
+  mostrarToast(editandoPlanId ? '✅ Plan actualizado' : '✅ Plan creado');
+  limpiarFormularioPlan();
+  renderListaPlanes();
+  renderPlanHoyBanner();
+}
+
+function editarPlan(id){
+  const plan = leerPlanes().find(p => p.id === id);
+  if(!plan) return;
+  editandoPlanId = id;
+  document.getElementById('inPlanNombre').value = plan.nombre;
+  document.getElementById('inPlanFechaInicio').value = plan.fechaInicio;
+  document.getElementById('inPlanDuracion').value = plan.duracionSemanas;
+  asignacionPlanActual = Object.assign({}, plan.asignaciones || {});
+  document.getElementById('tituloFormPlan').textContent = 'Editar plan';
+  document.getElementById('btnCancelarEdicionPlan').style.display = 'block';
+  renderListaAsignacionesPlan();
+}
+
+function borrarPlan(id){
+  if(!confirm('¿Borrar este plan? No borra las rutinas que usa, solo la calendarización por días.')) return;
+  const planes = leerPlanes().filter(p => p.id !== id);
+  guardarPlanes(planes);
+  mostrarToast('🗑 Plan borrado');
+  if(editandoPlanId === id) limpiarFormularioPlan();
+  renderListaPlanes();
+  renderPlanHoyBanner();
+}
+
+function renderListaPlanes(){
+  const cont = document.getElementById('listaPlanes');
+  if(!cont) return;
+  const planes = leerPlanes().slice().sort((a,b) => b.fechaInicio.localeCompare(a.fechaInicio));
+  if(planes.length === 0){
+    cont.innerHTML = '<div class="vacio">Todavía no creaste ningún plan.</div>';
+    return;
+  }
+  const hoy = hoyISO();
+  cont.innerHTML = planes.map(p => {
+    const fin = fechaFinPlan(p);
+    const diasAsignados = Object.keys(p.asignaciones || {}).length;
+    const activo = hoy >= p.fechaInicio && hoy <= fin;
+    return `<div class="card">
+      <div class="sesion-cab">
+        <div class="sesion-fecha">${escapeHtml(p.nombre)}</div>
+        ${activo ? '<span style="color:var(--ok); font-size:11px; font-weight:700;">● ACTIVO</span>' : ''}
+      </div>
+      <div class="sesion-meta">${formatearFecha(p.fechaInicio)} al ${formatearFecha(fin)} · ${p.duracionSemanas} semana${p.duracionSemanas===1?'':'s'} · ${diasAsignados} día${diasAsignados===1?'':'s'} asignado${diasAsignados===1?'':'s'}</div>
+      <div class="acciones-hist" style="margin-top:8px;">
+        <button class="btn btn-mini" style="flex:1;" onclick="editarPlan('${p.id}')">✏️ Editar</button>
+        <button class="btn btn-mal" style="flex:1;" onclick="borrarPlan('${p.id}')">🗑 Borrar</button>
+      </div>
+      <div class="acciones-hist" style="margin-top:8px;">
+        <button class="btn btn-mini" style="flex:1;" onclick="compartirPlan('${p.id}')">🔗 Compartir plan</button>
+        <button class="btn btn-mini" style="flex:1;" onclick="compartirCumplimiento('${p.id}')">📊 Cumplimiento</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// Detecta si el .json elegido es una rutina o un plan compartido, y muestra
+// una vista previa antes de importar nada (mismo patrón que el resto de la app).
+function leerArchivoImportar(event){
+  const archivo = event.target.files && event.target.files[0];
+  event.target.value = '';
+  if(!archivo) return;
+
+  const lector = new FileReader();
+  lector.onload = () => {
+    let datos;
+    try{
+      datos = JSON.parse(lector.result);
+    }catch(e){
+      console.error('Error al parsear el archivo importado', e);
+      mostrarToast('⚠️ No pude leer ese archivo');
+      return;
+    }
+    if(!datos || (datos.tipo !== 'rutina_fuerza' && datos.tipo !== 'plan_fuerza')){
+      mostrarToast('⚠️ Ese archivo no es una rutina ni un plan de Fuerza');
+      return;
+    }
+    datosImportarPendiente = datos;
+    renderPreviaImportarPlan();
+  };
+  lector.onerror = () => mostrarToast('⚠️ No pude leer ese archivo');
+  lector.readAsText(archivo);
+}
+
+function renderPreviaImportarPlan(){
+  const cont = document.getElementById('previaImportarPlan');
+  if(!cont) return;
+  if(!datosImportarPendiente){ cont.innerHTML = ''; return; }
+
+  if(datosImportarPendiente.tipo === 'rutina_fuerza'){
+    const r = datosImportarPendiente.rutina;
+    const tags = (r.ejercicios || []).map(e => `<span class="tag-ejercicio">${e.tipo==='tiempo'?'⏱️':'🔢'} ${escapeHtml(e.nombre)}</span>`).join('');
+    cont.innerHTML = `<div class="card">
+      <h2>Importar rutina</h2>
+      <div class="sesion-fecha">${escapeHtml(r.nombre)}</div>
+      <div class="sesion-meta">${(r.ejercicios||[]).length} ejercicio${(r.ejercicios||[]).length===1?'':'s'}</div>
+      <div class="tags-rutina">${tags}</div>
+      <div class="fila" style="margin-top:10px;">
+        <button class="btn btn-primario" onclick="confirmarImportarPendiente()">✅ Importar esta rutina</button>
+        <button class="btn btn-secundario" onclick="cancelarImportarPendiente()">Cancelar</button>
+      </div>
+    </div>`;
+  } else {
+    const p = datosImportarPendiente.plan;
+    const filas = [1,2,3,4,5,6,7]
+      .filter(d => p.asignaciones && p.asignaciones[String(d)])
+      .map(d => `<div class="sesion-meta">${NOMBRES_DIA_ISO[d]}: ${escapeHtml(p.asignaciones[String(d)].nombre)}</div>`)
+      .join('');
+    cont.innerHTML = `<div class="card">
+      <h2>Importar plan</h2>
+      <div class="sesion-fecha">${escapeHtml(p.nombre)}</div>
+      <div class="sesion-meta">Desde ${formatearFecha(p.fechaInicio)} · ${p.duracionSemanas} semana${p.duracionSemanas===1?'':'s'}</div>
+      ${filas}
+      <div class="fila" style="margin-top:10px;">
+        <button class="btn btn-primario" onclick="confirmarImportarPendiente()">✅ Importar este plan</button>
+        <button class="btn btn-secundario" onclick="cancelarImportarPendiente()">Cancelar</button>
+      </div>
+    </div>`;
+  }
+}
+
+function confirmarImportarPendiente(){
+  if(!datosImportarPendiente) return;
+  if(datosImportarPendiente.tipo === 'rutina_fuerza'){
+    const nueva = importarRutinaDesdeObjeto(datosImportarPendiente.rutina);
+    mostrarToast('✅ Rutina importada: ' + nueva.nombre);
+  } else {
+    const nuevoPlan = importarPlanDesdeObjeto(datosImportarPendiente.plan);
+    mostrarToast('✅ Plan importado: ' + nuevoPlan.nombre);
+  }
+  datosImportarPendiente = null;
+  document.getElementById('previaImportarPlan').innerHTML = '';
+  renderListaAsignacionesPlan(); // por si las rutinas importadas ya se pueden asignar
+  renderListaPlanes();
+  renderPlanHoyBanner();
+}
+
+function cancelarImportarPendiente(){
+  datosImportarPendiente = null;
+  document.getElementById('previaImportarPlan').innerHTML = '';
 }
 
 /* ============ Sesión "en vivo" (rutina iniciada con cronómetro) ============ */
@@ -1222,6 +1746,7 @@ function finalizarSesionEnVivo(){
     porClave[clave].series.push({ cantidad: 0, valor: null });
   });
   const ejerciciosGuardados = Object.values(porClave);
+  const rutinaOrigenId = vivoRutinaId; // guardar antes de limpiar el estado en vivo, para cumplimiento de Planes
 
   borrarEstadoVivo();
   vivoRutinaId = null;
@@ -1238,13 +1763,14 @@ function finalizarSesionEnVivo(){
   const fecha = hoyISO();
   const tss = calcularTSS(rpeSesion, minutos);
   const id = idNuevo('fuerza');
-  const sesion = { id, fecha, duracionMin: minutos, rpeSesion, tss, ejercicios: ejerciciosGuardados, tiempoTrabajoMin: minutosTrabajo, tiempoPausaMin: minutosPausa };
+  const sesion = { id, fecha, duracionMin: minutos, rpeSesion, tss, ejercicios: ejerciciosGuardados, tiempoTrabajoMin: minutosTrabajo, tiempoPausaMin: minutosPausa, rutinaOrigenId };
 
   const lista = leerSesiones();
   lista.push(sesion);
   guardarSesiones(lista);
   upsertEnRegistroForma({ fecha, deporte: 'fuerza', tss, duracionSeg: minutos * 60, id });
 
+  renderPlanHoyBanner();
   mostrarTab('historial');
   mostrarToast(`✅ Guardada (${minutos} min · ${minutosTrabajo}' trabajo / ${minutosPausa}' pausa, RPE ${rpeSesion}) — completá reps y peso en ✏️ Editar`);
 }
@@ -1892,7 +2418,8 @@ function guardarSesion(){
     duracionMin: duracion,
     rpeSesion,
     tss,
-    ejercicios: ejerciciosLimpios
+    ejercicios: ejerciciosLimpios,
+    rutinaOrigenId: rutinaActualId || null
   };
 
   const lista = leerSesiones();
@@ -1904,6 +2431,7 @@ function guardarSesion(){
 
   mostrarToast(editandoId ? '✅ Sesión actualizada' : '✅ Sesión guardada');
   limpiarFormulario();
+  renderPlanHoyBanner();
   mostrarTab('historial');
 }
 
@@ -2004,6 +2532,8 @@ if(estadoVivoGuardado){
   actualizarTSS();
   renderBotonRutina();
 }
+limpiarFormularioPlan();
+renderPlanHoyBanner();
 </script>
 
 </body>
