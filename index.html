@@ -747,26 +747,48 @@ function renderEjercicios(){
 }
 
 /* ============ Rutinas (circuitos reutilizables) ============ */
+// Traduce la definición de un ejercicio de rutina a un array de objetivos,
+// uno por ronda (índice 0 = ronda 1). Compatible con rutinas viejas que
+// todavía tienen un solo "objetivo" + "seriesSugeridas" en vez del array.
+function objetivosPorRondaDe(def){
+  if(Array.isArray(def.objetivosPorRonda)) return def.objetivosPorRonda;
+  const n = def.seriesSugeridas || 1;
+  return Array.from({length: n}, () => (def.objetivo !== undefined ? def.objetivo : null));
+}
+
+// Cantidad de rondas programadas de una rutina. Compatible con rutinas
+// viejas sin el campo "rondas": la infiere del ejercicio con más objetivos.
+function rondasDe(rutina){
+  if(rutina.rondas) return rutina.rondas;
+  return Math.max(1, ...rutina.ejercicios.map(e => objetivosPorRondaDe(e).length));
+}
+
 function construirDefinicionRutina(){
   const validos = ejercicios.filter(e => (e.nombre||'').trim() !== '');
   if(validos.length === 0){
     mostrarToast('⚠️ Agregá nombres a los ejercicios primero');
     return null;
   }
-  return validos.map(e => {
-    // Objetivo (reps o segundos, según tipo): se toma de la primera serie que
-    // tenga algo cargado en "cantidad" — asume que todas las series de un
-    // mismo ejercicio apuntan al mismo número (lo más común en una rutina).
-    const serieConValor = e.series.find(s => s.cantidad !== '' && s.cantidad !== null && s.cantidad !== undefined);
-    const objetivo = serieConValor ? Number(serieConValor.cantidad) : null;
+  // Cada serie cargada en el formulario pasa a ser el objetivo de ESA ronda
+  // (serie 1 -> ronda 1, serie 2 -> ronda 2, ...) — permite esquemas
+  // descendentes tipo 10/8/6. Se recortan series vacías al final que no
+  // aportan nada. Las rondas de la rutina son el máximo entre todos los
+  // ejercicios; uno con menos series repite su último valor cargado.
+  const definiciones = validos.map(e => {
+    const objetivosPorRonda = e.series.map(s => {
+      const n = Number(s.cantidad);
+      return (s.cantidad !== '' && s.cantidad !== null && s.cantidad !== undefined && !isNaN(n) && n > 0) ? n : null;
+    });
+    while(objetivosPorRonda.length > 1 && objetivosPorRonda[objetivosPorRonda.length - 1] === null) objetivosPorRonda.pop();
     return {
       nombre: e.nombre.trim(),
       tipo: e.tipo,
       carga: e.carga,
-      seriesSugeridas: e.series.length || 1,
-      objetivo: (objetivo !== null && !isNaN(objetivo) && objetivo > 0) ? objetivo : null,
+      objetivosPorRonda: objetivosPorRonda.length > 0 ? objetivosPorRonda : [null],
     };
   });
+  const rondas = Math.max(1, ...definiciones.map(d => d.objetivosPorRonda.length));
+  return { ejercicios: definiciones, rondas };
 }
 
 function guardarComoRutinaNueva(){
@@ -776,12 +798,12 @@ function guardarComoRutinaNueva(){
   const nombre = prompt('Nombre de la rutina:', '');
   if(!nombre || !nombre.trim()) return;
   const rutinas = leerRutinas();
-  const rutina = { id: idNuevo('rutina'), nombre: nombre.trim(), ejercicios: definicion };
+  const rutina = { id: idNuevo('rutina'), nombre: nombre.trim(), ejercicios: definicion.ejercicios, rondas: definicion.rondas };
   rutinas.push(rutina);
   guardarRutinas(rutinas);
   rutinaActualId = rutina.id;
   renderBotonRutina();
-  mostrarToast('✅ Rutina guardada');
+  mostrarToast(`✅ Rutina guardada (${definicion.rondas} ronda${definicion.rondas===1?'':'s'})`);
 }
 
 function actualizarRutinaActual(){
@@ -794,9 +816,10 @@ function actualizarRutinaActual(){
     mostrarToast('⚠️ No se encontró la rutina original');
     return;
   }
-  rutinas[idx].ejercicios = definicion;
+  rutinas[idx].ejercicios = definicion.ejercicios;
+  rutinas[idx].rondas = definicion.rondas;
   guardarRutinas(rutinas);
-  mostrarToast('✅ Rutina actualizada');
+  mostrarToast(`✅ Rutina actualizada (${definicion.rondas} ronda${definicion.rondas===1?'':'s'})`);
 }
 
 function renderBotonRutina(){
@@ -1042,13 +1065,17 @@ function usarRutina(id){
   if(!rutina) return;
   if(hayDatosEnFormulario() && !confirm('Esto va a reemplazar los ejercicios que ya cargaste en el formulario. ¿Continuar?')) return;
 
-  ejercicios = rutina.ejercicios.map(def => ({
-    id: idNuevo('ej'),
-    nombre: def.nombre,
-    tipo: def.tipo || 'reps',
-    carga: def.carga || 'peso',
-    series: Array.from({length: def.seriesSugeridas || 1}, () => ({cantidad: def.objetivo ?? '', valor:''}))
-  }));
+  const rondas = rondasDe(rutina);
+  ejercicios = rutina.ejercicios.map(def => {
+    const objetivos = objetivosPorRondaDe(def);
+    return {
+      id: idNuevo('ej'),
+      nombre: def.nombre,
+      tipo: def.tipo || 'reps',
+      carga: def.carga || 'peso',
+      series: Array.from({length: rondas}, (_, i) => ({ cantidad: objetivos[i] ?? '', valor: '' }))
+    };
+  });
   rutinaActualId = id;
   renderEjercicios();
   renderBotonRutina();
@@ -1106,15 +1133,24 @@ function renderRutinas(){
     const tags = r.ejercicios.map(e => {
       const icono = e.tipo === 'tiempo' ? '⏱️' : '🔢';
       const unidad = e.carga === 'peso' ? 'KG' : 'RPE';
-      const objetivo = e.objetivo ? ` · ${e.objetivo}${e.tipo === 'tiempo' ? 's' : ' reps'}` : '';
-      return `<span class="tag-ejercicio">${icono} ${escapeHtml(e.nombre)} · ${unidad}${objetivo}</span>`;
+      const objetivos = objetivosPorRondaDe(e);
+      const definidos = objetivos.filter(v => v !== null && v !== undefined);
+      const unicos = [...new Set(definidos)];
+      const sufijo = e.tipo === 'tiempo' ? 's' : ' reps';
+      let textoObjetivo = '';
+      if(definidos.length > 0){
+        textoObjetivo = unicos.length === 1
+          ? ` · ${unicos[0]}${sufijo}`
+          : ` · ${objetivos.map(v => v ?? '?').join('→')}${sufijo}`;
+      }
+      return `<span class="tag-ejercicio">${icono} ${escapeHtml(e.nombre)} · ${unidad}${textoObjetivo}</span>`;
     }).join('');
     return `
       <div class="card">
         <div class="sesion-cab">
           <div class="sesion-fecha">${escapeHtml(r.nombre)}</div>
         </div>
-        <div class="sesion-meta">${r.ejercicios.length} ejercicio${r.ejercicios.length===1?'':'s'}</div>
+        <div class="sesion-meta">${r.ejercicios.length} ejercicio${r.ejercicios.length===1?'':'s'} · ${rondasDe(r)} ronda${rondasDe(r)===1?'':'s'}</div>
         <div class="tags-rutina">${tags}</div>
         <div class="acciones-hist">
           <button class="btn btn-primario" style="width:auto;" onclick="iniciarSesionEnVivo('${r.id}')">🏁 Iniciar</button>
@@ -1133,10 +1169,43 @@ function renderRutinas(){
   }).join('');
 }
 
+// Junta, de fuerza_musculos_personalizados, solo los ajustes que corresponden
+// a los ejercicios de la lista dada (por nombre normalizado) — para que viajen
+// junto con una rutina/plan compartido y el diagrama de músculos le salga
+// bien a quien lo importa, sin mandarle la tabla completa de ajustes de Hugo.
+function recolectarAjustesMuscularesPara(listaEjercicios){
+  const personalizados = leerMusculosPersonalizados();
+  const resultado = {};
+  (listaEjercicios || []).forEach(ej => {
+    const clave = normalizarTexto(ej.nombre);
+    if(personalizados[clave]) resultado[clave] = personalizados[clave];
+  });
+  return resultado;
+}
+
+// Suma los ajustes que trae un archivo importado a los propios del
+// dispositivo, SIN pisar ningún ajuste que el usuario ya tuviera guardado
+// para ese mismo nombre — mismo criterio de "nunca pisar lo existente" que
+// se usa para rutinas y planes importados.
+function fusionarAjustesMusculares(ajustesEntrantes){
+  if(!ajustesEntrantes || Object.keys(ajustesEntrantes).length === 0) return 0;
+  const propios = leerMusculosPersonalizados();
+  let agregados = 0;
+  Object.keys(ajustesEntrantes).forEach(clave => {
+    if(!propios[clave]){
+      propios[clave] = ajustesEntrantes[clave];
+      agregados++;
+    }
+  });
+  if(agregados > 0) guardarMusculosPersonalizados(propios);
+  return agregados;
+}
+
 function compartirRutina(id){
   const rutina = leerRutinas().find(r => r.id === id);
   if(!rutina) return;
-  const payload = { tipo: 'rutina_fuerza', version: 1, rutina: { nombre: rutina.nombre, ejercicios: rutina.ejercicios } };
+  const ajustesMusculares = recolectarAjustesMuscularesPara(rutina.ejercicios);
+  const payload = { tipo: 'rutina_fuerza', version: 1, rutina: { nombre: rutina.nombre, ejercicios: rutina.ejercicios, rondas: rondasDe(rutina) }, ajustesMusculares };
   const nombreArchivo = 'rutina-' + normalizarTexto(rutina.nombre).replace(/\s+/g,'-') + '.json';
   compartirComoArchivoJSON(nombreArchivo, payload, 'Rutina de Fuerza: ' + rutina.nombre);
 }
@@ -1208,14 +1277,21 @@ function compartirPlan(id){
   const rutinas = leerRutinas();
   const asignacionesPorValor = {};
   let faltantes = 0;
+  let todosLosEjercicios = [];
   Object.keys(plan.asignaciones || {}).forEach(dia => {
     const rutina = rutinas.find(r => r.id === plan.asignaciones[dia]);
-    if(rutina) asignacionesPorValor[dia] = { nombre: rutina.nombre, ejercicios: rutina.ejercicios };
-    else faltantes++;
+    if(rutina){
+      asignacionesPorValor[dia] = { nombre: rutina.nombre, ejercicios: rutina.ejercicios, rondas: rondasDe(rutina) };
+      todosLosEjercicios = todosLosEjercicios.concat(rutina.ejercicios);
+    } else {
+      faltantes++;
+    }
   });
+  const ajustesMusculares = recolectarAjustesMuscularesPara(todosLosEjercicios);
   const payload = {
     tipo: 'plan_fuerza', version: 1,
-    plan: { nombre: plan.nombre, fechaInicio: plan.fechaInicio, duracionSemanas: plan.duracionSemanas, asignaciones: asignacionesPorValor }
+    plan: { nombre: plan.nombre, fechaInicio: plan.fechaInicio, duracionSemanas: plan.duracionSemanas, asignaciones: asignacionesPorValor },
+    ajustesMusculares
   };
   const nombreArchivo = 'plan-' + normalizarTexto(plan.nombre).replace(/\s+/g,'-') + '.json';
   compartirComoArchivoJSON(nombreArchivo, payload, 'Plan de Fuerza: ' + plan.nombre);
@@ -1224,22 +1300,35 @@ function compartirPlan(id){
 
 // Crea rutinas NUEVAS (ids propios) a partir de las rutinas por valor que
 // trae un plan importado, sin pisar ninguna rutina existente, y arma el plan
-// local apuntando a esas rutinas nuevas por id.
-function importarPlanDesdeObjeto(planPorValor){
+// local apuntando a esas rutinas nuevas por id. Además fusiona los ajustes
+// musculares que haya traído el plan (sin pisar los propios).
+function importarPlanDesdeObjeto(planPorValor, ajustesMusculares){
   const rutinasActuales = leerRutinas();
   const nuevasAsignaciones = {};
+  // Si dos días del plan comparten literalmente la misma rutina (mismo nombre
+  // y ejercicios), se crea una sola rutina nueva y ambos días apuntan a ella
+  // — si no, cada día llega como copia independiente por valor y duplicaría.
+  const idsPorContenido = {};
 
   Object.keys(planPorValor.asignaciones || {}).forEach(dia => {
     const rutinaValor = planPorValor.asignaciones[dia];
-    const nuevaRutina = {
-      id: idNuevo('rutina'),
-      nombre: rutinaValor.nombre,
-      ejercicios: rutinaValor.ejercicios,
-    };
-    rutinasActuales.push(nuevaRutina);
-    nuevasAsignaciones[dia] = nuevaRutina.id;
+    const claveContenido = JSON.stringify({ nombre: rutinaValor.nombre, ejercicios: rutinaValor.ejercicios });
+    let id = idsPorContenido[claveContenido];
+    if(!id){
+      const nuevaRutina = {
+        id: idNuevo('rutina'),
+        nombre: rutinaValor.nombre,
+        ejercicios: rutinaValor.ejercicios,
+        rondas: rutinaValor.rondas,
+      };
+      rutinasActuales.push(nuevaRutina);
+      id = nuevaRutina.id;
+      idsPorContenido[claveContenido] = id;
+    }
+    nuevasAsignaciones[dia] = id;
   });
   guardarRutinas(rutinasActuales);
+  fusionarAjustesMusculares(ajustesMusculares);
 
   const nuevoPlan = {
     id: idNuevo('plan'),
@@ -1255,11 +1344,12 @@ function importarPlanDesdeObjeto(planPorValor){
   return nuevoPlan;
 }
 
-function importarRutinaDesdeObjeto(rutinaValor){
+function importarRutinaDesdeObjeto(rutinaValor, ajustesMusculares){
   const rutinas = leerRutinas();
-  const nueva = { id: idNuevo('rutina'), nombre: rutinaValor.nombre, ejercicios: rutinaValor.ejercicios };
+  const nueva = { id: idNuevo('rutina'), nombre: rutinaValor.nombre, ejercicios: rutinaValor.ejercicios, rondas: rutinaValor.rondas };
   rutinas.push(nueva);
   guardarRutinas(rutinas);
+  fusionarAjustesMusculares(ajustesMusculares);
   return nueva;
 }
 
@@ -1475,12 +1565,14 @@ function renderPreviaImportarPlan(){
 
   if(datosImportarPendiente.tipo === 'rutina_fuerza'){
     const r = datosImportarPendiente.rutina;
+    const cantAjustes = Object.keys(datosImportarPendiente.ajustesMusculares || {}).length;
     const tags = (r.ejercicios || []).map(e => `<span class="tag-ejercicio">${e.tipo==='tiempo'?'⏱️':'🔢'} ${escapeHtml(e.nombre)}</span>`).join('');
     cont.innerHTML = `<div class="card">
       <h2>Importar rutina</h2>
       <div class="sesion-fecha">${escapeHtml(r.nombre)}</div>
       <div class="sesion-meta">${(r.ejercicios||[]).length} ejercicio${(r.ejercicios||[]).length===1?'':'s'}</div>
       <div class="tags-rutina">${tags}</div>
+      ${cantAjustes > 0 ? `<div class="tss-nota">Incluye ${cantAjustes} ajuste${cantAjustes===1?'':'s'} de grupos musculares para que el gráfico de Músculos te salga igual que del otro lado.</div>` : ''}
       <div class="fila" style="margin-top:10px;">
         <button class="btn btn-primario" onclick="confirmarImportarPendiente()">✅ Importar esta rutina</button>
         <button class="btn btn-secundario" onclick="cancelarImportarPendiente()">Cancelar</button>
@@ -1488,6 +1580,7 @@ function renderPreviaImportarPlan(){
     </div>`;
   } else {
     const p = datosImportarPendiente.plan;
+    const cantAjustes = Object.keys(datosImportarPendiente.ajustesMusculares || {}).length;
     const filas = [1,2,3,4,5,6,7]
       .filter(d => p.asignaciones && p.asignaciones[String(d)])
       .map(d => `<div class="sesion-meta">${NOMBRES_DIA_ISO[d]}: ${escapeHtml(p.asignaciones[String(d)].nombre)}</div>`)
@@ -1497,6 +1590,7 @@ function renderPreviaImportarPlan(){
       <div class="sesion-fecha">${escapeHtml(p.nombre)}</div>
       <div class="sesion-meta">Desde ${formatearFecha(p.fechaInicio)} · ${p.duracionSemanas} semana${p.duracionSemanas===1?'':'s'}</div>
       ${filas}
+      ${cantAjustes > 0 ? `<div class="tss-nota">Incluye ${cantAjustes} ajuste${cantAjustes===1?'':'s'} de grupos musculares para que el gráfico de Músculos te salga igual que del otro lado.</div>` : ''}
       <div class="fila" style="margin-top:10px;">
         <button class="btn btn-primario" onclick="confirmarImportarPendiente()">✅ Importar este plan</button>
         <button class="btn btn-secundario" onclick="cancelarImportarPendiente()">Cancelar</button>
@@ -1508,10 +1602,10 @@ function renderPreviaImportarPlan(){
 function confirmarImportarPendiente(){
   if(!datosImportarPendiente) return;
   if(datosImportarPendiente.tipo === 'rutina_fuerza'){
-    const nueva = importarRutinaDesdeObjeto(datosImportarPendiente.rutina);
+    const nueva = importarRutinaDesdeObjeto(datosImportarPendiente.rutina, datosImportarPendiente.ajustesMusculares);
     mostrarToast('✅ Rutina importada: ' + nueva.nombre);
   } else {
-    const nuevoPlan = importarPlanDesdeObjeto(datosImportarPendiente.plan);
+    const nuevoPlan = importarPlanDesdeObjeto(datosImportarPendiente.plan, datosImportarPendiente.ajustesMusculares);
     mostrarToast('✅ Plan importado: ' + nuevoPlan.nombre);
   }
   datosImportarPendiente = null;
@@ -1607,14 +1701,18 @@ function iniciarSesionEnVivo(rutinaId){
   const rutina = leerRutinas().find(r => r.id === rutinaId);
   if(!rutina) return;
 
-  const rondasTexto = prompt('¿Cuántas rondas del circuito?', '1');
+  const rondasProgramadas = rondasDe(rutina);
+  const rondasTexto = prompt('¿Cuántas rondas del circuito?', String(rondasProgramadas));
   if(rondasTexto === null) return; // canceló
-  const rondas = Math.max(1, parseInt(rondasTexto, 10) || 1);
+  const rondas = Math.max(1, parseInt(rondasTexto, 10) || rondasProgramadas);
 
   const items = [];
   for(let ronda = 1; ronda <= rondas; ronda++){
     rutina.ejercicios.forEach(e => {
-      items.push({ ronda, nombre: e.nombre, tipo: e.tipo, carga: e.carga, objetivo: e.objetivo || null, hecho: false });
+      const objetivos = objetivosPorRondaDe(e);
+      // si se pidieron más rondas de las programadas, repite el último objetivo definido
+      const objetivo = (objetivos[ronda - 1] !== undefined ? objetivos[ronda - 1] : null) ?? objetivos[objetivos.length - 1] ?? null;
+      items.push({ ronda, nombre: e.nombre, tipo: e.tipo, carga: e.carga, objetivo, hecho: false });
     });
   }
 
