@@ -317,8 +317,15 @@
           <div style="font-size:10.5px; color:var(--texto-sec); text-transform:uppercase; letter-spacing:.4px;">Pausa</div>
           <div id="vivoPausa" style="font-size:19px; font-weight:800; color:var(--acento2);">00:00</div>
         </div>
+        <div style="text-align:center;">
+          <div style="font-size:10.5px; color:var(--texto-sec); text-transform:uppercase; letter-spacing:.4px;">Pulso</div>
+          <div id="vivoFC" style="font-size:19px; font-weight:800; color:var(--mal);">—</div>
+        </div>
       </div>
-      <button class="btn btn-secundario" id="btnPausaVivo" style="margin-top:14px;" onclick="alternarPausaVivo()">⏸️ Pausa</button>
+      <div class="fila" style="margin-top:14px;">
+        <button class="btn btn-secundario btnBandaFC" onclick="conectarBandaFC()">💓 Conectar banda</button>
+        <button class="btn btn-secundario" id="btnPausaVivo" onclick="alternarPausaVivo()">⏸️ Pausa</button>
+      </div>
       <div id="vivoProgreso" style="color:var(--texto-sec); font-size:12.5px; margin-top:10px;"></div>
     </div>
     <div class="card">
@@ -488,6 +495,85 @@ function guardarPlanes(lista){
     console.error('Error guardando planes de fuerza', e);
     return false;
   }
+}
+
+/* ============ Exportar a Garmin Connect (.tcx, para subir manual) ============
+   Garmin no tiene API pública de escritura para apps individuales sin
+   backend/aprobación — así que en vez de "subir sola", Fuerza genera un
+   archivo TCX estándar por sesión que se sube a mano en Garmin Connect
+   (Actividades → Importar). Sport="Other" (fuerza no es una disciplina TCX
+   estándar), sin GPS. Como no se guarda la hora exacta de inicio (solo la
+   fecha), se usa el mediodía local de ese día como convención — Garmin solo
+   necesita un timestamp válido, no la hora exacta, para una sesión sin GPS. */
+function escaparXML(texto){
+  return String(texto || '')
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;').replace(/'/g,'&apos;');
+}
+
+function generarTCX(sesion){
+  const inicioISO = new Date(sesion.fecha + 'T12:00:00').toISOString();
+  const finISO = new Date(new Date(inicioISO).getTime() + sesion.duracionMin * 60000).toISOString();
+  const totalSegundos = sesion.duracionMin * 60;
+
+  const nombresEjercicios = (sesion.ejercicios || []).map(e => e.nombre).join(', ');
+  const notas = escaparXML(`Fuerza (sRPE) — RPE ${sesion.rpeSesion} · TSS ${sesion.tss.toFixed(0)}${nombresEjercicios ? ' · ' + nombresEjercicios : ''}`);
+
+  const lineasFC = [];
+  if(sesion.pulsoPromedio) lineasFC.push(`        <AverageHeartRateBpm><Value>${sesion.pulsoPromedio}</Value></AverageHeartRateBpm>`);
+  if(sesion.pulsoMax) lineasFC.push(`        <MaximumHeartRateBpm><Value>${sesion.pulsoMax}</Value></MaximumHeartRateBpm>`);
+
+  const track = sesion.pulsoPromedio ? `
+        <Track>
+          <Trackpoint>
+            <Time>${inicioISO}</Time>
+            <HeartRateBpm><Value>${sesion.pulsoPromedio}</Value></HeartRateBpm>
+          </Trackpoint>
+          <Trackpoint>
+            <Time>${finISO}</Time>
+            <HeartRateBpm><Value>${sesion.pulsoPromedio}</Value></HeartRateBpm>
+          </Trackpoint>
+        </Track>` : '';
+
+  return `<?xml version="1.0" encoding="UTF-8"?>
+<TrainingCenterDatabase xmlns="http://www.garmin.com/xmlschemas/TrainingCenterDatabase/v2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.garmin.com/xmlschemas/TrainingCenterDatabase/v2 http://www.garmin.com/xmlschemas/TrainingCenterDatabasev2.xsd">
+  <Activities>
+    <Activity Sport="Other">
+      <Id>${inicioISO}</Id>
+      <Lap StartTime="${inicioISO}">
+        <TotalTimeSeconds>${totalSegundos}</TotalTimeSeconds>
+        <DistanceMeters>0</DistanceMeters>
+        <Calories>${sesion.calorias || 0}</Calories>
+${lineasFC.join('\n')}
+        <Intensity>Active</Intensity>
+        <TriggerMethod>Manual</TriggerMethod>${track}
+        <Notes>${notas}</Notes>
+      </Lap>
+      <Creator xsi:type="Device_t">
+        <Name>Fuerza (profehugotdf.github.io)</Name>
+        <UnitId>0</UnitId>
+        <ProductID>0</ProductID>
+        <Version><VersionMajor>1</VersionMajor><VersionMinor>0</VersionMinor><BuildMajor>0</BuildMajor><BuildMinor>0</BuildMinor></Version>
+      </Creator>
+    </Activity>
+  </Activities>
+</TrainingCenterDatabase>`;
+}
+
+function exportarSesionTCX(id){
+  const sesion = leerSesiones().find(s => s.id === id);
+  if(!sesion) return;
+  const xml = generarTCX(sesion);
+  const blob = new Blob([xml], { type: 'application/vnd.garmin.tcx+xml' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `fuerza-${sesion.fecha}.tcx`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(url), 2000);
+  mostrarToast('⬇️ .tcx descargado — subilo en Garmin Connect: Actividades → Importar');
 }
 
 /* ============ Compartir (archivo/portapapeles/descarga como respaldo) ============ */
@@ -1143,7 +1229,8 @@ function renderRutinas(){
     return;
   }
 
-  const hint = `<div class="hint-rutinas">🏁 <b>Iniciar</b>: arranca el cronómetro y elegís cuántas rondas del circuito.<br>📝 <b>Cargar</b>: completa el formulario para anotar una sesión a mano, sin cronómetro.<br>🛠️ <b>Editar</b>: corregí los ejercicios de la rutina en sí (nombres, KG/RPE, cantidad de series) sin registrar ninguna sesión.</div>`;
+  const hint = `<div class="hint-rutinas">🏁 <b>Iniciar</b>: arranca el cronómetro y elegís cuántas rondas del circuito.<br>📝 <b>Cargar</b>: completa el formulario para anotar una sesión a mano, sin cronómetro.<br>🛠️ <b>Editar</b>: corregí los ejercicios de la rutina en sí (nombres, KG/RPE, cantidad de series) sin registrar ninguna sesión.</div>
+    <button class="btn btn-mini btnBandaFC" style="width:100%; margin-bottom:12px;" onclick="conectarBandaFC()">💓 Conectar banda</button>`;
 
   cont.innerHTML = hint + rutinas.map(r => {
     const tags = r.ejercicios.map(e => {
@@ -1183,6 +1270,7 @@ function renderRutinas(){
       </div>
     `;
   }).join('');
+  actualizarUIBanda();
 }
 
 // Junta, de fuerza_musculos_personalizados, solo los ajustes que corresponden
@@ -1682,6 +1770,188 @@ document.addEventListener('visibilitychange', () => {
   }
 });
 
+/* ============ Banda de pulso BLE (Heart Rate Service estándar 0x180D) ============
+   Implementación propia siguiendo el patrón descripto para Correr/Bici/Kayak
+   (no tengo el código real de esas apps para portar literal, así que esto es
+   una reconstrucción fiel a las dos reglas clave que evitan los bugs que ya
+   pisaron: 1) todo connect/startNotifications con timeout explícito via
+   Promise.race, para que nunca quede una promesa colgada sin resolver ni
+   rechazar; 2) el watchdog de "canal zombi" arranca a contar recién cuando
+   el canal está realmente vivo (primera confirmación de notificaciones
+   activas), nunca mientras la conexión todavía está en curso. */
+const HR_SERVICE_UUID = 0x180D;
+const HR_MEASUREMENT_UUID = 0x2A37;
+const HR_TIMEOUT_MS = 10000;   // timeout explícito para cada paso de conexión
+const HR_WATCHDOG_MS = 8000;   // sin dato nuevo en este tiempo = canal zombi
+const HR_WATCHDOG_INTERVALO_MS = 3000;
+
+let hrDevice = null;
+let hrCaracteristica = null;
+let hrConectado = false;
+let hrConectando = false;
+let hrUltimoValor = null;
+let hrUltimaMuestraTs = null;
+let hrWatchdogHandle = null;
+let hrWatchdogAvisado = false;
+let hrMuestras = []; // valores de FC (lpm) acumulados durante la sesión en vivo actual
+
+// Envuelve una promesa con un timeout explícito — si no resuelve ni rechaza
+// sola a tiempo, la rechaza nosotros. Sin esto, un connect()/startNotifications()
+// que se cuelga deja la UI esperando para siempre (bug real ya pisado).
+function conTimeout(promesa, ms, mensajeError){
+  return Promise.race([
+    promesa,
+    new Promise((_, reject) => setTimeout(() => reject(new Error(mensajeError || 'Tiempo de espera agotado')), ms))
+  ]);
+}
+
+// Heart Rate Measurement (0x2A37): el primer byte trae flags — el bit 0
+// indica si la FC viene en UINT8 (bit=0) o UINT16 little-endian (bit=1).
+// Distintas bandas usan uno u otro — no hay que asumir siempre 8 bits.
+function parsearFrecuenciaCardiaca(dataView){
+  const flags = dataView.getUint8(0);
+  const formato16bits = (flags & 0x01) === 1;
+  return formato16bits ? dataView.getUint16(1, true) : dataView.getUint8(1);
+}
+
+async function conectarBandaFC(){
+  if(hrConectando) return;
+  if(!navigator.bluetooth){
+    mostrarToast('⚠️ Este navegador no tiene Web Bluetooth activado. En Brave: brave://flags → buscar "Web Bluetooth" → activar y reiniciar');
+    return;
+  }
+  hrConectando = true;
+  detenerWatchdogFC(); // por las dudas: nunca vigilar mientras se está conectando
+  actualizarUIBanda();
+  try{
+    mostrarToast('🔍 Buscando banda de pulso...');
+    hrDevice = await navigator.bluetooth.requestDevice({ filters: [{ services: [HR_SERVICE_UUID] }] });
+    hrDevice.addEventListener('gattserverdisconnected', onBandaFCDesconectada);
+
+    const server = await conTimeout(hrDevice.gatt.connect(), HR_TIMEOUT_MS, 'No se pudo conectar a la banda (tiempo agotado)');
+    const service = await conTimeout(server.getPrimaryService(HR_SERVICE_UUID), HR_TIMEOUT_MS, 'No se encontró el servicio de frecuencia cardíaca');
+    hrCaracteristica = await conTimeout(service.getCharacteristic(HR_MEASUREMENT_UUID), HR_TIMEOUT_MS, 'No se encontró la característica de FC');
+    await conTimeout(hrCaracteristica.startNotifications(), HR_TIMEOUT_MS, 'No se pudieron activar las notificaciones de FC');
+    hrCaracteristica.addEventListener('characteristicvaluechanged', onDatoFC);
+
+    // Recién ACÁ el canal está realmente vivo — es el único momento correcto
+    // para empezar a contar el watchdog (nunca antes, mientras se conectaba).
+    hrConectado = true;
+    hrUltimaMuestraTs = Date.now();
+    hrWatchdogAvisado = false;
+    iniciarWatchdogFC();
+    mostrarToast('✅ Banda de pulso conectada');
+  }catch(e){
+    console.error('Error conectando la banda de FC', e);
+    mostrarToast('⚠️ No se pudo conectar la banda: ' + (e && e.message ? e.message : 'error desconocido'));
+    hrConectado = false;
+  }finally{
+    hrConectando = false;
+    actualizarUIBanda();
+  }
+}
+
+function onBandaFCDesconectada(){
+  hrConectado = false;
+  detenerWatchdogFC();
+  actualizarUIBanda();
+  mostrarToast('⚠️ Se desconectó la banda de pulso');
+}
+
+function onDatoFC(event){
+  const fc = parsearFrecuenciaCardiaca(event.target.value);
+  if(!fc || fc <= 0) return;
+  hrUltimoValor = fc;
+  hrUltimaMuestraTs = Date.now();
+  hrWatchdogAvisado = false; // llegó dato fresco: si había un aviso pendiente, se resetea
+  if(vivoInicio) hrMuestras.push(fc); // solo acumula estadística mientras hay sesión en vivo activa
+  actualizarUIBanda();
+}
+
+function iniciarWatchdogFC(){
+  detenerWatchdogFC();
+  hrWatchdogHandle = setInterval(() => {
+    if(!hrConectado || hrUltimaMuestraTs === null) return; // nunca vigilar si no está realmente conectado
+    const inactivoMs = Date.now() - hrUltimaMuestraTs;
+    if(inactivoMs > HR_WATCHDOG_MS && !hrWatchdogAvisado){
+      hrWatchdogAvisado = true;
+      mostrarToast('⚠️ La banda de pulso no manda datos nuevos hace un rato — revisá que esté bien puesta');
+    }
+  }, HR_WATCHDOG_INTERVALO_MS);
+}
+
+function detenerWatchdogFC(){
+  if(hrWatchdogHandle){ clearInterval(hrWatchdogHandle); hrWatchdogHandle = null; }
+}
+
+function desconectarBandaFC(){
+  detenerWatchdogFC();
+  if(hrDevice && hrDevice.gatt && hrDevice.gatt.connected){
+    try{ hrDevice.gatt.disconnect(); }catch(e){ console.error(e); }
+  }
+  hrConectado = false;
+  hrDevice = null;
+  hrCaracteristica = null;
+  hrUltimoValor = null;
+  actualizarUIBanda();
+}
+
+function actualizarUIBanda(){
+  const elValor = document.getElementById('vivoFC');
+  if(elValor) elValor.textContent = hrConectado ? (hrUltimoValor ? hrUltimoValor + ' lpm' : '…') : '—';
+  document.querySelectorAll('.btnBandaFC').forEach(btn => {
+    if(hrConectando) btn.textContent = '🔍 Conectando...';
+    else if(hrConectado) btn.textContent = '💓 Banda conectada';
+    else btn.textContent = '💓 Conectar banda';
+    btn.onclick = hrConectado ? desconectarBandaFC : conectarBandaFC;
+  });
+}
+
+// Promedio y máximo de las muestras de FC recibidas durante la sesión en vivo.
+function calcularEstadisticasFC(muestras){
+  if(!muestras || muestras.length === 0) return null;
+  const suma = muestras.reduce((a,b) => a + b, 0);
+  return { promedio: Math.round(suma / muestras.length), maximo: Math.max(...muestras) };
+}
+
+/* ============ Perfil compartido (entrenamiento_perfil) y calorías (Keytel) ============
+   ⚠️ edad/sexo todavía pueden no existir en esta clave — los agrega Plan de
+   Ciclos más adelante. Los nombres de campo usados acá (edad, sexo: 'M'|'F')
+   son mi mejor estimación siguiendo la convención de pesoKg ya confirmada
+   (memoria de Correr v82) — hay que confirmarlos contra el código real de
+   Plan de Ciclos apenas exista, no asumirlos como definitivos.
+   Si falta cualquier dato, NO se calculan calorías — se avisa en vez de
+   inventar un valor con un peso/edad/sexo supuesto. */
+const K_PERFIL_COMPARTIDO = 'entrenamiento_perfil';
+
+function leerPerfilCompartido(){
+  try{
+    const raw = localStorage.getItem(K_PERFIL_COMPARTIDO);
+    return raw ? JSON.parse(raw) : null;
+  }catch(e){
+    console.error('Error leyendo el perfil compartido', e);
+    return null;
+  }
+}
+
+// Fórmula de Keytel (kcal/min a partir de FC promedio, peso, edad, sexo).
+// Devuelve null (sin inventar nada) si falta algún dato del perfil.
+function calcularCaloriasKeytel(pulsoPromedio, duracionMin, perfil){
+  if(!pulsoPromedio || !duracionMin) return null;
+  if(!perfil || !perfil.pesoKg || !perfil.edad || !perfil.sexo) return null;
+
+  const fc = pulsoPromedio, peso = perfil.pesoKg, edad = perfil.edad;
+  let kcalPorMin;
+  if(perfil.sexo === 'M'){
+    kcalPorMin = (-55.0969 + 0.6309*fc + 0.1988*peso + 0.2017*edad) / 4.184;
+  } else if(perfil.sexo === 'F'){
+    kcalPorMin = (-20.4022 + 0.4472*fc - 0.1263*peso + 0.074*edad) / 4.184;
+  } else {
+    return null; // valor de sexo no reconocido — no asumimos
+  }
+  return Math.max(0, Math.round(kcalPorMin * duracionMin));
+}
+
 // --- Contabilidad de trabajo/pausa dentro de la rutina en vivo ---
 // Basado en timestamps (no en sumar 1 seg por tick), para que sea robusto si
 // el navegador se va a segundo plano o el tick del setInterval se retrasa —
@@ -1762,6 +2032,7 @@ function iniciarSesionEnVivo(rutinaId){
   vivoSegundosTrabajoAcum = 0;
   vivoSegundosPausaAcum = 0;
   vivoSegmentoInicio = vivoInicio;
+  hrMuestras = []; // arranca en limpio la acumulación de pulso de esta sesión
 
   guardarEstadoVivo();
   mostrarSeccionVivo();
@@ -1782,6 +2053,7 @@ function mostrarSeccionVivo(){
   actualizarCronometroVivo();
   vivoTimerHandle = setInterval(actualizarCronometroVivo, 1000);
 
+  actualizarUIBanda();
   solicitarWakeLock();
 }
 
@@ -1851,6 +2123,7 @@ function finalizarSesionEnVivo(){
     vivoSegundosTrabajoAcum = 0;
     vivoSegundosPausaAcum = 0;
     vivoSegmentoInicio = null;
+    hrMuestras = [];
     document.getElementById('navTabs').style.display = '';
     mostrarTab('rutinas');
     return;
@@ -1899,16 +2172,31 @@ function finalizarSesionEnVivo(){
   const fecha = hoyISO();
   const tss = calcularTSS(rpeSesion, minutos);
   const id = idNuevo('fuerza');
-  const sesion = { id, fecha, duracionMin: minutos, rpeSesion, tss, ejercicios: ejerciciosGuardados, tiempoTrabajoMin: minutosTrabajo, tiempoPausaMin: minutosPausa, rutinaOrigenId };
+
+  const estadisticasFC = calcularEstadisticasFC(hrMuestras);
+  const pulsoPromedio = estadisticasFC ? estadisticasFC.promedio : null;
+  const pulsoMax = estadisticasFC ? estadisticasFC.maximo : null;
+  const perfil = leerPerfilCompartido();
+  const calorias = calcularCaloriasKeytel(pulsoPromedio, minutos, perfil);
+  hrMuestras = []; // ya se usaron, no deben arrastrarse a la próxima sesión
+
+  const sesion = {
+    id, fecha, duracionMin: minutos, rpeSesion, tss,
+    ejercicios: ejerciciosGuardados, tiempoTrabajoMin: minutosTrabajo, tiempoPausaMin: minutosPausa,
+    rutinaOrigenId, pulsoPromedio, pulsoMax, calorias
+  };
 
   const lista = leerSesiones();
   lista.push(sesion);
   guardarSesiones(lista);
-  upsertEnRegistroForma({ fecha, deporte: 'fuerza', tss, duracionSeg: minutos * 60, id });
+  upsertEnRegistroForma({ fecha, deporte: 'fuerza', tss, duracionSeg: minutos * 60, calorias, id });
 
   renderPlanHoyBanner();
   mostrarTab('historial');
-  mostrarToast(`✅ Guardada (${minutos} min · ${minutosTrabajo}' trabajo / ${minutosPausa}' pausa, RPE ${rpeSesion}) — completá reps y peso en ✏️ Editar`);
+  const avisoCalorias = calorias !== null
+    ? ` · ${calorias} kcal`
+    : (pulsoPromedio ? ' · faltan edad/peso/sexo en tu perfil para calcular calorías' : '');
+  mostrarToast(`✅ Guardada (${minutos} min · ${minutosTrabajo}' trabajo / ${minutosPausa}' pausa, RPE ${rpeSesion}${avisoCalorias}) — completá reps y peso en ✏️ Editar`);
 }
 
 function descartarSesionEnVivo(){
@@ -1925,6 +2213,7 @@ function descartarSesionEnVivo(){
   vivoSegundosTrabajoAcum = 0;
   vivoSegundosPausaAcum = 0;
   vivoSegmentoInicio = null;
+  hrMuestras = [];
 
   document.getElementById('navTabs').style.display = '';
   mostrarTab('rutinas');
@@ -2585,17 +2874,22 @@ function renderHistorial(){
     const nombresEjercicios = s.ejercicios.map(e => escapeHtml(e.nombre || '(sin nombre)')).join(' · ');
     const tieneDesglose = s.tiempoTrabajoMin !== undefined && s.tiempoPausaMin !== undefined;
     const desglose = tieneDesglose ? ` · <span style="color:var(--ok)">${s.tiempoTrabajoMin}' trabajo</span> / <span style="color:var(--acento2)">${s.tiempoPausaMin}' pausa</span>` : '';
+    const pulso = s.pulsoPromedio ? ` · 💓 ${s.pulsoPromedio} lpm (máx ${s.pulsoMax})` : '';
+    const calorias = s.calorias ? ` · 🔥 ${s.calorias} kcal` : '';
     return `
       <div class="card sesion-card" onclick="cargarSesionEnFormulario('${s.id}')">
         <div class="sesion-cab">
           <div class="sesion-fecha">${formatearFecha(s.fecha)}</div>
           <div class="sesion-tss">TSS ${s.tss.toFixed(0)}</div>
         </div>
-        <div class="sesion-meta">${s.duracionMin} min · RPE ${s.rpeSesion} · ${s.ejercicios.length} ejercicio${s.ejercicios.length===1?'':'s'}${desglose}</div>
+        <div class="sesion-meta">${s.duracionMin} min · RPE ${s.rpeSesion} · ${s.ejercicios.length} ejercicio${s.ejercicios.length===1?'':'s'}${desglose}${pulso}${calorias}</div>
         <div class="sesion-ejercicios">${nombresEjercicios}</div>
         <div class="acciones-hist">
           <button class="btn btn-secundario" onclick="event.stopPropagation(); cargarSesionEnFormulario('${s.id}')">✏️ Editar</button>
           <button class="btn btn-mal" onclick="event.stopPropagation(); borrarSesion('${s.id}')">🗑 Borrar</button>
+        </div>
+        <div class="acciones-hist" style="margin-top:8px;">
+          <button class="btn btn-mini" style="flex:1;" onclick="event.stopPropagation(); exportarSesionTCX('${s.id}')">⬇️ Exportar a Garmin (.tcx)</button>
         </div>
       </div>
     `;
