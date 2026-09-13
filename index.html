@@ -57,6 +57,9 @@
   .ejercicio{background:var(--card2); border:1px solid var(--borde); border-radius:12px;
     padding:12px; margin-bottom:10px;}
   .ejercicio-cab{display:flex; align-items:center; gap:8px; margin-bottom:8px;}
+  .asa-arrastre{font-size:20px; color:var(--texto-sec); padding:6px 4px; touch-action:none;
+    cursor:grab; user-select:none; flex-shrink:0; line-height:1;}
+  .ejercicio.arrastrando{opacity:0.85; box-shadow:0 6px 18px rgba(0,0,0,.4); position:relative; z-index:5;}
   .ejercicio-cab input[type=text]{margin-bottom:0; flex:1; font-weight:700;}
   .quitar-ejercicio{background:transparent; border:none; color:var(--texto-sec); font-size:20px;
     line-height:1; padding:2px 4px; cursor:pointer; flex-shrink:0;}
@@ -511,6 +514,42 @@ function escaparXML(texto){
     .replace(/"/g,'&quot;').replace(/'/g,'&apos;');
 }
 
+function construirTrackTCX(sesion, inicioISO, finISO){
+  // Con curva real guardada (pulsoMuestras): un Trackpoint por cada lectura
+  // real de la banda, en el momento exacto en que llegó — esto es lo que
+  // permite que Garmin/TrainingPeaks dibuje la oscilación real en vez de
+  // una línea plana. Sesiones guardadas ANTES de este cambio no tienen
+  // pulsoMuestras — para esas se arma un fallback de 2 puntos con el
+  // promedio (mejor que nada, pero sin oscilación real).
+  if(sesion.pulsoMuestras && sesion.pulsoMuestras.length > 0){
+    const puntos = sesion.pulsoMuestras.map(m => {
+      const tiempoISO = new Date(new Date(inicioISO).getTime() + m.t * 1000).toISOString();
+      return `          <Trackpoint>
+            <Time>${tiempoISO}</Time>
+            <HeartRateBpm><Value>${m.v}</Value></HeartRateBpm>
+          </Trackpoint>`;
+    }).join('\n');
+    return `
+        <Track>
+${puntos}
+        </Track>`;
+  }
+  if(sesion.pulsoPromedio){
+    return `
+        <Track>
+          <Trackpoint>
+            <Time>${inicioISO}</Time>
+            <HeartRateBpm><Value>${sesion.pulsoPromedio}</Value></HeartRateBpm>
+          </Trackpoint>
+          <Trackpoint>
+            <Time>${finISO}</Time>
+            <HeartRateBpm><Value>${sesion.pulsoPromedio}</Value></HeartRateBpm>
+          </Trackpoint>
+        </Track>`;
+  }
+  return '';
+}
+
 function generarTCX(sesion){
   const inicioISO = new Date(sesion.fecha + 'T12:00:00').toISOString();
   const finISO = new Date(new Date(inicioISO).getTime() + sesion.duracionMin * 60000).toISOString();
@@ -523,17 +562,7 @@ function generarTCX(sesion){
   if(sesion.pulsoPromedio) lineasFC.push(`        <AverageHeartRateBpm><Value>${sesion.pulsoPromedio}</Value></AverageHeartRateBpm>`);
   if(sesion.pulsoMax) lineasFC.push(`        <MaximumHeartRateBpm><Value>${sesion.pulsoMax}</Value></MaximumHeartRateBpm>`);
 
-  const track = sesion.pulsoPromedio ? `
-        <Track>
-          <Trackpoint>
-            <Time>${inicioISO}</Time>
-            <HeartRateBpm><Value>${sesion.pulsoPromedio}</Value></HeartRateBpm>
-          </Trackpoint>
-          <Trackpoint>
-            <Time>${finISO}</Time>
-            <HeartRateBpm><Value>${sesion.pulsoPromedio}</Value></HeartRateBpm>
-          </Trackpoint>
-        </Track>` : '';
+  const track = construirTrackTCX(sesion, inicioISO, finISO);
 
   return `<?xml version="1.0" encoding="UTF-8"?>
 <TrainingCenterDatabase xmlns="http://www.garmin.com/xmlschemas/TrainingCenterDatabase/v2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.garmin.com/xmlschemas/TrainingCenterDatabase/v2 http://www.garmin.com/xmlschemas/TrainingCenterDatabasev2.xsd">
@@ -806,6 +835,99 @@ function leerCamposFormulario(){
   });
 }
 
+// Reordena `lista` según un orden de ids dado — función pura, separada de la
+// manipulación del DOM para poder testearla aparte. Si algún id no matchea
+// (no debería pasar nunca), devuelve la lista original sin tocar nada, para
+// no perder ejercicios por un desajuste raro entre el DOM y el estado.
+function reordenarPorIds(lista, idsEnOrden){
+  const reordenada = idsEnOrden.map(id => lista.find(item => item.id === id)).filter(Boolean);
+  return reordenada.length === lista.length ? reordenada : lista;
+}
+
+// --- Arrastrar para reordenar ejercicios (mantener presionado el asa ⠿) ---
+// Delegación de eventos sobre el contenedor (el contenido se re-renderiza
+// seguido, así no hay que re-atar listeners cada vez). Durante el arrastre
+// se mueve el DOM directamente (sin volver a renderizar, para no perder la
+// captura del puntero) y recién al soltar se confirma el nuevo orden en el
+// array `ejercicios`.
+const UMBRAL_LARGO_PRESIONADO_MS = 350;
+const UMBRAL_MOVIMIENTO_CANCELA_PX = 10;
+
+function iniciarArrastreEjercicio(e){
+  const asa = e.target.closest('.asa-arrastre');
+  if(!asa) return;
+  const tarjeta = asa.closest('.ejercicio');
+  if(!tarjeta) return;
+
+  const pointerId = e.pointerId;
+  const startX = e.clientX, startY = e.clientY;
+  let activado = false;
+
+  const timer = setTimeout(() => {
+    activado = true;
+    tarjeta.classList.add('arrastrando');
+    try{ asa.setPointerCapture(pointerId); }catch(err){}
+  }, UMBRAL_LARGO_PRESIONADO_MS);
+
+  function onMove(ev){
+    if(ev.pointerId !== pointerId) return;
+    if(!activado){
+      if(Math.abs(ev.clientY - startY) > UMBRAL_MOVIMIENTO_CANCELA_PX || Math.abs(ev.clientX - startX) > UMBRAL_MOVIMIENTO_CANCELA_PX){
+        clearTimeout(timer);
+        limpiar();
+      }
+      return;
+    }
+    ev.preventDefault();
+    moverTarjetaSegunPosicion(tarjeta, ev.clientY);
+  }
+
+  function onUp(ev){
+    if(ev.pointerId !== pointerId) return;
+    clearTimeout(timer);
+    if(activado){
+      tarjeta.classList.remove('arrastrando');
+      const idsEnOrden = Array.from(document.getElementById('listaEjercicios').querySelectorAll('.ejercicio')).map(el => el.dataset.id);
+      leerCamposFormulario(); // no perder lo tipeado en nombres/series por el reordenamiento
+      ejercicios = reordenarPorIds(ejercicios, idsEnOrden);
+    }
+    limpiar();
+  }
+
+  function limpiar(){
+    document.removeEventListener('pointermove', onMove);
+    document.removeEventListener('pointerup', onUp);
+    document.removeEventListener('pointercancel', onUp);
+  }
+
+  document.addEventListener('pointermove', onMove);
+  document.addEventListener('pointerup', onUp);
+  document.addEventListener('pointercancel', onUp);
+}
+
+// Mueve `tarjeta` en el DOM (sin re-renderizar) según en qué card cayó el
+// puntero — comparando contra el punto medio vertical de cada vecina.
+function moverTarjetaSegunPosicion(tarjeta, clientY){
+  const contenedor = document.getElementById('listaEjercicios');
+  const tarjetas = Array.from(contenedor.querySelectorAll('.ejercicio'));
+  for(const otra of tarjetas){
+    if(otra === tarjeta) continue;
+    const rect = otra.getBoundingClientRect();
+    const medio = rect.top + rect.height / 2;
+    const tarjetaVaDespues = !!(otra.compareDocumentPosition(tarjeta) & Node.DOCUMENT_POSITION_FOLLOWING);
+    if(clientY < medio && tarjetaVaDespues){
+      contenedor.insertBefore(tarjeta, otra);
+      break;
+    }
+    if(clientY > medio && !tarjetaVaDespues){
+      contenedor.insertBefore(tarjeta, otra.nextSibling);
+      break;
+    }
+  }
+}
+
+document.getElementById('listaEjercicios').addEventListener('pointerdown', iniciarArrastreEjercicio);
+
 function renderEjercicios(){
   const cont = document.getElementById('listaEjercicios');
   if(ejercicios.length === 0){
@@ -828,6 +950,7 @@ function renderEjercicios(){
     return `
       <div class="ejercicio" data-id="${ej.id}">
         <div class="ejercicio-cab">
+          <span class="asa-arrastre" title="Mantené presionado para reordenar">⠿</span>
           <input type="text" class="nombre-ejercicio" placeholder="Nombre del ejercicio" value="${escapeAttr(ej.nombre)}">
           <button class="quitar-ejercicio" onclick="leerCamposFormulario(); quitarEjercicio('${ej.id}')" title="Quitar ejercicio">🗑</button>
         </div>
@@ -1864,7 +1987,10 @@ function onDatoFC(event){
   hrUltimoValor = fc;
   hrUltimaMuestraTs = Date.now();
   hrWatchdogAvisado = false; // llegó dato fresco: si había un aviso pendiente, se resetea
-  if(vivoInicio) hrMuestras.push(fc); // solo acumula estadística mientras hay sesión en vivo activa
+  // Guarda CADA muestra con su momento (segundos desde el arranque de la
+  // sesión en vivo), no solo el valor — así se puede reconstruir la curva
+  // real de pulso en vez de una sola línea plana con el promedio.
+  if(vivoInicio) hrMuestras.push({ t: Math.round((Date.now() - vivoInicio) / 1000), v: fc });
   actualizarUIBanda();
 }
 
@@ -1907,11 +2033,18 @@ function actualizarUIBanda(){
   });
 }
 
-// Promedio y máximo de las muestras de FC recibidas durante la sesión en vivo.
+// Promedio, mínimo y máximo de las muestras de FC de la sesión en vivo.
+// Acepta tanto el formato nuevo ({t,v} con momento) como el viejo (número
+// suelto), por compatibilidad si quedó algo en memoria de una versión previa.
 function calcularEstadisticasFC(muestras){
   if(!muestras || muestras.length === 0) return null;
-  const suma = muestras.reduce((a,b) => a + b, 0);
-  return { promedio: Math.round(suma / muestras.length), maximo: Math.max(...muestras) };
+  const valores = muestras.map(m => (typeof m === 'object' ? m.v : m));
+  const suma = valores.reduce((a,b) => a + b, 0);
+  return {
+    promedio: Math.round(suma / valores.length),
+    minimo: Math.min(...valores),
+    maximo: Math.max(...valores),
+  };
 }
 
 /* ============ Perfil compartido (entrenamiento_perfil) y calorías (Keytel) ============
@@ -2178,12 +2311,16 @@ function finalizarSesionEnVivo(){
   const pulsoMax = estadisticasFC ? estadisticasFC.maximo : null;
   const perfil = leerPerfilCompartido();
   const calorias = calcularCaloriasKeytel(pulsoPromedio, minutos, perfil);
+  // Se guarda la curva completa (no solo el promedio) para que el export a
+  // Garmin/TCX pueda dibujar la oscilación real — se omite por completo si
+  // no hubo banda conectada, para no inflar sesiones sin ese dato.
+  const pulsoMuestras = hrMuestras.length > 0 ? hrMuestras : undefined;
   hrMuestras = []; // ya se usaron, no deben arrastrarse a la próxima sesión
 
   const sesion = {
     id, fecha, duracionMin: minutos, rpeSesion, tss,
     ejercicios: ejerciciosGuardados, tiempoTrabajoMin: minutosTrabajo, tiempoPausaMin: minutosPausa,
-    rutinaOrigenId, pulsoPromedio, pulsoMax, calorias
+    rutinaOrigenId, pulsoPromedio, pulsoMax, calorias, pulsoMuestras
   };
 
   const lista = leerSesiones();
