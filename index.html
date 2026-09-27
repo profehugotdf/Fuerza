@@ -4,6 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <title>Fuerza</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0c1015">
 <style>
   :root{
     --bg:#0c1015;
@@ -334,9 +336,21 @@
       </div>
       <div id="vivoProgreso" style="color:var(--texto-sec); font-size:12.5px; margin-top:10px;"></div>
     </div>
-    <div class="card">
+    <div class="card" id="tarjetaChecklistVivo">
       <h2>Ejercicios</h2>
       <div id="vivoLista"></div>
+    </div>
+    <div class="card" id="panelGuiado" style="display:none; text-align:center;">
+      <div class="lbl" style="text-transform:uppercase; letter-spacing:.5px; color:var(--texto-sec); font-size:11px;">Ejercicio <span id="guiadoContador">1/1</span></div>
+      <div id="guiadoNombre" style="font-weight:800; font-size:21px; margin:4px 0 2px;">—</div>
+      <div id="guiadoObjetivo" style="color:var(--texto-sec); font-size:12.5px; margin-bottom:6px;"></div>
+      <div class="cronometro-num" id="guiadoCuentaRegresiva" style="font-size:52px;">--</div>
+      <button class="btn btn-primario" id="btnGuiadoListo" style="margin-top:10px; display:none;" onclick="guiadoMarcarListoManual()">✅ Listo</button>
+      <div id="guiadoSiguiente" style="color:var(--texto-sec); font-size:12px; margin-top:10px;"></div>
+      <div class="fila" style="margin-top:14px;">
+        <button class="btn btn-secundario" onclick="guiadoAnterior()">⏮️ Anterior</button>
+        <button class="btn btn-secundario" onclick="guiadoSiguiente()">⏭️ Saltar</button>
+      </div>
     </div>
     <button class="btn btn-primario" onclick="finalizarSesionEnVivo()">🏁 Finalizar y cargar duración</button>
     <button class="btn btn-secundario" style="width:100%; margin-top:8px;" onclick="descartarSesionEnVivo()">Descartar sesión en vivo</button>
@@ -385,6 +399,50 @@ let vivoEnPausa = false;              // false = trabajo, true = pausa/descanso
 let vivoSegundosTrabajoAcum = 0;      // segundos ya cerrados (no incluye el segmento en curso)
 let vivoSegundosPausaAcum = 0;
 let vivoSegmentoInicio = null;        // timestamp (ms) de cuando arrancó el segmento actual
+
+// --- Modo guiado (avanza solo, con cuenta regresiva y aviso sonoro) ---
+let modoGuiado = false;
+let guiadoIndice = 0;          // índice actual dentro de vivoItems
+let guiadoRestanteSeg = null;  // segundos restantes del conteo del ejercicio actual (null = sin objetivo, espera toque manual)
+let guiadoTimerHandle = null;
+
+// Sonido con Web Audio API (sin archivos externos, coherente con la filosofía
+// de la app) — el AudioContext se crea recién al arrancar el modo guiado,
+// porque los navegadores bloquean el audio si no hay un toque del usuario
+// de por medio.
+let audioCtxGuiado = null;
+function obtenerAudioCtxGuiado(){
+  if(!audioCtxGuiado){
+    const Ctor = window.AudioContext || window.webkitAudioContext;
+    if(!Ctor) return null;
+    audioCtxGuiado = new Ctor();
+  }
+  if(audioCtxGuiado.state === 'suspended') audioCtxGuiado.resume().catch(()=>{});
+  return audioCtxGuiado;
+}
+function reproducirTono(frecuencia, duracionMs, volumen){
+  try{
+    const ctx = obtenerAudioCtxGuiado();
+    if(!ctx) return;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = 'sine';
+    osc.frequency.value = frecuencia;
+    gain.gain.value = volumen;
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start();
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duracionMs/1000);
+    osc.stop(ctx.currentTime + duracionMs/1000);
+  }catch(e){
+    console.error('Error reproduciendo sonido guiado', e);
+  }
+}
+function sonidoTickFinal(){ reproducirTono(600, 100, 0.15); }
+function sonidoAvisoCambio(){
+  reproducirTono(880, 300, 0.22);
+  setTimeout(() => reproducirTono(1175, 350, 0.22), 140);
+}
 
 /* ============ Utilidades ============ */
 function idNuevo(prefijo){
@@ -689,7 +747,9 @@ function guardarEstadoVivo(){
       enPausa: vivoEnPausa,
       segundosTrabajoAcum: vivoSegundosTrabajoAcum,
       segundosPausaAcum: vivoSegundosPausaAcum,
-      segmentoInicio: vivoSegmentoInicio
+      segmentoInicio: vivoSegmentoInicio,
+      modoGuiado: modoGuiado,
+      guiadoIndice: guiadoIndice
     }));
   }catch(e){
     console.error('Error guardando la sesión en vivo', e);
@@ -1355,7 +1415,7 @@ function renderRutinas(){
     return;
   }
 
-  const hint = `<div class="hint-rutinas">🏁 <b>Iniciar</b>: arranca el cronómetro y elegís cuántas rondas del circuito.<br>📝 <b>Cargar</b>: completa el formulario para anotar una sesión a mano, sin cronómetro.<br>🛠️ <b>Editar</b>: corregí los ejercicios de la rutina en sí (nombres, KG/RPE, cantidad de series) sin registrar ninguna sesión.</div>
+  const hint = `<div class="hint-rutinas">🏁 <b>Iniciar</b>: arranca el cronómetro y elegís cuántas rondas del circuito, vas tildando vos.<br>🎧 <b>Guiado</b>: avanza solo con cuenta regresiva y aviso sonoro — ideal para movilidad/flexibilidad (ejercicios tipo TIEMPO).<br>📝 <b>Cargar</b>: completa el formulario para anotar una sesión a mano, sin cronómetro.<br>🛠️ <b>Editar</b>: corregí los ejercicios de la rutina en sí (nombres, KG/RPE, cantidad de series) sin registrar ninguna sesión.</div>
     <button class="btn btn-mini btnBandaFC" style="width:100%; margin-bottom:12px;" onclick="conectarBandaFC()">💓 Conectar banda</button>`;
 
   cont.innerHTML = hint + rutinas.map(r => {
@@ -1384,6 +1444,9 @@ function renderRutinas(){
         <div class="acciones-hist">
           <button class="btn btn-primario" style="width:auto;" onclick="iniciarSesionEnVivo('${r.id}')">🏁 Iniciar</button>
           <button class="btn btn-secundario" onclick="usarRutina('${r.id}')">📝 Cargar</button>
+        </div>
+        <div class="acciones-hist" style="margin-top:8px;">
+          <button class="btn btn-mini" style="flex:1;" onclick="iniciarSesionGuiada('${r.id}')">🎧 Guiado (avanza solo)</button>
         </div>
         <div class="acciones-hist" style="margin-top:8px;">
           <button class="btn btn-mini" style="flex:1;" onclick="editarRutina('${r.id}')">🛠️ Editar</button>
@@ -2141,13 +2204,14 @@ function actualizarBotonPausaVivo(){
   if(btn) btn.textContent = vivoEnPausa ? '▶️ Reanudar' : '⏸️ Pausa';
 }
 
-function iniciarSesionEnVivo(rutinaId){
-  const rutina = leerRutinas().find(r => r.id === rutinaId);
-  if(!rutina) return;
-
+// Arma la lista aplanada de items (ejercicio × ronda) para una rutina —
+// compartido entre el modo checklist y el modo guiado. Pregunta cuántas
+// rondas hacer, con la cantidad programada de la rutina como valor por
+// defecto (así solo hay que tocar OK salvo que se quiera otro número).
+function armarItemsParaRutina(rutina){
   const rondasProgramadas = rondasDe(rutina);
   const rondasTexto = prompt('¿Cuántas rondas del circuito?', String(rondasProgramadas));
-  if(rondasTexto === null) return; // canceló
+  if(rondasTexto === null) return null; // canceló
   const rondas = Math.max(1, parseInt(rondasTexto, 10) || rondasProgramadas);
 
   const items = [];
@@ -2159,6 +2223,15 @@ function iniciarSesionEnVivo(rutinaId){
       items.push({ ronda, nombre: e.nombre, tipo: e.tipo, carga: e.carga, objetivo, hecho: false });
     });
   }
+  return items;
+}
+
+function iniciarSesionEnVivo(rutinaId){
+  const rutina = leerRutinas().find(r => r.id === rutinaId);
+  if(!rutina) return;
+
+  const items = armarItemsParaRutina(rutina);
+  if(items === null) return;
 
   vivoRutinaId = rutina.id;
   vivoRutinaNombre = rutina.nombre;
@@ -2169,9 +2242,134 @@ function iniciarSesionEnVivo(rutinaId){
   vivoSegundosPausaAcum = 0;
   vivoSegmentoInicio = vivoInicio;
   hrMuestras = []; // arranca en limpio la acumulación de pulso de esta sesión
+  modoGuiado = false;
+  guiadoIndice = 0;
 
   guardarEstadoVivo();
   mostrarSeccionVivo();
+}
+
+// Igual que iniciarSesionEnVivo, pero en modo guiado: cuenta regresiva con
+// aviso sonoro y avance automático al siguiente ejercicio — pensado para
+// movilidad/flexibilidad (ejercicios tipo TIEMPO), aunque funciona con
+// cualquier rutina. Un ejercicio tipo REPS (sin duración real) muestra un
+// botón "Listo" en vez de contar solo, ya que no hay forma de saber cuánto
+// tarda sin que la persona lo confirme.
+function iniciarSesionGuiada(rutinaId){
+  const rutina = leerRutinas().find(r => r.id === rutinaId);
+  if(!rutina) return;
+
+  const items = armarItemsParaRutina(rutina);
+  if(items === null) return;
+
+  vivoRutinaId = rutina.id;
+  vivoRutinaNombre = rutina.nombre;
+  vivoInicio = Date.now();
+  vivoItems = items;
+  vivoEnPausa = false;
+  vivoSegundosTrabajoAcum = 0;
+  vivoSegundosPausaAcum = 0;
+  vivoSegmentoInicio = vivoInicio;
+  hrMuestras = [];
+  modoGuiado = true;
+  guiadoIndice = 0;
+
+  obtenerAudioCtxGuiado(); // crear/despertar el audio ya, con el toque del usuario a mano
+
+  guardarEstadoVivo();
+  mostrarSeccionVivo();
+  iniciarPasoGuiado();
+}
+
+function detenerTimerGuiado(){
+  if(guiadoTimerHandle){ clearInterval(guiadoTimerHandle); guiadoTimerHandle = null; }
+}
+
+function iniciarPasoGuiado(){
+  detenerTimerGuiado();
+  if(guiadoIndice >= vivoItems.length){
+    finalizarSesionEnVivo(); // se acabó la secuencia: pasa directo a cerrar la sesión
+    return;
+  }
+  const item = vivoItems[guiadoIndice];
+  renderPanelGuiado();
+
+  if(item.tipo === 'tiempo' && item.objetivo){
+    guiadoRestanteSeg = item.objetivo;
+    actualizarUIGuiado();
+    guiadoTimerHandle = setInterval(tickGuiado, 1000);
+  } else {
+    guiadoRestanteSeg = null; // sin duración conocida: espera el botón "Listo"
+    actualizarUIGuiado();
+  }
+}
+
+function tickGuiado(){
+  if(vivoEnPausa) return; // no avanzar el conteo mientras está en pausa general
+  guiadoRestanteSeg--;
+  if(guiadoRestanteSeg > 0 && guiadoRestanteSeg <= 3) sonidoTickFinal();
+  if(guiadoRestanteSeg <= 0){
+    sonidoAvisoCambio();
+    marcarItemGuiadoHecho();
+    avanzarPasoGuiado();
+    return;
+  }
+  actualizarUIGuiado();
+}
+
+function marcarItemGuiadoHecho(){
+  if(vivoItems[guiadoIndice]) vivoItems[guiadoIndice].hecho = true;
+  guardarEstadoVivo();
+}
+
+function avanzarPasoGuiado(){
+  guiadoIndice++;
+  guardarEstadoVivo();
+  iniciarPasoGuiado();
+}
+
+function guiadoMarcarListoManual(){
+  detenerTimerGuiado();
+  sonidoAvisoCambio();
+  marcarItemGuiadoHecho();
+  avanzarPasoGuiado();
+}
+
+// "Saltar": pasa al siguiente SIN marcar el actual como hecho (se salteó).
+function guiadoSiguiente(){
+  detenerTimerGuiado();
+  guiadoIndice = Math.min(guiadoIndice + 1, vivoItems.length);
+  guardarEstadoVivo();
+  iniciarPasoGuiado();
+}
+
+function guiadoAnterior(){
+  detenerTimerGuiado();
+  guiadoIndice = Math.max(0, guiadoIndice - 1);
+  guardarEstadoVivo();
+  iniciarPasoGuiado();
+}
+
+function renderPanelGuiado(){
+  const item = vivoItems[guiadoIndice];
+  if(!item) return;
+  document.getElementById('guiadoContador').textContent = `${guiadoIndice + 1}/${vivoItems.length}`;
+  document.getElementById('guiadoNombre').textContent = item.nombre;
+  const unidad = item.tipo === 'tiempo' ? 'seg' : 'reps';
+  document.getElementById('guiadoObjetivo').textContent = item.objetivo
+    ? `Objetivo: ${item.objetivo} ${unidad}`
+    : 'Sin objetivo cargado — tocá "Listo" cuando termines';
+  const siguiente = vivoItems[guiadoIndice + 1];
+  document.getElementById('guiadoSiguiente').textContent = siguiente ? `Siguiente: ${siguiente.nombre}` : 'Último ejercicio de la secuencia';
+
+  const esperaToqueManual = !(item.tipo === 'tiempo' && item.objetivo);
+  document.getElementById('btnGuiadoListo').style.display = esperaToqueManual ? 'block' : 'none';
+  document.getElementById('guiadoCuentaRegresiva').style.display = esperaToqueManual ? 'none' : 'block';
+}
+
+function actualizarUIGuiado(){
+  const el = document.getElementById('guiadoCuentaRegresiva');
+  if(el) el.textContent = guiadoRestanteSeg !== null ? formatearDuracion(guiadoRestanteSeg * 1000) : '--';
 }
 
 function mostrarSeccionVivo(){
@@ -2182,7 +2380,13 @@ function mostrarSeccionVivo(){
   document.getElementById('tab-vivo').classList.add('activa');
 
   document.getElementById('vivoNombreRutina').textContent = vivoRutinaNombre;
-  renderVivoLista();
+  document.getElementById('tarjetaChecklistVivo').style.display = modoGuiado ? 'none' : 'block';
+  document.getElementById('panelGuiado').style.display = modoGuiado ? 'block' : 'none';
+  if(modoGuiado){
+    renderPanelGuiado();
+  } else {
+    renderVivoLista();
+  }
   actualizarBotonPausaVivo();
 
   if(vivoTimerHandle) clearInterval(vivoTimerHandle);
@@ -2246,8 +2450,9 @@ function finalizarSesionEnVivo(){
   // seguir con el cronómetro corriendo en vez de perder la sesión.
   const hechosCount = vivoItems.filter(it => it.hecho).length;
   if(hechosCount === 0){
-    const seguir = confirm('Todavía no tildaste ningún ejercicio, así que no hay nada para guardar.\n\nAceptar = volver al checklist (el cronómetro sigue corriendo).\nCancelar = descartar esta sesión en vivo.');
+    const seguir = confirm('Todavía no tildaste ningún ejercicio, así que no hay nada para guardar.\n\nAceptar = seguir con la sesión (el cronómetro sigue corriendo).\nCancelar = descartar esta sesión en vivo.');
     if(seguir) return; // vuelve a la vista en vivo tal cual estaba, sin tocar nada
+    detenerTimerGuiado();
     if(vivoTimerHandle){ clearInterval(vivoTimerHandle); vivoTimerHandle = null; }
     liberarWakeLock();
     borrarEstadoVivo();
@@ -2260,6 +2465,8 @@ function finalizarSesionEnVivo(){
     vivoSegundosPausaAcum = 0;
     vivoSegmentoInicio = null;
     hrMuestras = [];
+    modoGuiado = false;
+    guiadoIndice = 0;
     document.getElementById('navTabs').style.display = '';
     mostrarTab('rutinas');
     return;
@@ -2277,6 +2484,7 @@ function finalizarSesionEnVivo(){
   if(!Number.isFinite(rpeSesion)) rpeSesion = 5;
   rpeSesion = Math.min(10, Math.max(1, rpeSesion));
 
+  detenerTimerGuiado();
   if(vivoTimerHandle){ clearInterval(vivoTimerHandle); vivoTimerHandle = null; }
   liberarWakeLock();
 
@@ -2302,6 +2510,8 @@ function finalizarSesionEnVivo(){
   vivoSegundosTrabajoAcum = 0;
   vivoSegundosPausaAcum = 0;
   vivoSegmentoInicio = null;
+  modoGuiado = false;
+  guiadoIndice = 0;
 
   document.getElementById('navTabs').style.display = '';
 
@@ -2342,6 +2552,7 @@ function finalizarSesionEnVivo(){
 function descartarSesionEnVivo(){
   if(!confirm('¿Descartar esta sesión en vivo? Se pierde el tiempo y lo tildado.')) return;
 
+  detenerTimerGuiado();
   if(vivoTimerHandle){ clearInterval(vivoTimerHandle); vivoTimerHandle = null; }
   liberarWakeLock();
   borrarEstadoVivo();
@@ -2354,6 +2565,8 @@ function descartarSesionEnVivo(){
   vivoSegundosPausaAcum = 0;
   vivoSegmentoInicio = null;
   hrMuestras = [];
+  modoGuiado = false;
+  guiadoIndice = 0;
 
   document.getElementById('navTabs').style.display = '';
   mostrarTab('rutinas');
@@ -3146,7 +3359,10 @@ if(estadoVivoGuardado){
   vivoSegundosTrabajoAcum = estadoVivoGuardado.segundosTrabajoAcum || 0;
   vivoSegundosPausaAcum = estadoVivoGuardado.segundosPausaAcum || 0;
   vivoSegmentoInicio = estadoVivoGuardado.segmentoInicio || estadoVivoGuardado.inicio || Date.now();
+  modoGuiado = estadoVivoGuardado.modoGuiado || false;
+  guiadoIndice = estadoVivoGuardado.guiadoIndice || 0;
   mostrarSeccionVivo();
+  if(modoGuiado) iniciarPasoGuiado(); // retoma el conteo del ejercicio donde haya quedado
 } else {
   document.getElementById('inFecha').value = hoyISO();
   agregarEjercicio();
@@ -3155,6 +3371,13 @@ if(estadoVivoGuardado){
 }
 limpiarFormularioPlan();
 renderPlanHoyBanner();
+
+// Registra el service worker para que la app abra sin conexión (modo avión,
+// gimnasios sin señal) — necesita al menos UNA carga con internet antes para
+// poder cachear el archivo; después de eso funciona 100% offline.
+if('serviceWorker' in navigator){
+  navigator.serviceWorker.register('sw.js').catch(err => console.error('Error registrando el service worker', err));
+}
 </script>
 
 </body>
