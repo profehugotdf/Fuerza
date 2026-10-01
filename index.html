@@ -20,6 +20,7 @@
     --ok:#3ddc84;
     --mal:#ff5470;
     --radio:14px;
+    --alto-header:150px; /* valor de respaldo; se recalcula por JS con el alto real del header */
   }
   *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
   html,body{margin:0; padding:0; background:var(--bg); color:var(--texto);
@@ -106,7 +107,8 @@
   .tag-ejercicio{background:var(--card2); border:1px solid var(--borde); border-radius:99px;
     padding:4px 10px; font-size:11.5px; color:var(--texto-sec);}
   .hint-rutinas{color:var(--texto-sec); font-size:12px; line-height:1.7; padding:2px 4px 14px;}
-  .cronometro-card{text-align:center;}
+  .cronometro-card{text-align:center;
+    position:sticky; top:var(--alto-header, 150px); z-index:8; background:var(--bg);}
   .cronometro-num{font-size:46px; font-weight:800; color:var(--acento2); line-height:1;
     font-variant-numeric:tabular-nums;}
   .ronda-titulo{font-size:11.5px; text-transform:uppercase; letter-spacing:.5px; color:var(--texto-sec);
@@ -3371,6 +3373,17 @@ if(estadoVivoGuardado){
 }
 limpiarFormularioPlan();
 renderPlanHoyBanner();
+
+// Mide el alto REAL del header (sticky) y lo deja como variable CSS, para que
+// la tarjeta de cronómetro de la sesión en vivo se pegue justo debajo —
+// calculado por JS en vez de un número fijo, porque el alto cambia según el
+// tamaño de letra del dispositivo. Se repite en cada resize/rotación.
+function actualizarAltoHeaderSticky(){
+  const header = document.querySelector('header');
+  if(header) document.documentElement.style.setProperty('--alto-header', header.offsetHeight + 'px');
+}
+actualizarAltoHeaderSticky();
+window.addEventListener('resize', actualizarAltoHeaderSticky);
 
 // Registra el service worker para que la app abra sin conexión (modo avión,
 // gimnasios sin señal) — necesita al menos UNA carga con internet antes para
